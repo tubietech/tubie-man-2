@@ -6,7 +6,7 @@ import { IMapData } from '../interfaces/IMapData';
 import { MapValue } from '../enums/MapValue';
 
 export class Entity implements IEntity {
-  sprite: Phaser.GameObjects.Arc;
+  sprite: Phaser.GameObjects.Arc | Phaser.GameObjects.Sprite;
   gridX: number;
   gridY: number;
   direction: Direction;

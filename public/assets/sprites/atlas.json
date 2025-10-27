@@ -617,7 +617,7 @@
       "sourceSize": { "w": 330, "h": 330 }
     },
     {
-      "filename": "plyaer_down_frame_1.png",
+      "filename": "player_down_frame_1.png",
       "frame": { "x": 1980, "y": 2640, "w": 330, "h": 330 },
       "rotated": false,
       "trimmed": false,
@@ -625,7 +625,7 @@
       "sourceSize": { "w": 330, "h": 330 }
     },
     {
-      "filename": "plyaer_down_frame_2.png",
+      "filename": "player_down_frame_2.png",
       "frame": { "x": 2310, "y": 2640, "w": 330, "h": 330 },
       "rotated": false,
       "trimmed": false,

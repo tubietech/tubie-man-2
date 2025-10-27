@@ -10,9 +10,33 @@ export class Player extends Entity {
   fireDuration: number = 0;
   fireParticles: Phaser.GameObjects.Arc[] = [];
   inputQueue: Direction[] = [];
-  
+  animatedSprite!: Phaser.GameObjects.Sprite;
+  isMoving: boolean = false;
+  lastDirection: Direction = Direction.RIGHT;
+
   constructor(scene: Phaser.Scene, x: number, y: number, color: number, speed: number, mapData: IMapData, tileSize: number, mapOffsetX: number, mapOffsetY: number) {
     super(scene, x, y, color, speed, mapData, tileSize, mapOffsetX, mapOffsetY);
+
+    // Destroy the circle sprite created by parent
+    this.sprite.destroy();
+
+    // Create animated sprite
+    this.animatedSprite = scene.add.sprite(
+      mapOffsetX + x * tileSize + tileSize / 2,
+      mapOffsetY + y * tileSize + tileSize / 2,
+      'atlas',
+      'player_right_frame_1.png'
+    );
+
+    // Scale sprite to fit tile size
+    const spriteScale = tileSize / Math.max(this.animatedSprite.width, this.animatedSprite.height);
+    this.animatedSprite.setScale(spriteScale);
+
+    // Update sprite reference to point to animated sprite
+    this.sprite = this.animatedSprite;
+
+    // Start with idle frame for right direction
+    this.lastDirection = Direction.RIGHT;
   }
   
   update(time: number, delta: number): void {
@@ -83,6 +107,43 @@ export class Player extends Entity {
       const actualSpeed = Math.min(speed, dist);
       this.sprite.x += (moveX / dist) * actualSpeed;
       this.sprite.y += (moveY / dist) * actualSpeed;
+      this.isMoving = true;
+
+      // Play animation based on direction
+      this.playDirectionAnimation(this.direction);
+      this.lastDirection = this.direction;
+    } else {
+      // Not moving - freeze on last frame
+      this.isMoving = false;
+      if (this.animatedSprite.anims.isPlaying) {
+        this.animatedSprite.anims.pause();
+      }
+    }
+  }
+
+  private playDirectionAnimation(direction: Direction): void {
+    let animKey = '';
+
+    switch (direction) {
+      case Direction.UP:
+        animKey = 'player_up';
+        break;
+      case Direction.DOWN:
+        animKey = 'player_down';
+        break;
+      case Direction.LEFT:
+        animKey = 'player_left';
+        break;
+      case Direction.RIGHT:
+        animKey = 'player_right';
+        break;
+    }
+
+    // Only play if not already playing this animation
+    if (this.animatedSprite.anims.currentAnim?.key !== animKey) {
+      this.animatedSprite.play(animKey);
+    } else if (!this.animatedSprite.anims.isPlaying) {
+      this.animatedSprite.anims.resume();
     }
   }
   

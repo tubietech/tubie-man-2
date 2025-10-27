@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import { Direction } from '../enums/Direction';
 
 export interface IEntity {
-  sprite: Phaser.GameObjects.Arc;
+  sprite: Phaser.GameObjects.Arc | Phaser.GameObjects.Sprite;
   gridX: number;
   gridY: number;
   direction: Direction;

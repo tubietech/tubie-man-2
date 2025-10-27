@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import Phaser from 'phaser';
 import { Orientation } from '../enums/Orientation';
+import { PreloadScene } from '../scenes/PreloadScene';
 import { GameScene } from '../scenes/GameScene';
 import { MenuScene } from '../scenes/MenuScene';
 
@@ -35,7 +36,7 @@ export default function FireBreatherGame() {
       height: targetHeight,
       parent: "phaser-container",
       backgroundColor: '#000000',
-      scene: [MenuScene, GameScene],
+      scene: [PreloadScene, MenuScene, GameScene],
       physics: {
         default: 'arcade',
         arcade: {
