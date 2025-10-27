@@ -14,8 +14,10 @@ export class Entity implements IEntity {
   scene: Phaser.Scene;
   mapData: IMapData;
   tileSize: number;
+  mapOffsetX: number;
+  mapOffsetY: number;
 
-  constructor(scene: Phaser.Scene, x: number, y: number, color: number, speed: number, mapData: IMapData, tileSize: number) {
+  constructor(scene: Phaser.Scene, x: number, y: number, color: number, speed: number, mapData: IMapData, tileSize: number, mapOffsetX: number, mapOffsetY: number) {
     this.scene = scene;
     this.gridX = x;
     this.gridY = y;
@@ -23,10 +25,12 @@ export class Entity implements IEntity {
     this.speed = speed;
     this.mapData = mapData;
     this.tileSize = tileSize;
+    this.mapOffsetX = mapOffsetX;
+    this.mapOffsetY = mapOffsetY;
 
     this.sprite = scene.add.circle(
-      x * tileSize + tileSize / 2,
-      y * tileSize + tileSize / 2,
+      mapOffsetX + x * tileSize + tileSize / 2,
+      mapOffsetY + y * tileSize + tileSize / 2,
       tileSize / 2 - 2,
       color
     );
@@ -40,8 +44,8 @@ export class Entity implements IEntity {
     this.gridX = x;
     this.gridY = y;
     this.sprite.setPosition(
-      x * this.tileSize + this.tileSize / 2,
-      y * this.tileSize + this.tileSize / 2
+      this.mapOffsetX + x * this.tileSize + this.tileSize / 2,
+      this.mapOffsetY + y * this.tileSize + this.tileSize / 2
     );
   }
   

@@ -4,8 +4,8 @@ import { GameScene } from '../../scenes/GameScene';
 import { IMapData } from '../../interfaces/IMapData';
 
 export class Blinky extends Enemy {
-  constructor(scene: Phaser.Scene, x: number, y: number, speed: number, mapData: IMapData, tileSize: number) {
-    super(scene, x, y, 'blinky', speed, mapData, tileSize);
+  constructor(scene: Phaser.Scene, x: number, y: number, speed: number, mapData: IMapData, tileSize: number, mapOffsetX: number, mapOffsetY: number) {
+    super(scene, x, y, 'blinky', speed, mapData, tileSize, mapOffsetX, mapOffsetY);
   }
   
   updateTarget(): void {

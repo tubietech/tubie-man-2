@@ -25,6 +25,8 @@ export class GameScene extends Phaser.Scene {
   orientation: Orientation = Orientation.HORIZONTAL;
   localization!: LocalizationManager;
   tunnelCooldown: number = 0;
+  mapOffsetX: number = 0;
+  mapOffsetY: number = 0;
 
   scoreText!: Phaser.GameObjects.Text;
   highScoreText!: Phaser.GameObjects.Text;
@@ -63,8 +65,21 @@ export class GameScene extends Phaser.Scene {
     return Math.min(canvasWidth / mapWidth, canvasHeight / mapHeight);
   }
 
+  private calculateMapOffset(): void {
+    const tileSize = this.getTileSize();
+    const mapPixelWidth = gameConfig.map.width * tileSize;
+    const mapPixelHeight = gameConfig.map.height * tileSize;
+    const canvasWidth = this.cameras.main.width;
+    const canvasHeight = this.cameras.main.height;
+
+    // Center the map on the canvas
+    this.mapOffsetX = (canvasWidth - mapPixelWidth) / 2;
+    this.mapOffsetY = (canvasHeight - mapPixelHeight) / 2;
+  }
+
   async create() {
     this.mapData = await MapGeneratorV2.generate(gameConfig.map.width, gameConfig.map.height);
+    this.calculateMapOffset();
     this.drawMap();
     this.createPellets();
 
@@ -77,7 +92,7 @@ export class GameScene extends Phaser.Scene {
     const startX = this.mapData.playerStart.x;
     const startY = this.mapData.playerStart.y;
 
-    this.player = new Player(this, startX, startY, gameConfig.colors.player, playerSpeed, this.mapData, tileSize);
+    this.player = new Player(this, startX, startY, gameConfig.colors.player, playerSpeed, this.mapData, tileSize, this.mapOffsetX, this.mapOffsetY);
 
     this.createEnemies();
     this.setupInput();
@@ -90,12 +105,12 @@ export class GameScene extends Phaser.Scene {
     for (let y = 0; y < this.mapData.map.length; y++) {
       for (let x = 0; x < this.mapData.map[y].length; x++) {
         const tile = this.mapData.map[y][x];
-        
+
         if (tile === 1) {
           // Wall
           this.add.rectangle(
-            x * tileSize,
-            y * tileSize,
+            this.mapOffsetX + x * tileSize,
+            this.mapOffsetY + y * tileSize,
             tileSize,
             tileSize,
             gameConfig.colors.wall
@@ -103,8 +118,8 @@ export class GameScene extends Phaser.Scene {
         } else if (tile === 2) {
           // Pen interior
           this.add.rectangle(
-            x * tileSize,
-            y * tileSize,
+            this.mapOffsetX + x * tileSize,
+            this.mapOffsetY + y * tileSize,
             tileSize,
             tileSize,
             gameConfig.colors.wall
@@ -112,8 +127,8 @@ export class GameScene extends Phaser.Scene {
         } else if (tile === 3) {
           // Pen door
           this.add.rectangle(
-            x * tileSize,
-            y * tileSize,
+            this.mapOffsetX + x * tileSize,
+            this.mapOffsetY + y * tileSize,
             tileSize,
             tileSize,
             gameConfig.colors.penDoor
@@ -121,8 +136,8 @@ export class GameScene extends Phaser.Scene {
         } else if (tile === 4) {
           // Tunnel
           this.add.rectangle(
-            x * tileSize,
-            y * tileSize,
+            this.mapOffsetX + x * tileSize,
+            this.mapOffsetY + y * tileSize,
             tileSize,
             tileSize,
             gameConfig.colors.tunnel
@@ -160,8 +175,8 @@ export class GameScene extends Phaser.Scene {
           }
 
           const pellet = this.add.circle(
-            x * tileSize + tileSize / 2,
-            y * tileSize + tileSize / 2,
+            this.mapOffsetX + x * tileSize + tileSize / 2,
+            this.mapOffsetY + y * tileSize + tileSize / 2,
             tileSize / 5,
             gameConfig.colors.pellet
           );
@@ -182,8 +197,8 @@ export class GameScene extends Phaser.Scene {
 
       // Create powerup
       const powerup = this.add.circle(
-        x * tileSize + tileSize / 2,
-        y * tileSize + tileSize / 2,
+        this.mapOffsetX + x * tileSize + tileSize / 2,
+        this.mapOffsetY + y * tileSize + tileSize / 2,
         tileSize / 2.5,
         gameConfig.colors.powerup
       );
@@ -208,7 +223,7 @@ export class GameScene extends Phaser.Scene {
 
     for (let i = 0; i < Math.min(this.level + 2, 4); i++) {
       const EnemyClass = types[i % types.length];
-      const enemy = new EnemyClass(this, penX, penY, enemySpeed, this.mapData, tileSize);
+      const enemy = new EnemyClass(this, penX, penY, enemySpeed, this.mapData, tileSize, this.mapOffsetX, this.mapOffsetY);
       this.enemies.push(enemy);
     }
   }
@@ -259,32 +274,32 @@ export class GameScene extends Phaser.Scene {
     const loc = this.localization;
 
     if (this.orientation === Orientation.VERTICAL) {
-      this.scoreText = this.add.text(10, 10, `${loc.getText('score')}: ${this.score}`, {
+      this.scoreText = this.add.text(this.mapOffsetX + 10, this.mapOffsetY + 10, `${loc.getText('score')}: ${this.score}`, {
         fontSize: '16px',
         color: '#fff'
       }).setScrollFactor(0);
 
-      this.highScoreText = this.add.text(mapWidth / 2, 10, `${loc.getText('highScore')}: 0`, {
+      this.highScoreText = this.add.text(this.mapOffsetX + mapWidth / 2, this.mapOffsetY + 10, `${loc.getText('highScore')}: 0`, {
         fontSize: '16px',
         color: '#fff'
       }).setOrigin(0.5, 0).setScrollFactor(0);
 
-      this.levelText = this.add.text(mapWidth - 10, 10, `${loc.getText('level')}: ${this.level}`, {
+      this.levelText = this.add.text(this.mapOffsetX + mapWidth - 10, this.mapOffsetY + 10, `${loc.getText('level')}: ${this.level}`, {
         fontSize: '16px',
         color: '#fff'
       }).setOrigin(1, 0).setScrollFactor(0);
 
-      this.livesText = this.add.text(10, mapHeight + 10, `${loc.getText('lives')}: ${this.lives}`, {
+      this.livesText = this.add.text(this.mapOffsetX + 10, this.mapOffsetY + mapHeight + 10, `${loc.getText('lives')}: ${this.lives}`, {
         fontSize: '16px',
         color: '#fff'
       }).setScrollFactor(0);
 
-      this.powerText = this.add.text(mapWidth / 2, mapHeight + 10, `${loc.getText('power')}: ${loc.getText('powerReady')}`, {
+      this.powerText = this.add.text(this.mapOffsetX + mapWidth / 2, this.mapOffsetY + mapHeight + 10, `${loc.getText('power')}: ${loc.getText('powerReady')}`, {
         fontSize: '16px',
         color: '#00ff00'
       }).setOrigin(0.5, 0).setScrollFactor(0);
     } else {
-      const uiX = mapWidth + 20;
+      const uiX = this.mapOffsetX + mapWidth + 20;
 
       this.scoreText = this.add.text(uiX, 50, `${loc.getText('score')}:\n${this.score}`, {
         fontSize: '18px',

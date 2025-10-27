@@ -11,8 +11,8 @@ export class Player extends Entity {
   fireParticles: Phaser.GameObjects.Arc[] = [];
   inputQueue: Direction[] = [];
   
-  constructor(scene: Phaser.Scene, x: number, y: number, color: number, speed: number, mapData: IMapData, tileSize: number) {
-    super(scene, x, y, color, speed, mapData, tileSize);
+  constructor(scene: Phaser.Scene, x: number, y: number, color: number, speed: number, mapData: IMapData, tileSize: number, mapOffsetX: number, mapOffsetY: number) {
+    super(scene, x, y, color, speed, mapData, tileSize, mapOffsetX, mapOffsetY);
   }
   
   update(time: number, delta: number): void {
@@ -58,12 +58,12 @@ export class Player extends Entity {
   }
   
   moveInDirection(speed: number): void {
-    const targetX = this.gridX * this.tileSize + this.tileSize / 2;
-    const targetY = this.gridY * this.tileSize + this.tileSize / 2;
-    
+    const targetX = this.mapOffsetX + this.gridX * this.tileSize + this.tileSize / 2;
+    const targetY = this.mapOffsetY + this.gridY * this.tileSize + this.tileSize / 2;
+
     const dx = targetX - this.sprite.x;
     const dy = targetY - this.sprite.y;
-    
+
     if (Math.abs(dx) < 1 && Math.abs(dy) < 1) {
       const next = this.getNextPosition(this.direction);
       if (this.canMovePlayer(next.x, next.y)) {
@@ -71,14 +71,14 @@ export class Player extends Entity {
         this.gridY = next.y;
       }
     }
-    
-    const newTargetX = this.gridX * this.tileSize + this.tileSize / 2;
-    const newTargetY = this.gridY * this.tileSize + this.tileSize / 2;
-    
+
+    const newTargetX = this.mapOffsetX + this.gridX * this.tileSize + this.tileSize / 2;
+    const newTargetY = this.mapOffsetY + this.gridY * this.tileSize + this.tileSize / 2;
+
     const moveX = newTargetX - this.sprite.x;
     const moveY = newTargetY - this.sprite.y;
     const dist = Math.sqrt(moveX * moveX + moveY * moveY);
-    
+
     if (dist > 0) {
       const actualSpeed = Math.min(speed, dist);
       this.sprite.x += (moveX / dist) * actualSpeed;
@@ -109,8 +109,8 @@ export class Player extends Entity {
 
       if (this.canMove(fx, fy)) {
         const fire = this.scene.add.circle(
-          fx * this.tileSize + this.tileSize / 2,
-          fy * this.tileSize + this.tileSize / 2,
+          this.mapOffsetX + fx * this.tileSize + this.tileSize / 2,
+          this.mapOffsetY + fy * this.tileSize + this.tileSize / 2,
           this.tileSize / 3,
           gameConfig.colors.fire
         );

@@ -10,9 +10,9 @@ export class Enemy extends Entity {
   targetX: number;
   targetY: number;
   
-  constructor(scene: Phaser.Scene, x: number, y: number, type: string, speed: number, mapData: IMapData, tileSize: number) {
+  constructor(scene: Phaser.Scene, x: number, y: number, type: string, speed: number, mapData: IMapData, tileSize: number, mapOffsetX: number, mapOffsetY: number) {
     const color = gameConfig.colors[type as keyof typeof gameConfig.colors] as number;
-    super(scene, x, y, color, speed, mapData, tileSize);
+    super(scene, x, y, color, speed, mapData, tileSize, mapOffsetX, mapOffsetY);
     this.type = type;
     this.targetX = x;
     this.targetY = y;
@@ -35,30 +35,30 @@ export class Enemy extends Entity {
   }
   
   moveTowardsTarget(speed: number): void {
-    const targetX = this.gridX * this.tileSize + this.tileSize / 2;
-    const targetY = this.gridY * this.tileSize + this.tileSize / 2;
-    
+    const targetX = this.mapOffsetX + this.gridX * this.tileSize + this.tileSize / 2;
+    const targetY = this.mapOffsetY + this.gridY * this.tileSize + this.tileSize / 2;
+
     const dx = targetX - this.sprite.x;
     const dy = targetY - this.sprite.y;
-    
+
     if (Math.abs(dx) < 1 && Math.abs(dy) < 1) {
       const nextDir = this.chooseDirection();
       const next = this.getNextPosition(nextDir);
-      
+
       if (this.canMove(next.x, next.y)) {
         this.direction = nextDir;
         this.gridX = next.x;
         this.gridY = next.y;
       }
     }
-    
-    const newTargetX = this.gridX * this.tileSize + this.tileSize / 2;
-    const newTargetY = this.gridY * this.tileSize + this.tileSize / 2;
-    
+
+    const newTargetX = this.mapOffsetX + this.gridX * this.tileSize + this.tileSize / 2;
+    const newTargetY = this.mapOffsetY + this.gridY * this.tileSize + this.tileSize / 2;
+
     const moveX = newTargetX - this.sprite.x;
     const moveY = newTargetY - this.sprite.y;
     const dist = Math.sqrt(moveX * moveX + moveY * moveY);
-    
+
     if (dist > 0) {
       const actualSpeed = Math.min(speed, dist);
       this.sprite.x += (moveX / dist) * actualSpeed;
