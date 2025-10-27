@@ -11,8 +11,8 @@ export class Player extends Entity {
   fireParticles: Phaser.GameObjects.Arc[] = [];
   inputQueue: Direction[] = [];
   
-  constructor(scene: Phaser.Scene, x: number, y: number, color: number, speed: number, mapData: IMapData) {
-    super(scene, x, y, color, speed, mapData);
+  constructor(scene: Phaser.Scene, x: number, y: number, color: number, speed: number, mapData: IMapData, tileSize: number) {
+    super(scene, x, y, color, speed, mapData, tileSize);
   }
   
   update(time: number, delta: number): void {
@@ -46,21 +46,20 @@ export class Player extends Entity {
   
   canMovePlayer(x: number, y: number): boolean {
     if (!this.canMove(x, y)) return false;
-    
+
     // Player cannot enter pen
     const penBounds = this.mapData.penBounds;
-    if (x >= penBounds.minX && x <= penBounds.maxX && 
+    if (x >= penBounds.minX && x <= penBounds.maxX &&
         y >= penBounds.minY && y <= penBounds.maxY) {
       return false;
     }
-    
+
     return true;
   }
   
   moveInDirection(speed: number): void {
-    const tileSize = gameConfig.map.tileSize;
-    const targetX = this.gridX * tileSize + tileSize / 2;
-    const targetY = this.gridY * tileSize + tileSize / 2;
+    const targetX = this.gridX * this.tileSize + this.tileSize / 2;
+    const targetY = this.gridY * this.tileSize + this.tileSize / 2;
     
     const dx = targetX - this.sprite.x;
     const dy = targetY - this.sprite.y;
@@ -73,8 +72,8 @@ export class Player extends Entity {
       }
     }
     
-    const newTargetX = this.gridX * tileSize + tileSize / 2;
-    const newTargetY = this.gridY * tileSize + tileSize / 2;
+    const newTargetX = this.gridX * this.tileSize + this.tileSize / 2;
+    const newTargetY = this.gridY * this.tileSize + this.tileSize / 2;
     
     const moveX = newTargetX - this.sprite.x;
     const moveY = newTargetY - this.sprite.y;
@@ -89,31 +88,30 @@ export class Player extends Entity {
   
   activateFire(): void {
     if (!this.hasFirePower || this.fireActive) return;
-    
+
     this.fireActive = true;
     this.fireDuration = gameConfig.player.fireBreathDuration;
     this.hasFirePower = false;
-    
-    const tileSize = gameConfig.map.tileSize;
+
     const range = gameConfig.player.fireBreathRange;
-    
+
     this.fireParticles = [];
     for (let i = 1; i <= range; i++) {
       let fx = this.gridX;
       let fy = this.gridY;
-      
+
       switch (this.direction) {
         case Direction.UP: fy -= i; break;
         case Direction.DOWN: fy += i; break;
         case Direction.LEFT: fx -= i; break;
         case Direction.RIGHT: fx += i; break;
       }
-      
+
       if (this.canMove(fx, fy)) {
         const fire = this.scene.add.circle(
-          fx * tileSize + tileSize / 2,
-          fy * tileSize + tileSize / 2,
-          tileSize / 3,
+          fx * this.tileSize + this.tileSize / 2,
+          fy * this.tileSize + this.tileSize / 2,
+          this.tileSize / 3,
           gameConfig.colors.fire
         );
         this.fireParticles.push(fire);

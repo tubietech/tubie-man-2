@@ -10,7 +10,6 @@ export class MenuScene extends Phaser.Scene {
   localization!: LocalizationManager;
   mapsLoaded: boolean = false;
   loadingText!: Phaser.GameObjects.Text;
-  menuContainer!: Phaser.GameObjects.Container;
 
   constructor() {
     super({ key: 'MenuScene' });
@@ -22,9 +21,6 @@ export class MenuScene extends Phaser.Scene {
 
     const centerX = this.cameras.main.centerX;
     const centerY = this.cameras.main.centerY;
-
-    // Create a container for all menu elements
-    this.menuContainer = this.add.container(0, 0);
 
     // Add loading indicator for map preloading
     this.loadingText = this.add.text(
@@ -71,23 +67,28 @@ export class MenuScene extends Phaser.Scene {
     ];
     
     difficulties.forEach((diff, i) => {
-      const btn = this.add.text(
-        centerX,
-        220 + i * 60,
-        loc.getText(diff.key as any),
-        {
-          fontSize: '28px',
-          color: diff.color,
-          backgroundColor: '#000',
-          padding: { x: 20, y: 10 }
-        }
-      ).setOrigin(0.5)
+      const y = 220 + i * 60;
+
+      // Create background rectangle
+      const bg = this.add.rectangle(centerX, y, 200, 50, 0x000000)
+        .setOrigin(0.5)
         .setInteractive({ useHandCursor: true })
         .setScrollFactor(0);
 
-      btn.on('pointerover', () => btn.setScale(1.1));
-      btn.on('pointerout', () => btn.setScale(1));
-      btn.on('pointerdown', () => {
+      const btn = this.add.text(
+        centerX,
+        y,
+        loc.getText(diff.key as any),
+        {
+          fontSize: '28px',
+          color: diff.color
+        }
+      ).setOrigin(0.5)
+        .setScrollFactor(0);
+
+      bg.on('pointerover', () => { bg.setScale(1.1); btn.setScale(1.1); });
+      bg.on('pointerout', () => { bg.setScale(1); btn.setScale(1); });
+      bg.on('pointerdown', () => {
         this.selectedDifficulty = diff.key;
         this.startGame();
       });
@@ -112,46 +113,33 @@ export class MenuScene extends Phaser.Scene {
     }).setOrigin(0.5).setScrollFactor(0);
     
     languages.forEach((langObj, i) => {
-      const langBtn = this.add.text(
-        centerX - 80 + i * 50,
-        550,
-        langObj.label,
-        {
-          fontSize: '16px',
-          color: this.localization.getLanguage() === langObj.lang ? '#ffff00' : '#fff',
-          backgroundColor: '#222',
-          padding: { x: 8, y: 4 }
-        }
-      ).setOrigin(0.5)
+      const x = centerX - 80 + i * 50;
+      const y = 550;
+
+      // Create background rectangle
+      const bg = this.add.rectangle(x, y, 40, 30, 0x222222)
+        .setOrigin(0.5)
         .setInteractive({ useHandCursor: true })
         .setScrollFactor(0);
 
-      langBtn.on('pointerover', () => langBtn.setScale(1.1));
-      langBtn.on('pointerout', () => langBtn.setScale(1));
-      langBtn.on('pointerdown', () => {
+      const langBtn = this.add.text(
+        x,
+        y,
+        langObj.label,
+        {
+          fontSize: '16px',
+          color: this.localization.getLanguage() === langObj.lang ? '#ffff00' : '#fff'
+        }
+      ).setOrigin(0.5)
+        .setScrollFactor(0);
+
+      bg.on('pointerover', () => { bg.setScale(1.1); langBtn.setScale(1.1); });
+      bg.on('pointerout', () => { bg.setScale(1); langBtn.setScale(1); });
+      bg.on('pointerdown', () => {
         this.localization.setLanguage(langObj.lang);
         this.scene.restart();
       });
     });
-
-    // Listen for resize events
-    this.scale.on('resize', this.handleResize, this);
-  }
-
-  handleResize(gameSize: Phaser.Structs.Size) {
-    const mapWidth = 280; // Approximate menu width
-    const mapHeight = 600; // Approximate menu height
-
-    // Calculate the scale factor
-    const scaleX = gameSize.width / mapWidth;
-    const scaleY = gameSize.height / mapHeight;
-    const scale = Math.min(scaleX, scaleY);
-
-    // Update camera zoom to maintain aspect ratio
-    this.cameras.main.setZoom(scale);
-
-    // Center the camera
-    this.cameras.main.centerOn(this.cameras.main.centerX, this.cameras.main.centerY);
   }
 
   startGame() {

@@ -8,7 +8,7 @@ import { Direction } from '../enums/Direction';
 import { MapTile } from '../enums/MapTile';
 import { MapValue } from '../enums/MapValue';
 import { getRandomInt, shuffleArray, getRandomArrayElement, generateMapHash } from './utils';
-import { loadPreloadedMaps, getRandomPreloadedMap } from './preloadedMaps';
+import { getRandomPreloadedMap } from './preloadedMaps';
 
 export class MapGeneratorV2 {
   private static cells: ICell[] = [];
@@ -1051,8 +1051,8 @@ export class MapGeneratorV2 {
       }
     }
 
-    const penDoorX = gameConfig.map.enemyPen.location.x - Math.floor(gameConfig.map.enemyPen.doorWidth / 2);
-    const penDoorY = gameConfig.map.enemyPen.location.y + 8;
+    const penDoorX = gameConfig.map.enemyPen.location.x + Math.floor(gameConfig.map.enemyPen.width / 2) - Math.floor(gameConfig.map.enemyPen.doorWidth / 2);
+    const penDoorY = gameConfig.map.enemyPen.location.y - 8;
 
     console.log(`PenDoorX: ${penDoorX}, PenDoorY: ${penDoorY}`);
 

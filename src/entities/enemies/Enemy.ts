@@ -10,9 +10,9 @@ export class Enemy extends Entity {
   targetX: number;
   targetY: number;
   
-  constructor(scene: Phaser.Scene, x: number, y: number, type: string, speed: number, mapData: IMapData) {
+  constructor(scene: Phaser.Scene, x: number, y: number, type: string, speed: number, mapData: IMapData, tileSize: number) {
     const color = gameConfig.colors[type as keyof typeof gameConfig.colors] as number;
-    super(scene, x, y, color, speed, mapData);
+    super(scene, x, y, color, speed, mapData, tileSize);
     this.type = type;
     this.targetX = x;
     this.targetY = y;
@@ -35,9 +35,8 @@ export class Enemy extends Entity {
   }
   
   moveTowardsTarget(speed: number): void {
-    const tileSize = gameConfig.map.tileSize;
-    const targetX = this.gridX * tileSize + tileSize / 2;
-    const targetY = this.gridY * tileSize + tileSize / 2;
+    const targetX = this.gridX * this.tileSize + this.tileSize / 2;
+    const targetY = this.gridY * this.tileSize + this.tileSize / 2;
     
     const dx = targetX - this.sprite.x;
     const dy = targetY - this.sprite.y;
@@ -53,8 +52,8 @@ export class Enemy extends Entity {
       }
     }
     
-    const newTargetX = this.gridX * tileSize + tileSize / 2;
-    const newTargetY = this.gridY * tileSize + tileSize / 2;
+    const newTargetX = this.gridX * this.tileSize + this.tileSize / 2;
+    const newTargetY = this.gridY * this.tileSize + this.tileSize / 2;
     
     const moveX = newTargetX - this.sprite.x;
     const moveY = newTargetY - this.sprite.y;

@@ -13,16 +13,17 @@ export class Entity implements IEntity {
   speed: number;
   scene: Phaser.Scene;
   mapData: IMapData;
-  
-  constructor(scene: Phaser.Scene, x: number, y: number, color: number, speed: number, mapData: IMapData) {
+  tileSize: number;
+
+  constructor(scene: Phaser.Scene, x: number, y: number, color: number, speed: number, mapData: IMapData, tileSize: number) {
     this.scene = scene;
     this.gridX = x;
     this.gridY = y;
     this.direction = Direction.RIGHT;
     this.speed = speed;
     this.mapData = mapData;
-    
-    const tileSize = gameConfig.map.tileSize;
+    this.tileSize = tileSize;
+
     this.sprite = scene.add.circle(
       x * tileSize + tileSize / 2,
       y * tileSize + tileSize / 2,
@@ -38,10 +39,9 @@ export class Entity implements IEntity {
   moveTo(x: number, y: number): void {
     this.gridX = x;
     this.gridY = y;
-    const tileSize = gameConfig.map.tileSize;
     this.sprite.setPosition(
-      x * tileSize + tileSize / 2,
-      y * tileSize + tileSize / 2
+      x * this.tileSize + this.tileSize / 2,
+      y * this.tileSize + this.tileSize / 2
     );
   }
   

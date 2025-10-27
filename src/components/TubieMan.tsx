@@ -3,36 +3,37 @@ import Phaser from 'phaser';
 import { Orientation } from '../enums/Orientation';
 import { GameScene } from '../scenes/GameScene';
 import { MenuScene } from '../scenes/MenuScene';
-import { gameConfig } from '../config/gameConfig';
 
 export default function FireBreatherGame() {
   const gameRef = useRef<HTMLDivElement>(null);
   const [orientation, setOrientation] = useState<Orientation>(Orientation.HORIZONTAL);
   const phaserGameRef = useRef<Phaser.Game | null>(null);
-  
+
   useEffect(() => {
     const updateOrientation = () => {
       const isVertical = window.innerWidth < window.innerHeight;
       setOrientation(isVertical ? Orientation.VERTICAL : Orientation.HORIZONTAL);
     };
-    
+
     updateOrientation();
     window.addEventListener('resize', updateOrientation);
-    
+
     return () => window.removeEventListener('resize', updateOrientation);
   }, []);
-  
+
   useEffect(() => {
     if (!gameRef.current || phaserGameRef.current) return;
 
-    const mapWidth = gameConfig.map.width * gameConfig.map.tileSize;
-    const mapHeight = gameConfig.map.height * gameConfig.map.tileSize;
+    // Calculate optimal dimensions based on viewport
+    // Use a percentage of viewport size to ensure it scales well on all screens
+    const targetWidth = Math.floor(window.innerWidth * 0.95);
+    const targetHeight = Math.floor(window.innerHeight * 0.95);
 
     const config: Phaser.Types.Core.GameConfig = {
       type: Phaser.AUTO,
-      width: mapWidth,
-      height: mapHeight,
-      parent: gameRef.current,
+      width: targetWidth,
+      height: targetHeight,
+      parent: "phaser-container",
       backgroundColor: '#000000',
       scene: [MenuScene, GameScene],
       physics: {
@@ -45,10 +46,10 @@ export default function FireBreatherGame() {
         gamepad: true
       },
       scale: {
-        mode: Phaser.Scale.RESIZE,
+        mode: Phaser.Scale.FIT,
         autoCenter: Phaser.Scale.CENTER_BOTH,
-        width: mapWidth,
-        height: mapHeight
+        width: targetWidth,
+        height: targetHeight
       }
     };
 
@@ -70,54 +71,32 @@ export default function FireBreatherGame() {
     };
   }, []);
 
-  // Handle orientation changes and resize
+  // Handle orientation changes
   useEffect(() => {
     if (!phaserGameRef.current) return;
 
-    const handleResize = () => {
+    const updateOrientation = () => {
       const game = phaserGameRef.current;
       if (!game) return;
 
-      const mapWidth = gameConfig.map.width * gameConfig.map.tileSize;
-      const mapHeight = gameConfig.map.height * gameConfig.map.tileSize;
       const isVertical = window.innerWidth < window.innerHeight;
-
-      // Calculate scale to fill screen
-      let scale: number;
-      if (isVertical) {
-        // In vertical layout, scale to fill width
-        scale = window.innerWidth / mapWidth;
-      } else {
-        // In horizontal layout, scale to fill height
-        scale = window.innerHeight / mapHeight;
-      }
-
-      const newWidth = mapWidth * scale;
-      const newHeight = mapHeight * scale;
-
-      game.scale.resize(newWidth, newHeight);
 
       // Update orientation in active scenes
       const activeScenes = game.scene.getScenes(true);
       activeScenes.forEach(scene => {
         if (scene instanceof MenuScene || scene instanceof GameScene) {
           scene.orientation = isVertical ? Orientation.VERTICAL : Orientation.HORIZONTAL;
-          if (scene.scale && scene.scale.emit) {
-            scene.scale.emit('resize', scene.scale.gameSize, scene.scale.baseSize, scene.scale.displaySize, scene.scale.previousWidth, scene.scale.previousHeight);
-          }
         }
       });
     };
 
-    handleResize();
-    window.addEventListener('resize', handleResize);
-
-    return () => window.removeEventListener('resize', handleResize);
+    updateOrientation();
   }, [orientation]);
   
   return (
-    <div className="w-full h-screen bg-black flex items-center justify-center">
-      <div ref={gameRef} className="max-w-full max-h-full" />
+    <div className="w-full h-screen bg-black flex items-center justify-center overflow-hidden">
+      <div id="phaser-container" ref={gameRef} style={{ width: '100%', height: '100%', display: 'flex'}}>
+      </div>
     </div>
   );
 }

@@ -52,124 +52,41 @@ export class GameScene extends Phaser.Scene {
     }
   }
   
+  private getTileSize(): number {
+    // Calculate tile size based on canvas dimensions to fill the screen
+    const canvasWidth = this.cameras.main.width;
+    const canvasHeight = this.cameras.main.height;
+    const mapWidth = gameConfig.map.width;
+    const mapHeight = gameConfig.map.height;
+
+    // Use the smaller scale to ensure the entire map fits
+    return Math.min(canvasWidth / mapWidth, canvasHeight / mapHeight);
+  }
+
   async create() {
     this.mapData = await MapGeneratorV2.generate(gameConfig.map.width, gameConfig.map.height);
     this.drawMap();
     this.createPellets();
 
-    const playerSpeed = gameConfig.player.speed[this.difficulty as keyof typeof gameConfig.player.speed];
+    const tileSize = this.getTileSize();
+    const baseSpeed = gameConfig.player.speed[this.difficulty as keyof typeof gameConfig.player.speed];
+    // Scale speed based on tile size (base tile size is 10)
+    const playerSpeed = baseSpeed * (tileSize / gameConfig.map.tileSize);
 
     // Use player start position from map data
     const startX = this.mapData.playerStart.x;
     const startY = this.mapData.playerStart.y;
 
-    this.player = new Player(this, startX, startY, gameConfig.colors.player, playerSpeed, this.mapData);
+    this.player = new Player(this, startX, startY, gameConfig.colors.player, playerSpeed, this.mapData, tileSize);
 
     this.createEnemies();
     this.setupInput();
     this.createUI();
-
-    // Listen for resize events
-    this.scale.on('resize', this.handleResize, this);
-  }
-
-  handleResize(gameSize: Phaser.Structs.Size) {
-    const mapWidth = gameConfig.map.width * gameConfig.map.tileSize;
-    const mapHeight = gameConfig.map.height * gameConfig.map.tileSize;
-
-    // Calculate the scale factor
-    const scaleX = gameSize.width / mapWidth;
-    const scaleY = gameSize.height / mapHeight;
-    const scale = Math.min(scaleX, scaleY);
-
-    // Update camera zoom to maintain aspect ratio
-    this.cameras.main.setZoom(scale);
-
-    // Center the camera on the game board
-    this.cameras.main.centerOn(mapWidth / 2, mapHeight / 2);
-
-    // Reposition UI elements if needed (they will be recreated on orientation change)
-    if (this.scoreText) {
-      this.repositionUI();
-    }
-  }
-
-  repositionUI() {
-    const mapWidth = gameConfig.map.width * gameConfig.map.tileSize;
-    const mapHeight = gameConfig.map.height * gameConfig.map.tileSize;
-    const loc = this.localization;
-
-    // Remove old UI
-    this.scoreText?.destroy();
-    this.highScoreText?.destroy();
-    this.livesText?.destroy();
-    this.levelText?.destroy();
-    this.powerText?.destroy();
-
-    // Recreate UI with current orientation
-    if (this.orientation === Orientation.VERTICAL) {
-      this.scoreText = this.add.text(10, 10, `${loc.getText('score')}: ${this.score}`, {
-        fontSize: '16px',
-        color: '#fff'
-      }).setScrollFactor(0);
-
-      this.highScoreText = this.add.text(10, 35, `${loc.getText('highScore')}: ${localStorage.getItem('highScore') || 0}`, {
-        fontSize: '16px',
-        color: '#fff'
-      }).setScrollFactor(0);
-
-      this.livesText = this.add.text(10, mapHeight + 10, `${loc.getText('lives')}: ${this.lives}`, {
-        fontSize: '16px',
-        color: '#fff'
-      }).setScrollFactor(0);
-
-      this.levelText = this.add.text(10, mapHeight + 35, `${loc.getText('level')}: ${this.level}`, {
-        fontSize: '16px',
-        color: '#fff'
-      }).setScrollFactor(0);
-
-      this.powerText = this.add.text(10, mapHeight + 60, `${loc.getText('power')}: ${loc.getText('powerNone')}`, {
-        fontSize: '16px',
-        color: '#ff0000'
-      }).setScrollFactor(0);
-    } else {
-      const uiX = mapWidth + 20;
-
-      this.scoreText = this.add.text(uiX, 50, `${loc.getText('score')}:\n${this.score}`, {
-        fontSize: '18px',
-        color: '#fff',
-        align: 'left'
-      }).setScrollFactor(0);
-
-      this.highScoreText = this.add.text(uiX, 110, `${loc.getText('highScore')}:\n${localStorage.getItem('highScore') || 0}`, {
-        fontSize: '18px',
-        color: '#fff',
-        align: 'left'
-      }).setScrollFactor(0);
-
-      this.livesText = this.add.text(uiX, 170, `${loc.getText('lives')}:\n${this.lives}`, {
-        fontSize: '18px',
-        color: '#fff',
-        align: 'left'
-      }).setScrollFactor(0);
-
-      this.levelText = this.add.text(uiX, 230, `${loc.getText('level')}:\n${this.level}`, {
-        fontSize: '18px',
-        color: '#fff',
-        align: 'left'
-      }).setScrollFactor(0);
-
-      this.powerText = this.add.text(uiX, 290, `${loc.getText('power')}:\n${loc.getText('powerNone')}`, {
-        fontSize: '18px',
-        color: '#ff0000',
-        align: 'left'
-      }).setScrollFactor(0);
-    }
   }
   
   drawMap() {
-    const tileSize = gameConfig.map.tileSize;
-    
+    const tileSize = this.getTileSize();
+
     for (let y = 0; y < this.mapData.map.length; y++) {
       for (let x = 0; x < this.mapData.map[y].length; x++) {
         const tile = this.mapData.map[y][x];
@@ -216,7 +133,7 @@ export class GameScene extends Phaser.Scene {
   }
   
   createPellets() {
-    const tileSize = gameConfig.map.tileSize;
+    const tileSize = this.getTileSize();
     this.pellets = [];
     const doorStartX = this.mapData.penDoor.x;
     const doorY = this.mapData.penDoor.y;
@@ -245,7 +162,7 @@ export class GameScene extends Phaser.Scene {
           const pellet = this.add.circle(
             x * tileSize + tileSize / 2,
             y * tileSize + tileSize / 2,
-            2,
+            tileSize / 5,
             gameConfig.colors.pellet
           );
           this.pellets[y][x] = pellet;
@@ -267,7 +184,7 @@ export class GameScene extends Phaser.Scene {
       const powerup = this.add.circle(
         x * tileSize + tileSize / 2,
         y * tileSize + tileSize / 2,
-        4,
+        tileSize / 2.5,
         gameConfig.colors.powerup
       );
       this.powerups.push(powerup);
@@ -280,15 +197,18 @@ export class GameScene extends Phaser.Scene {
   }
   
   createEnemies() {
-    const enemySpeed = gameConfig.enemy.speed[this.difficulty as keyof typeof gameConfig.enemy.speed];
+    const tileSize = this.getTileSize();
+    const baseSpeed = gameConfig.enemy.speed[this.difficulty as keyof typeof gameConfig.enemy.speed];
+    // Scale speed based on tile size (base tile size is 10)
+    const enemySpeed = baseSpeed * (tileSize / gameConfig.map.tileSize);
     const types = [Blinky, Pinky, Inky, Clyde];
-    
+
     const penX = this.mapData.penCenter.x;
     const penY = this.mapData.penCenter.y;
-    
+
     for (let i = 0; i < Math.min(this.level + 2, 4); i++) {
       const EnemyClass = types[i % types.length];
-      const enemy = new EnemyClass(this, penX, penY, enemySpeed, this.mapData);
+      const enemy = new EnemyClass(this, penX, penY, enemySpeed, this.mapData, tileSize);
       this.enemies.push(enemy);
     }
   }
@@ -333,8 +253,9 @@ export class GameScene extends Phaser.Scene {
   }
   
   createUI() {
-    const mapWidth = gameConfig.map.width * gameConfig.map.tileSize;
-    const mapHeight = gameConfig.map.height * gameConfig.map.tileSize;
+    const tileSize = this.getTileSize();
+    const mapWidth = gameConfig.map.width * tileSize;
+    const mapHeight = gameConfig.map.height * tileSize;
     const loc = this.localization;
 
     if (this.orientation === Orientation.VERTICAL) {
