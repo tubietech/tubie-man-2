@@ -29,7 +29,7 @@ export const gameConfig = {
     minPowerups: 4,
     maxPowerups: 6,
     maxDeadEndsPerHalf: 2,
-    wallRadius: 20, // Corner radius for wall tiles
+    wallRadius: 4, // Corner radius for wall tiles
     wallEdgeOffset: 0.5, // Inset walls by 25% from tile edges (0-1 scale)
     wallOutlineThickness: 3,
     generation: {

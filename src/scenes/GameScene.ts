@@ -152,6 +152,7 @@ export class GameScene extends Phaser.Scene {
     const regionSet = new Set(region.map(p => `${p.x},${p.y}`));
 
     // STEP 1: Draw the fill - extend rectangles to bridge gaps with adjacent walls
+    // BUT avoid extending into concave corners
     this.graphics!.fillStyle(gameConfig.colors.wall);
     for (const tile of region) {
       const px = this.mapOffsetX + tile.x * tileSize + inset;
@@ -163,19 +164,54 @@ export class GameScene extends Phaser.Scene {
       const hasWallLeft = regionSet.has(`${tile.x - 1},${tile.y}`);
       const hasWallRight = regionSet.has(`${tile.x + 1},${tile.y}`);
 
-      // Calculate extensions to bridge gaps with adjacent walls
-      const extendUp = hasWallAbove ? inset : 0;
-      const extendDown = hasWallBelow ? inset : 0;
-      const extendLeft = hasWallLeft ? inset : 0;
-      const extendRight = hasWallRight ? inset : 0;
+      // Check diagonals for concave corner detection
+      const hasWallTopLeft = regionSet.has(`${tile.x - 1},${tile.y - 1}`);
+      const hasWallTopRight = regionSet.has(`${tile.x + 1},${tile.y - 1}`);
+      const hasWallBottomLeft = regionSet.has(`${tile.x - 1},${tile.y + 1}`);
+      const hasWallBottomRight = regionSet.has(`${tile.x + 1},${tile.y + 1}`);
 
-      // Draw extended rectangle
-      this.graphics!.fillRect(
-        px - extendLeft,
-        py - extendUp,
-        wallSize + extendLeft + extendRight,
-        wallSize + extendUp + extendDown
-      );
+      // Detect concave corners (where two walls meet but diagonal is empty)
+      const topLeftConcave = hasWallAbove && hasWallLeft && !hasWallTopLeft;
+      const topRightConcave = hasWallAbove && hasWallRight && !hasWallTopRight;
+      const bottomLeftConcave = hasWallBelow && hasWallLeft && !hasWallBottomLeft;
+      const bottomRightConcave = hasWallBelow && hasWallRight && !hasWallBottomRight;
+
+      // Draw base rectangle
+      this.graphics!.fillRect(px, py, wallSize, wallSize);
+
+      // Extend upward (if no concave corners at top)
+      if (hasWallAbove && !topLeftConcave && !topRightConcave) {
+        this.graphics!.fillRect(px, py - inset, wallSize, inset);
+      }
+
+      // Extend downward (if no concave corners at bottom)
+      if (hasWallBelow && !bottomLeftConcave && !bottomRightConcave) {
+        this.graphics!.fillRect(px, py + wallSize, wallSize, inset);
+      }
+
+      // Extend leftward (if no concave corners on left)
+      if (hasWallLeft && !topLeftConcave && !bottomLeftConcave) {
+        this.graphics!.fillRect(px - inset, py, inset, wallSize);
+      }
+
+      // Extend rightward (if no concave corners on right)
+      if (hasWallRight && !topRightConcave && !bottomRightConcave) {
+        this.graphics!.fillRect(px + wallSize, py, inset, wallSize);
+      }
+
+      // Fill corner squares for non-concave corners (where diagonal exists)
+      if (hasWallAbove && hasWallLeft && hasWallTopLeft) {
+        this.graphics!.fillRect(px - inset, py - inset, inset, inset);
+      }
+      if (hasWallAbove && hasWallRight && hasWallTopRight) {
+        this.graphics!.fillRect(px + wallSize, py - inset, inset, inset);
+      }
+      if (hasWallBelow && hasWallLeft && hasWallBottomLeft) {
+        this.graphics!.fillRect(px - inset, py + wallSize, inset, inset);
+      }
+      if (hasWallBelow && hasWallRight && hasWallBottomRight) {
+        this.graphics!.fillRect(px + wallSize, py + wallSize, inset, inset);
+      }
     }
 
     // STEP 2: Draw the outlines - on all perimeter edges (exterior and concave)
@@ -229,28 +265,30 @@ export class GameScene extends Phaser.Scene {
       }
 
       // Draw concave corner edges (interior corners where walls meet at right angles)
+      // For concave corners, draw straight edges that meet at the corner point
       // Top-left concave corner
       if (hasWallAbove && hasWallLeft && !hasWallTopLeft) {
-        verticalEdges.push({ y1: py, y2: py + radius, x: px });
-        horizontalEdges.push({ x1: px, x2: px + radius, y: py });
+        // Draw straight edges forming an L-shape in the gap
+        verticalEdges.push({ y1: py - inset, y2: py, x: px });
+        horizontalEdges.push({ x1: px - inset, x2: px, y: py });
       }
 
       // Top-right concave corner
       if (hasWallAbove && hasWallRight && !hasWallTopRight) {
-        verticalEdges.push({ y1: py, y2: py + radius, x: px + wallSize });
-        horizontalEdges.push({ x1: px + wallSize - radius, x2: px + wallSize, y: py });
+        verticalEdges.push({ y1: py - inset, y2: py, x: px + wallSize });
+        horizontalEdges.push({ x1: px + wallSize, x2: px + wallSize + inset, y: py });
       }
 
       // Bottom-left concave corner
       if (hasWallBelow && hasWallLeft && !hasWallBottomLeft) {
-        verticalEdges.push({ y1: py + wallSize - radius, y2: py + wallSize, x: px });
-        horizontalEdges.push({ x1: px, x2: px + radius, y: py + wallSize });
+        verticalEdges.push({ y1: py + wallSize, y2: py + wallSize + inset, x: px });
+        horizontalEdges.push({ x1: px - inset, x2: px, y: py + wallSize });
       }
 
       // Bottom-right concave corner
       if (hasWallBelow && hasWallRight && !hasWallBottomRight) {
-        verticalEdges.push({ y1: py + wallSize - radius, y2: py + wallSize, x: px + wallSize });
-        horizontalEdges.push({ x1: px + wallSize - radius, x2: px + wallSize, y: py + wallSize });
+        verticalEdges.push({ y1: py + wallSize, y2: py + wallSize + inset, x: px + wallSize });
+        horizontalEdges.push({ x1: px + wallSize, x2: px + wallSize + inset, y: py + wallSize });
       }
     }
 
@@ -314,30 +352,8 @@ export class GameScene extends Phaser.Scene {
         this.graphics!.strokePath();
       }
 
-      // Concave corners (interior corners)
-      if (hasWallAbove && hasWallLeft && !hasWallTopLeft) {
-        this.graphics!.beginPath();
-        this.graphics!.arc(px, py, radius, Phaser.Math.DegToRad(0), Phaser.Math.DegToRad(90), false);
-        this.graphics!.strokePath();
-      }
-
-      if (hasWallAbove && hasWallRight && !hasWallTopRight) {
-        this.graphics!.beginPath();
-        this.graphics!.arc(px + wallSize, py, radius, Phaser.Math.DegToRad(90), Phaser.Math.DegToRad(180), false);
-        this.graphics!.strokePath();
-      }
-
-      if (hasWallBelow && hasWallLeft && !hasWallBottomLeft) {
-        this.graphics!.beginPath();
-        this.graphics!.arc(px, py + wallSize, radius, Phaser.Math.DegToRad(270), Phaser.Math.DegToRad(360), false);
-        this.graphics!.strokePath();
-      }
-
-      if (hasWallBelow && hasWallRight && !hasWallBottomRight) {
-        this.graphics!.beginPath();
-        this.graphics!.arc(px + wallSize, py + wallSize, radius, Phaser.Math.DegToRad(180), Phaser.Math.DegToRad(270), false);
-        this.graphics!.strokePath();
-      }
+      // Concave corners are handled by the straight edge segments added above
+      // No rounded arcs needed for concave corners - they form sharp right angles
     }
   }
 
