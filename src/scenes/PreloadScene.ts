@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { gameConfig } from '../config/gameConfig';
 
 export class PreloadScene extends Phaser.Scene {
   constructor() {
@@ -52,6 +53,8 @@ export class PreloadScene extends Phaser.Scene {
   }
 
   private createPlayerAnimations() {
+    const frameRate = gameConfig.player.animationFrameRate;
+
     // UP animation
     this.anims.create({
       key: 'player_up',
@@ -60,7 +63,7 @@ export class PreloadScene extends Phaser.Scene {
         { key: 'atlas', frame: 'player_up_frame_2.png' },
         { key: 'atlas', frame: 'player_up_frame_3.png' }
       ],
-      frameRate: 10,
+      frameRate: frameRate,
       repeat: -1
     });
 
@@ -72,7 +75,7 @@ export class PreloadScene extends Phaser.Scene {
         { key: 'atlas', frame: 'player_down_frame_2.png' },
         { key: 'atlas', frame: 'player_down_frame_3.png' }
       ],
-      frameRate: 10,
+      frameRate: frameRate,
       repeat: -1
     });
 
@@ -84,7 +87,7 @@ export class PreloadScene extends Phaser.Scene {
         { key: 'atlas', frame: 'player_left_frame_2.png' },
         { key: 'atlas', frame: 'player_left_frame_3.png' }
       ],
-      frameRate: 10,
+      frameRate: frameRate,
       repeat: -1
     });
 
@@ -96,7 +99,7 @@ export class PreloadScene extends Phaser.Scene {
         { key: 'atlas', frame: 'player_right_frame_2.png' },
         { key: 'atlas', frame: 'player_right_frame_3.png' }
       ],
-      frameRate: 10,
+      frameRate: frameRate,
       repeat: -1
     });
   }

@@ -5,7 +5,9 @@ export const gameConfig = {
     fireBreathCooldown: 1000,
     fireBreathRange: 3,
     startLives: 3,
-    playerStartingHeight: 7 // Player starts 7 rows above bottom of map
+    playerStartingHeight: 7, // Player starts 7 rows above bottom of map
+    animationFrameRate: 15,
+    spriteScale: 1.5
   },
   enemy: {
     speed: { easy: 80, medium: 120, hard: 180 },

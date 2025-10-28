@@ -28,9 +28,9 @@ export class Player extends Entity {
       'player_right_frame_1.png'
     );
 
-    // Scale sprite to fit tile size
+    // Scale sprite to fit tile size, then scale up by 50%
     const spriteScale = tileSize / Math.max(this.animatedSprite.width, this.animatedSprite.height);
-    this.animatedSprite.setScale(spriteScale);
+    this.animatedSprite.setScale(spriteScale * gameConfig.player.spriteScale);
 
     // Update sprite reference to point to animated sprite
     this.sprite = this.animatedSprite;
