@@ -7,7 +7,7 @@ export const gameConfig = {
     startLives: 3,
     playerStartingHeight: 7, // Player starts 7 rows above bottom of map
     animationFrameRate: 15,
-    spriteScale: 2
+    spriteScale: 1.95
   },
   enemy: {
     speed: { easy: 80, medium: 120, hard: 180 },
@@ -32,6 +32,7 @@ export const gameConfig = {
     wallRadius: 4, // Corner radius for wall tiles
     wallEdgeOffset: 0.5, // Inset walls by 25% from tile edges (0-1 scale)
     wallOutlineThickness: 3,
+    thinWallAdjustment: 1.75,
     generation: {
       maxGenerationAttempts: 10,
       gridRows: 9,

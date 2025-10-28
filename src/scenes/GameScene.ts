@@ -165,7 +165,7 @@ export class GameScene extends Phaser.Scene {
 
     // If more than 70% of tiles are single-thickness, use reduced inset
     const isSingleThickness = singleThicknessCount > region.length * 0.7;
-    const adjustedOffset = isSingleThickness ? offset / 1.5 : offset;
+    const adjustedOffset = isSingleThickness ? offset / gameConfig.map.thinWallAdjustment : offset;
 
     const inset = tileSize * adjustedOffset;
     const outlineThickness = gameConfig.map.wallOutlineThickness;
@@ -200,24 +200,55 @@ export class GameScene extends Phaser.Scene {
       // Draw base rectangle
       this.graphics!.fillRect(px, py, wallSize, wallSize);
 
-      // Extend upward (if no concave corners at top)
-      if (hasWallAbove && !topLeftConcave && !topRightConcave) {
-        this.graphics!.fillRect(px, py - inset, wallSize, inset);
+      // Extend upward - draw full width or partial width depending on concave corners
+      // Use a fixed overlap amount that works regardless of thin wall adjustment
+      const overlap = Math.max(2, inset * 0.5); // At least 2px or 20% of inset
+
+      if (hasWallAbove) {
+        if (!topLeftConcave && !topRightConcave) {
+          // No concave corners - extend full width
+          this.graphics!.fillRect(px, py - inset, wallSize, inset);
+        } else if (topLeftConcave && !topRightConcave) {
+          // Left concave corner - extend from slightly before center to avoid gap
+          this.graphics!.fillRect(px + wallSize / 2 - overlap, py - inset, wallSize / 2 + overlap, inset);
+        } else if (!topLeftConcave && topRightConcave) {
+          // Right concave corner - extend from left to slightly past center
+          this.graphics!.fillRect(px, py - inset, wallSize / 2 + overlap, inset);
+        }
+        // If both concave, don't extend
       }
 
-      // Extend downward (if no concave corners at bottom)
-      if (hasWallBelow && !bottomLeftConcave && !bottomRightConcave) {
-        this.graphics!.fillRect(px, py + wallSize, wallSize, inset);
+      // Extend downward
+      if (hasWallBelow) {
+        if (!bottomLeftConcave && !bottomRightConcave) {
+          this.graphics!.fillRect(px, py + wallSize, wallSize, inset);
+        } else if (bottomLeftConcave && !bottomRightConcave) {
+          this.graphics!.fillRect(px + wallSize / 2 - overlap, py + wallSize, wallSize / 2 + overlap, inset);
+        } else if (!bottomLeftConcave && bottomRightConcave) {
+          this.graphics!.fillRect(px, py + wallSize, wallSize / 2 + overlap, inset);
+        }
       }
 
-      // Extend leftward (if no concave corners on left)
-      if (hasWallLeft && !topLeftConcave && !bottomLeftConcave) {
-        this.graphics!.fillRect(px - inset, py, inset, wallSize);
+      // Extend leftward
+      if (hasWallLeft) {
+        if (!topLeftConcave && !bottomLeftConcave) {
+          this.graphics!.fillRect(px - inset, py, inset, wallSize);
+        } else if (topLeftConcave && !bottomLeftConcave) {
+          this.graphics!.fillRect(px - inset, py + wallSize / 2 - overlap, inset, wallSize / 2 + overlap);
+        } else if (!topLeftConcave && bottomLeftConcave) {
+          this.graphics!.fillRect(px - inset, py, inset, wallSize / 2 + overlap);
+        }
       }
 
-      // Extend rightward (if no concave corners on right)
-      if (hasWallRight && !topRightConcave && !bottomRightConcave) {
-        this.graphics!.fillRect(px + wallSize, py, inset, wallSize);
+      // Extend rightward
+      if (hasWallRight) {
+        if (!topRightConcave && !bottomRightConcave) {
+          this.graphics!.fillRect(px + wallSize, py, inset, wallSize);
+        } else if (topRightConcave && !bottomRightConcave) {
+          this.graphics!.fillRect(px + wallSize, py + wallSize / 2 - overlap, inset, wallSize / 2 + overlap);
+        } else if (!topRightConcave && bottomRightConcave) {
+          this.graphics!.fillRect(px + wallSize, py, inset, wallSize / 2 + overlap);
+        }
       }
 
       // Fill corner squares for non-concave corners (where diagonal exists)
