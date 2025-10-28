@@ -144,15 +144,15 @@ export class GameScene extends Phaser.Scene {
   private drawWallRegion(region: { x: number, y: number }[], tileSize: number): void {
     const offset = gameConfig.map.wallEdgeOffset;
     const inset = tileSize * offset;
+    const outlineThickness = gameConfig.map.wallOutlineThickness;
     const wallSize = tileSize - (inset * 2);
-    const radius = gameConfig.map.wallRadius;
+    const radius = Math.min(gameConfig.map.wallRadius, wallSize / 2);
 
-    // Create a set for quick lookup
+    // Create a set for O(1) lookups
     const regionSet = new Set(region.map(p => `${p.x},${p.y}`));
 
-    // Draw all fills first - draw as solid rectangles that extend to connect with neighbors
+    // STEP 1: Draw the fill - extend rectangles to bridge gaps with adjacent walls
     this.graphics!.fillStyle(gameConfig.colors.wall);
-
     for (const tile of region) {
       const px = this.mapOffsetX + tile.x * tileSize + inset;
       const py = this.mapOffsetY + tile.y * tileSize + inset;
@@ -163,91 +163,179 @@ export class GameScene extends Phaser.Scene {
       const hasWallLeft = regionSet.has(`${tile.x - 1},${tile.y}`);
       const hasWallRight = regionSet.has(`${tile.x + 1},${tile.y}`);
 
-      // Extend the fill to connect with adjacent tiles (bridge the gap created by inset)
-      const extendTop = hasWallAbove ? inset : 0;
-      const extendBottom = hasWallBelow ? inset : 0;
+      // Calculate extensions to bridge gaps with adjacent walls
+      const extendUp = hasWallAbove ? inset : 0;
+      const extendDown = hasWallBelow ? inset : 0;
       const extendLeft = hasWallLeft ? inset : 0;
       const extendRight = hasWallRight ? inset : 0;
 
-      // Draw extended rectangle to create contiguous fill
+      // Draw extended rectangle
       this.graphics!.fillRect(
         px - extendLeft,
-        py - extendTop,
+        py - extendUp,
         wallSize + extendLeft + extendRight,
-        wallSize + extendTop + extendBottom
+        wallSize + extendUp + extendDown
       );
     }
 
-    // Draw outline only on perimeter edges
-    this.graphics!.lineStyle(2, gameConfig.colors.wallOutline);
+    // STEP 2: Draw the outlines - on all perimeter edges (exterior and concave)
+    this.graphics!.lineStyle(outlineThickness, gameConfig.colors.wallOutline);
+
+    // Collect all perimeter edge segments
+    const horizontalEdges: { x1: number, x2: number, y: number }[] = [];
+    const verticalEdges: { y1: number, y2: number, x: number }[] = [];
 
     for (const tile of region) {
       const px = this.mapOffsetX + tile.x * tileSize + inset;
       const py = this.mapOffsetY + tile.y * tileSize + inset;
 
-      // Check which adjacent cells are NOT in the region (perimeter edges)
       const hasWallAbove = regionSet.has(`${tile.x},${tile.y - 1}`);
       const hasWallBelow = regionSet.has(`${tile.x},${tile.y + 1}`);
       const hasWallLeft = regionSet.has(`${tile.x - 1},${tile.y}`);
       const hasWallRight = regionSet.has(`${tile.x + 1},${tile.y}`);
 
-      // Top edge (only if no wall above)
+      // Check diagonals for concave corner detection
+      const hasWallTopLeft = regionSet.has(`${tile.x - 1},${tile.y - 1}`);
+      const hasWallTopRight = regionSet.has(`${tile.x + 1},${tile.y - 1}`);
+      const hasWallBottomLeft = regionSet.has(`${tile.x - 1},${tile.y + 1}`);
+      const hasWallBottomRight = regionSet.has(`${tile.x + 1},${tile.y + 1}`);
+
+      // Top edge (exposed to outside OR concave corner)
       if (!hasWallAbove) {
-        this.graphics!.beginPath();
-        this.graphics!.moveTo(px + radius, py);
-        this.graphics!.lineTo(px + wallSize - radius, py);
-        this.graphics!.strokePath();
-
-        // Top-left corner arc
-        if (!hasWallLeft) {
-          this.graphics!.beginPath();
-          this.graphics!.arc(px + radius, py + radius, radius, Phaser.Math.DegToRad(180), Phaser.Math.DegToRad(270), false);
-          this.graphics!.strokePath();
-        }
-
-        // Top-right corner arc
-        if (!hasWallRight) {
-          this.graphics!.beginPath();
-          this.graphics!.arc(px + wallSize - radius, py + radius, radius, Phaser.Math.DegToRad(270), Phaser.Math.DegToRad(360), false);
-          this.graphics!.strokePath();
-        }
+        const x1 = hasWallLeft ? px - inset : px + radius;
+        const x2 = hasWallRight ? px + wallSize + inset : px + wallSize - radius;
+        horizontalEdges.push({ x1, x2, y: py });
       }
 
-      // Bottom edge (only if no wall below)
+      // Bottom edge (exposed to outside OR concave corner)
       if (!hasWallBelow) {
-        this.graphics!.beginPath();
-        this.graphics!.moveTo(px + radius, py + wallSize);
-        this.graphics!.lineTo(px + wallSize - radius, py + wallSize);
-        this.graphics!.strokePath();
-
-        // Bottom-left corner arc
-        if (!hasWallLeft) {
-          this.graphics!.beginPath();
-          this.graphics!.arc(px + radius, py + wallSize - radius, radius, Phaser.Math.DegToRad(90), Phaser.Math.DegToRad(180), false);
-          this.graphics!.strokePath();
-        }
-
-        // Bottom-right corner arc
-        if (!hasWallRight) {
-          this.graphics!.beginPath();
-          this.graphics!.arc(px + wallSize - radius, py + wallSize - radius, radius, Phaser.Math.DegToRad(0), Phaser.Math.DegToRad(90), false);
-          this.graphics!.strokePath();
-        }
+        const x1 = hasWallLeft ? px - inset : px + radius;
+        const x2 = hasWallRight ? px + wallSize + inset : px + wallSize - radius;
+        horizontalEdges.push({ x1, x2, y: py + wallSize });
       }
 
-      // Left edge (only if no wall to the left)
+      // Left edge (exposed to outside OR concave corner)
       if (!hasWallLeft) {
+        const y1 = hasWallAbove ? py - inset : py + radius;
+        const y2 = hasWallBelow ? py + wallSize + inset : py + wallSize - radius;
+        verticalEdges.push({ y1, y2, x: px });
+      }
+
+      // Right edge (exposed to outside OR concave corner)
+      if (!hasWallRight) {
+        const y1 = hasWallAbove ? py - inset : py + radius;
+        const y2 = hasWallBelow ? py + wallSize + inset : py + wallSize - radius;
+        verticalEdges.push({ y1, y2, x: px + wallSize });
+      }
+
+      // Draw concave corner edges (interior corners where walls meet at right angles)
+      // Top-left concave corner
+      if (hasWallAbove && hasWallLeft && !hasWallTopLeft) {
+        verticalEdges.push({ y1: py, y2: py + radius, x: px });
+        horizontalEdges.push({ x1: px, x2: px + radius, y: py });
+      }
+
+      // Top-right concave corner
+      if (hasWallAbove && hasWallRight && !hasWallTopRight) {
+        verticalEdges.push({ y1: py, y2: py + radius, x: px + wallSize });
+        horizontalEdges.push({ x1: px + wallSize - radius, x2: px + wallSize, y: py });
+      }
+
+      // Bottom-left concave corner
+      if (hasWallBelow && hasWallLeft && !hasWallBottomLeft) {
+        verticalEdges.push({ y1: py + wallSize - radius, y2: py + wallSize, x: px });
+        horizontalEdges.push({ x1: px, x2: px + radius, y: py + wallSize });
+      }
+
+      // Bottom-right concave corner
+      if (hasWallBelow && hasWallRight && !hasWallBottomRight) {
+        verticalEdges.push({ y1: py + wallSize - radius, y2: py + wallSize, x: px + wallSize });
+        horizontalEdges.push({ x1: px + wallSize - radius, x2: px + wallSize, y: py + wallSize });
+      }
+    }
+
+    // Draw all horizontal edges in one pass
+    if (horizontalEdges.length > 0) {
+      this.graphics!.beginPath();
+      for (const edge of horizontalEdges) {
+        this.graphics!.moveTo(edge.x1, edge.y);
+        this.graphics!.lineTo(edge.x2, edge.y);
+      }
+      this.graphics!.strokePath();
+    }
+
+    // Draw all vertical edges in one pass
+    if (verticalEdges.length > 0) {
+      this.graphics!.beginPath();
+      for (const edge of verticalEdges) {
+        this.graphics!.moveTo(edge.x, edge.y1);
+        this.graphics!.lineTo(edge.x, edge.y2);
+      }
+      this.graphics!.strokePath();
+    }
+
+    // STEP 3: Draw corner arcs (both exterior and concave)
+    for (const tile of region) {
+      const px = this.mapOffsetX + tile.x * tileSize + inset;
+      const py = this.mapOffsetY + tile.y * tileSize + inset;
+
+      const hasWallAbove = regionSet.has(`${tile.x},${tile.y - 1}`);
+      const hasWallBelow = regionSet.has(`${tile.x},${tile.y + 1}`);
+      const hasWallLeft = regionSet.has(`${tile.x - 1},${tile.y}`);
+      const hasWallRight = regionSet.has(`${tile.x + 1},${tile.y}`);
+
+      const hasWallTopLeft = regionSet.has(`${tile.x - 1},${tile.y - 1}`);
+      const hasWallTopRight = regionSet.has(`${tile.x + 1},${tile.y - 1}`);
+      const hasWallBottomLeft = regionSet.has(`${tile.x - 1},${tile.y + 1}`);
+      const hasWallBottomRight = regionSet.has(`${tile.x + 1},${tile.y + 1}`);
+
+      // Exterior corners (convex)
+      if (!hasWallAbove && !hasWallLeft) {
         this.graphics!.beginPath();
-        this.graphics!.moveTo(px, py + radius);
-        this.graphics!.lineTo(px, py + wallSize - radius);
+        this.graphics!.arc(px + radius, py + radius, radius, Phaser.Math.DegToRad(180), Phaser.Math.DegToRad(270), false);
         this.graphics!.strokePath();
       }
 
-      // Right edge (only if no wall to the right)
-      if (!hasWallRight) {
+      if (!hasWallAbove && !hasWallRight) {
         this.graphics!.beginPath();
-        this.graphics!.moveTo(px + wallSize, py + radius);
-        this.graphics!.lineTo(px + wallSize, py + wallSize - radius);
+        this.graphics!.arc(px + wallSize - radius, py + radius, radius, Phaser.Math.DegToRad(270), Phaser.Math.DegToRad(360), false);
+        this.graphics!.strokePath();
+      }
+
+      if (!hasWallBelow && !hasWallLeft) {
+        this.graphics!.beginPath();
+        this.graphics!.arc(px + radius, py + wallSize - radius, radius, Phaser.Math.DegToRad(90), Phaser.Math.DegToRad(180), false);
+        this.graphics!.strokePath();
+      }
+
+      if (!hasWallBelow && !hasWallRight) {
+        this.graphics!.beginPath();
+        this.graphics!.arc(px + wallSize - radius, py + wallSize - radius, radius, Phaser.Math.DegToRad(0), Phaser.Math.DegToRad(90), false);
+        this.graphics!.strokePath();
+      }
+
+      // Concave corners (interior corners)
+      if (hasWallAbove && hasWallLeft && !hasWallTopLeft) {
+        this.graphics!.beginPath();
+        this.graphics!.arc(px, py, radius, Phaser.Math.DegToRad(0), Phaser.Math.DegToRad(90), false);
+        this.graphics!.strokePath();
+      }
+
+      if (hasWallAbove && hasWallRight && !hasWallTopRight) {
+        this.graphics!.beginPath();
+        this.graphics!.arc(px + wallSize, py, radius, Phaser.Math.DegToRad(90), Phaser.Math.DegToRad(180), false);
+        this.graphics!.strokePath();
+      }
+
+      if (hasWallBelow && hasWallLeft && !hasWallBottomLeft) {
+        this.graphics!.beginPath();
+        this.graphics!.arc(px, py + wallSize, radius, Phaser.Math.DegToRad(270), Phaser.Math.DegToRad(360), false);
+        this.graphics!.strokePath();
+      }
+
+      if (hasWallBelow && hasWallRight && !hasWallBottomRight) {
+        this.graphics!.beginPath();
+        this.graphics!.arc(px + wallSize, py + wallSize, radius, Phaser.Math.DegToRad(180), Phaser.Math.DegToRad(270), false);
         this.graphics!.strokePath();
       }
     }
