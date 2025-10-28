@@ -37,15 +37,22 @@ export class GameScene extends Phaser.Scene {
   cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
   wasd!: any;
   fireKey!: Phaser.Input.Keyboard.Key;
+
+  graphics: Phaser.GameObjects.Graphics | null;
   
   constructor() {
     super({ key: 'GameScene' });
+
+    // this.graphics = this.add.graphics();
+    this.graphics = null;
   }
   
   init(data: any) {
     this.difficulty = data.difficulty || 'medium';
     this.orientation = data.orientation || Orientation.HORIZONTAL;
     this.localization = LocalizationManager.getInstance();
+
+    this.graphics = this.add.graphics();
     
     if (data.reset) {
       this.score = 0;
@@ -99,22 +106,171 @@ export class GameScene extends Phaser.Scene {
     this.createUI();
   }
   
+  private isWall(x: number, y: number): boolean {
+    if (y < 0 || y >= this.mapData.map.length || x < 0 || x >= this.mapData.map[0].length) {
+      return false;
+    }
+    return this.mapData.map[y][x] === 1;
+  }
+
+  private floodFillWallRegion(startX: number, startY: number, visited: boolean[][]): { x: number, y: number }[] {
+    const region: { x: number, y: number }[] = [];
+    const queue: { x: number, y: number }[] = [{ x: startX, y: startY }];
+    visited[startY][startX] = true;
+
+    while (queue.length > 0) {
+      const { x, y } = queue.shift()!;
+      region.push({ x, y });
+
+      // Check all 4 adjacent cells
+      const neighbors = [
+        { x: x, y: y - 1 }, // up
+        { x: x, y: y + 1 }, // down
+        { x: x - 1, y: y }, // left
+        { x: x + 1, y: y }  // right
+      ];
+
+      for (const neighbor of neighbors) {
+        if (this.isWall(neighbor.x, neighbor.y) && !visited[neighbor.y][neighbor.x]) {
+          visited[neighbor.y][neighbor.x] = true;
+          queue.push(neighbor);
+        }
+      }
+    }
+
+    return region;
+  }
+
+  private drawWallRegion(region: { x: number, y: number }[], tileSize: number): void {
+    const offset = gameConfig.map.wallEdgeOffset;
+    const inset = tileSize * offset;
+    const wallSize = tileSize - (inset * 2);
+    const radius = gameConfig.map.wallRadius;
+
+    // Create a set for quick lookup
+    const regionSet = new Set(region.map(p => `${p.x},${p.y}`));
+
+    // Draw all fills first - draw as solid rectangles that extend to connect with neighbors
+    this.graphics!.fillStyle(gameConfig.colors.wall);
+
+    for (const tile of region) {
+      const px = this.mapOffsetX + tile.x * tileSize + inset;
+      const py = this.mapOffsetY + tile.y * tileSize + inset;
+
+      // Check which adjacent cells are in the region
+      const hasWallAbove = regionSet.has(`${tile.x},${tile.y - 1}`);
+      const hasWallBelow = regionSet.has(`${tile.x},${tile.y + 1}`);
+      const hasWallLeft = regionSet.has(`${tile.x - 1},${tile.y}`);
+      const hasWallRight = regionSet.has(`${tile.x + 1},${tile.y}`);
+
+      // Extend the fill to connect with adjacent tiles (bridge the gap created by inset)
+      const extendTop = hasWallAbove ? inset : 0;
+      const extendBottom = hasWallBelow ? inset : 0;
+      const extendLeft = hasWallLeft ? inset : 0;
+      const extendRight = hasWallRight ? inset : 0;
+
+      // Draw extended rectangle to create contiguous fill
+      this.graphics!.fillRect(
+        px - extendLeft,
+        py - extendTop,
+        wallSize + extendLeft + extendRight,
+        wallSize + extendTop + extendBottom
+      );
+    }
+
+    // Draw outline only on perimeter edges
+    this.graphics!.lineStyle(2, gameConfig.colors.wallOutline);
+
+    for (const tile of region) {
+      const px = this.mapOffsetX + tile.x * tileSize + inset;
+      const py = this.mapOffsetY + tile.y * tileSize + inset;
+
+      // Check which adjacent cells are NOT in the region (perimeter edges)
+      const hasWallAbove = regionSet.has(`${tile.x},${tile.y - 1}`);
+      const hasWallBelow = regionSet.has(`${tile.x},${tile.y + 1}`);
+      const hasWallLeft = regionSet.has(`${tile.x - 1},${tile.y}`);
+      const hasWallRight = regionSet.has(`${tile.x + 1},${tile.y}`);
+
+      // Top edge (only if no wall above)
+      if (!hasWallAbove) {
+        this.graphics!.beginPath();
+        this.graphics!.moveTo(px + radius, py);
+        this.graphics!.lineTo(px + wallSize - radius, py);
+        this.graphics!.strokePath();
+
+        // Top-left corner arc
+        if (!hasWallLeft) {
+          this.graphics!.beginPath();
+          this.graphics!.arc(px + radius, py + radius, radius, Phaser.Math.DegToRad(180), Phaser.Math.DegToRad(270), false);
+          this.graphics!.strokePath();
+        }
+
+        // Top-right corner arc
+        if (!hasWallRight) {
+          this.graphics!.beginPath();
+          this.graphics!.arc(px + wallSize - radius, py + radius, radius, Phaser.Math.DegToRad(270), Phaser.Math.DegToRad(360), false);
+          this.graphics!.strokePath();
+        }
+      }
+
+      // Bottom edge (only if no wall below)
+      if (!hasWallBelow) {
+        this.graphics!.beginPath();
+        this.graphics!.moveTo(px + radius, py + wallSize);
+        this.graphics!.lineTo(px + wallSize - radius, py + wallSize);
+        this.graphics!.strokePath();
+
+        // Bottom-left corner arc
+        if (!hasWallLeft) {
+          this.graphics!.beginPath();
+          this.graphics!.arc(px + radius, py + wallSize - radius, radius, Phaser.Math.DegToRad(90), Phaser.Math.DegToRad(180), false);
+          this.graphics!.strokePath();
+        }
+
+        // Bottom-right corner arc
+        if (!hasWallRight) {
+          this.graphics!.beginPath();
+          this.graphics!.arc(px + wallSize - radius, py + wallSize - radius, radius, Phaser.Math.DegToRad(0), Phaser.Math.DegToRad(90), false);
+          this.graphics!.strokePath();
+        }
+      }
+
+      // Left edge (only if no wall to the left)
+      if (!hasWallLeft) {
+        this.graphics!.beginPath();
+        this.graphics!.moveTo(px, py + radius);
+        this.graphics!.lineTo(px, py + wallSize - radius);
+        this.graphics!.strokePath();
+      }
+
+      // Right edge (only if no wall to the right)
+      if (!hasWallRight) {
+        this.graphics!.beginPath();
+        this.graphics!.moveTo(px + wallSize, py + radius);
+        this.graphics!.lineTo(px + wallSize, py + wallSize - radius);
+        this.graphics!.strokePath();
+      }
+    }
+  }
+
   drawMap() {
     const tileSize = this.getTileSize();
 
+    // Create visited array for flood fill
+    const visited: boolean[][] = [];
+    for (let y = 0; y < this.mapData.map.length; y++) {
+      visited[y] = new Array(this.mapData.map[y].length).fill(false);
+    }
+
+    // Process all tiles
     for (let y = 0; y < this.mapData.map.length; y++) {
       for (let x = 0; x < this.mapData.map[y].length; x++) {
         const tile = this.mapData.map[y][x];
 
-        if (tile === 1) {
-          // Wall
-          this.add.rectangle(
-            this.mapOffsetX + x * tileSize,
-            this.mapOffsetY + y * tileSize,
-            tileSize,
-            tileSize,
-            gameConfig.colors.wall
-          ).setOrigin(0);
+        if (tile === 1 && !visited[y][x]) {
+          // Wall - find connected region and draw it
+          const region = this.floodFillWallRegion(x, y, visited);
+          this.drawWallRegion(region, tileSize);
         } else if (tile === 2) {
           // Pen interior
           this.add.rectangle(

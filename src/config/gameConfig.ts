@@ -29,6 +29,8 @@ export const gameConfig = {
     minPowerups: 4,
     maxPowerups: 6,
     maxDeadEndsPerHalf: 2,
+    wallRadius: 2, // Corner radius for wall tiles
+    wallEdgeOffset: 0.25, // Inset walls by 25% from tile edges (0-1 scale)
     generation: {
       maxGenerationAttempts: 10,
       gridRows: 9,
@@ -43,6 +45,7 @@ export const gameConfig = {
   },
   colors: {
     wall: 0x2121ff,
+    wallOutline: 0xffa500, // Orange outline for walls
     pellet: 0xffb897,
     powerup: 0xffffff,
     player: 0xffff00,
@@ -52,7 +55,7 @@ export const gameConfig = {
     inky: 0x00ffff,
     clyde: 0xffb851,
     penDoor: 0xff8800,
-    tunnel: 0x00ff00  
+    tunnel: 0x00ff00
   },
   controls: {
     keyboard: {
