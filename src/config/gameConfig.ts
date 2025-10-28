@@ -32,7 +32,7 @@ export const gameConfig = {
     wallRadius: 4, // Corner radius for wall tiles
     wallEdgeOffset: 0.5, // Inset walls by 25% from tile edges (0-1 scale)
     wallOutlineThickness: 3,
-    thinWallAdjustment: 1.75,
+    thinWallAdjustment: 1.5,
     generation: {
       maxGenerationAttempts: 10,
       gridRows: 9,

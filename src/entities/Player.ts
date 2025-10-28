@@ -78,6 +78,11 @@ export class Player extends Entity {
       return false;
     }
 
+    // Player cannot enter pen door (tile value 3)
+    if (this.mapData.map[y] && this.mapData.map[y][x] === 3) {
+      return false;
+    }
+
     return true;
   }
   
