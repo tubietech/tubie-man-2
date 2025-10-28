@@ -143,13 +143,34 @@ export class GameScene extends Phaser.Scene {
 
   private drawWallRegion(region: { x: number, y: number }[], tileSize: number): void {
     const offset = gameConfig.map.wallEdgeOffset;
-    const inset = tileSize * offset;
+
+    // Check if this is a single-thickness wall (outline or pen wall)
+    // Single-thickness walls are those where most tiles have no adjacent wall on at least 2 opposite sides
+    const regionSet = new Set(region.map(p => `${p.x},${p.y}`));
+    let singleThicknessCount = 0;
+    for (const tile of region) {
+      const hasWallAbove = regionSet.has(`${tile.x},${tile.y - 1}`);
+      const hasWallBelow = regionSet.has(`${tile.x},${tile.y + 1}`);
+      const hasWallLeft = regionSet.has(`${tile.x - 1},${tile.y}`);
+      const hasWallRight = regionSet.has(`${tile.x + 1},${tile.y}`);
+
+      // Single-thickness if missing walls on opposite sides
+      const verticallyThin = !hasWallAbove || !hasWallBelow;
+      const horizontallyThin = !hasWallLeft || !hasWallRight;
+
+      if (verticallyThin || horizontallyThin) {
+        singleThicknessCount++;
+      }
+    }
+
+    // If more than 70% of tiles are single-thickness, use reduced inset
+    const isSingleThickness = singleThicknessCount > region.length * 0.7;
+    const adjustedOffset = isSingleThickness ? offset / 1.5 : offset;
+
+    const inset = tileSize * adjustedOffset;
     const outlineThickness = gameConfig.map.wallOutlineThickness;
     const wallSize = tileSize - (inset * 2);
     const radius = Math.min(gameConfig.map.wallRadius, wallSize / 2);
-
-    // Create a set for O(1) lookups
-    const regionSet = new Set(region.map(p => `${p.x},${p.y}`));
 
     // STEP 1: Draw the fill - extend rectangles to bridge gaps with adjacent walls
     // BUT avoid extending into concave corners
