@@ -170,7 +170,8 @@ export class GameScene extends Phaser.Scene {
     const inset = tileSize * adjustedOffset;
     const outlineThickness = gameConfig.map.wallOutlineThickness;
     const wallSize = tileSize - (inset * 2);
-    const radius = Math.min(gameConfig.map.wallRadius, wallSize / 2);
+    // Use the configured radius directly - it can be larger than wallSize/2 for larger corners
+    const radius = gameConfig.map.wallRadius;
 
     // STEP 1: Draw the fill - extend rectangles to bridge gaps with adjacent walls
     // BUT avoid extending into concave corners
@@ -744,36 +745,52 @@ export class GameScene extends Phaser.Scene {
     
     const px = this.player.gridX;
     const py = this.player.gridY;
-    
+
+    // Check if there's a pellet on the current tile and player is close enough to eat it
     if (this.pellets[py] && this.pellets[py][px]) {
       const pellet = this.pellets[py][px];
-      const isPower = this.powerups.includes(pellet);
-      
-      pellet.destroy();
-      this.pellets[py][px] = null as any;
-      
-      if (isPower) {
-        this.score += gameConfig.map.powerupScore;
-        this.player.hasFirePower = true;
-        this.powerText.setColor('#00ff00');
+      const tileSize = this.getTileSize();
+
+      // Calculate player's distance from pellet center
+      const pelletCenterX = this.mapOffsetX + px * tileSize + tileSize / 2;
+      const pelletCenterY = this.mapOffsetY + py * tileSize + tileSize / 2;
+      const playerX = this.player.sprite.x;
+      const playerY = this.player.sprite.y;
+
+      const distX = Math.abs(playerX - pelletCenterX);
+      const distY = Math.abs(playerY - pelletCenterY);
+      const distance = Math.sqrt(distX * distX + distY * distY);
+
+      // Only eat pellet when player is within configured distance from center
+      if (distance < tileSize * gameConfig.player.pelletEatDistance) {
+        const isPower = this.powerups.includes(pellet);
+
+        pellet.destroy();
+        this.pellets[py][px] = null as any;
+
+        if (isPower) {
+          this.score += gameConfig.map.powerupScore;
+          this.player.hasFirePower = true;
+          this.powerText.setColor('#00ff00');
+          const loc = this.localization;
+          this.powerText.setText(
+            this.orientation === Orientation.VERTICAL
+              ? `${loc.getText('power')}: ${loc.getText('powerReady')}`
+              : `${loc.getText('power')}:\n${loc.getText('powerReady')}`
+          );
+        } else {
+          this.score += gameConfig.map.pelletScore;
+        }
+
         const loc = this.localization;
-        this.powerText.setText(
-          this.orientation === Orientation.VERTICAL 
-            ? `${loc.getText('power')}: ${loc.getText('powerReady')}` 
-            : `${loc.getText('power')}:\n${loc.getText('powerReady')}`
-        );
-      } else {
-        this.score += gameConfig.map.pelletScore;
+        this.scoreText.setText(
+          this.orientation === Orientation.VERTICAL
+            ? `${loc.getText('score')}: ${this.score}`
+            : `${loc.getText('score')}:\n${this.score}`
+          );
+
+        this.checkWinCondition();
       }
-      
-      const loc = this.localization;
-      this.scoreText.setText(
-        this.orientation === Orientation.VERTICAL 
-          ? `${loc.getText('score')}: ${this.score}` 
-          : `${loc.getText('score')}:\n${this.score}`
-      );
-      
-      this.checkWinCondition();
     }
     
     this.checkEnemyCollision();

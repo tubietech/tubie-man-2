@@ -7,7 +7,8 @@ export const gameConfig = {
     startLives: 3,
     playerStartingHeight: 7, // Player starts 7 rows above bottom of map
     animationFrameRate: 15,
-    spriteScale: 1.95
+    spriteScale: 1.95,
+    pelletEatDistance: 0.3 // Distance from pellet center (as fraction of tile size) to eat it
   },
   enemy: {
     speed: { easy: 80, medium: 120, hard: 180 },
