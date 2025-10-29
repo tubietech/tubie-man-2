@@ -120,13 +120,18 @@ export class Player extends Entity {
     } else {
       // Not moving - freeze on last frame
       this.isMoving = false;
-      if (this.animatedSprite.anims.isPlaying) {
+      if (this.animatedSprite && this.animatedSprite.anims && this.animatedSprite.anims.isPlaying) {
         this.animatedSprite.anims.pause();
       }
     }
   }
 
   private playDirectionAnimation(direction: Direction): void {
+    // Safety check: ensure sprite and anims exist
+    if (!this.animatedSprite || !this.animatedSprite.anims) {
+      return;
+    }
+
     let animKey = '';
 
     switch (direction) {

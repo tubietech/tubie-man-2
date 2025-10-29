@@ -950,4 +950,38 @@ export class GameScene extends Phaser.Scene {
     
     this.scene.pause();
   }
+
+  shutdown() {
+    // Clean up player sprite
+    if (this.player && this.player.animatedSprite) {
+      this.player.deactivateFire();
+      this.player.animatedSprite.destroy();
+    }
+
+    // Clean up enemy sprites
+    if (this.enemies) {
+      this.enemies.forEach(enemy => {
+        if (enemy.sprite) {
+          enemy.sprite.destroy();
+        }
+      });
+    }
+
+    // Clean up pellets
+    if (this.pellets) {
+      for (let y = 0; y < this.pellets.length; y++) {
+        for (let x = 0; x < this.pellets[y].length; x++) {
+          if (this.pellets[y][x]) {
+            this.pellets[y][x].destroy();
+          }
+        }
+      }
+    }
+
+    // Clean up graphics
+    if (this.graphics) {
+      this.graphics.destroy();
+      this.graphics = null;
+    }
+  }
 }
