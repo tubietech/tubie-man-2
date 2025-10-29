@@ -418,6 +418,9 @@ export class GameScene extends Phaser.Scene {
       visited[y] = new Array(this.mapData.map[y].length).fill(false);
     }
 
+    // Collect pen door tiles to draw as one connected region
+    const penDoorTiles: { x: number, y: number }[] = [];
+
     // Process all tiles
     for (let y = 0; y < this.mapData.map.length; y++) {
       for (let x = 0; x < this.mapData.map[y].length; x++) {
@@ -437,14 +440,8 @@ export class GameScene extends Phaser.Scene {
             gameConfig.colors.wall
           ).setOrigin(0).setAlpha(0.3);
         } else if (tile === 3) {
-          // Pen door
-          this.add.rectangle(
-            this.mapOffsetX + x * tileSize,
-            this.mapOffsetY + y * tileSize,
-            tileSize,
-            tileSize,
-            gameConfig.colors.penDoor
-          ).setOrigin(0);
+          // Collect pen door tiles
+          penDoorTiles.push({ x, y });
         } else if (tile === 4) {
           // Tunnel
           this.add.rectangle(
@@ -457,6 +454,54 @@ export class GameScene extends Phaser.Scene {
         }
       }
     }
+
+    // Draw pen door as one connected region
+    if (penDoorTiles.length > 0) {
+      this.drawPenDoor(penDoorTiles, tileSize);
+    }
+  }
+
+  private drawPenDoor(tiles: { x: number, y: number }[], tileSize: number): void {
+    const offset = gameConfig.map.wallEdgeOffset;
+    const adjustedOffset = offset / gameConfig.map.thinWallAdjustment;
+    const inset = tileSize * adjustedOffset;
+    const wallSize = tileSize - (inset * 2);
+    const outlineThickness = gameConfig.map.wallOutlineThickness;
+    const barHeight = tileSize * 0.3;
+
+    // Sort tiles by x coordinate to find leftmost and rightmost
+    tiles.sort((a, b) => a.x - b.x);
+    const leftmost = tiles[0];
+    const rightmost = tiles[tiles.length - 1];
+
+    // Extend to fill gaps on left and right sides
+    // Start from the left edge of the leftmost tile (before inset)
+    const startX = this.mapOffsetX + leftmost.x * tileSize;
+    // End at the right edge of the rightmost tile (after inset + wallSize)
+    const endX = this.mapOffsetX + (rightmost.x + 1) * tileSize;
+    const totalWidth = endX - startX;
+    const py = this.mapOffsetY + leftmost.y * tileSize + inset;
+
+    // Draw fill as one continuous bar spanning full width
+    this.graphics!.fillStyle(gameConfig.colors.penDoor);
+    this.graphics!.fillRect(startX, py, totalWidth, barHeight);
+
+    // Draw outline
+    this.graphics!.lineStyle(outlineThickness, gameConfig.colors.wallOutline);
+    this.graphics!.beginPath();
+    // Top edge
+    this.graphics!.moveTo(startX, py);
+    this.graphics!.lineTo(endX, py);
+    // Bottom edge
+    this.graphics!.moveTo(startX, py + barHeight);
+    this.graphics!.lineTo(endX, py + barHeight);
+    // Left edge
+    this.graphics!.moveTo(startX, py);
+    this.graphics!.lineTo(startX, py + barHeight);
+    // Right edge
+    this.graphics!.moveTo(endX, py);
+    this.graphics!.lineTo(endX, py + barHeight);
+    this.graphics!.strokePath();
   }
   
   createPellets() {
