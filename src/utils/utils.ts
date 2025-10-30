@@ -2,6 +2,44 @@
  * Utility functions for common operations
  */
 
+import Phaser from 'phaser';
+import { ICoordinate } from '../interfaces/ICoordinate';
+
+/**
+ * Check if a coordinate position is a wall tile
+ * @param coord The coordinate to check
+ * @param map The 2D map array
+ * @returns True if the position is a wall, false otherwise
+ */
+export function isWall(coord: ICoordinate, map: number[][]): boolean {
+  if (coord.y < 0 || coord.y >= map.length || coord.x < 0 || coord.x >= map[0].length) {
+    return false;
+  }
+  return map[coord.y][coord.x] === 1;
+}
+
+/**
+ * Draw a rounded corner arc on a graphics object
+ * @param graphics The Phaser graphics object to draw on
+ * @param centerX The x coordinate of the arc center
+ * @param centerY The y coordinate of the arc center
+ * @param radius The radius of the arc
+ * @param startAngle The starting angle in degrees
+ * @param endAngle The ending angle in degrees
+ */
+export function drawCorner(
+  graphics: Phaser.GameObjects.Graphics,
+  centerX: number,
+  centerY: number,
+  radius: number,
+  startAngle: number,
+  endAngle: number
+): void {
+  graphics.beginPath();
+  graphics.arc(centerX, centerY, radius, Phaser.Math.DegToRad(startAngle), Phaser.Math.DegToRad(endAngle), false);
+  graphics.strokePath();
+}
+
 /**
  * Get a random integer between min and max (inclusive)
  * @param min Minimum value
