@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { IEntity } from '../interfaces/IEntity';
+import { ICoordinate } from '../interfaces/ICoordinate';
 import { Direction } from '../enums/Direction';
 import { gameConfig } from '../config/gameConfig';
 import { IMapData } from '../interfaces/IMapData';
@@ -61,18 +62,49 @@ export class Entity implements IEntity {
            tile === MapValue.POWERUP;
   }
   
-  getNextPosition(dir: Direction): { x: number, y: number } {
+  getNextPosition(dir: Direction): ICoordinate {
     let nextX = this.gridX;
     let nextY = this.gridY;
-    
+
     switch (dir) {
       case Direction.UP: nextY--; break;
       case Direction.DOWN: nextY++; break;
       case Direction.LEFT: nextX--; break;
       case Direction.RIGHT: nextX++; break;
     }
-    
+
     return { x: nextX, y: nextY };
+  }
+
+  /**
+   * Get the current grid position as a coordinate
+   */
+  getGridPosition(): ICoordinate {
+    return { x: this.gridX, y: this.gridY };
+  }
+
+  /**
+   * Get the current pixel position as a coordinate
+   */
+  getPixelPosition(): ICoordinate {
+    return { x: this.sprite.x, y: this.sprite.y };
+  }
+
+  /**
+   * Calculate the target pixel position for a given grid coordinate
+   */
+  getTargetPixelPosition(gridCoord: ICoordinate): ICoordinate {
+    return {
+      x: this.mapOffsetX + gridCoord.x * this.tileSize + this.tileSize / 2,
+      y: this.mapOffsetY + gridCoord.y * this.tileSize + this.tileSize / 2
+    };
+  }
+
+  /**
+   * Calculate distance between two grid positions (Manhattan distance)
+   */
+  getGridDistance(pos1: ICoordinate, pos2: ICoordinate): number {
+    return Math.abs(pos1.x - pos2.x) + Math.abs(pos1.y - pos2.y);
   }
   
   getOppositeDirection(): Direction {

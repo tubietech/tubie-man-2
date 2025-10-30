@@ -145,32 +145,16 @@ export class GameScene extends Phaser.Scene {
       right: Phaser.Input.Keyboard.KeyCodes.D
     });
     this.fireKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
-    
+
     this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
-      const px = this.player.sprite.x;
-      const py = this.player.sprite.y;
-      const dx = pointer.x - px;
-      const dy = pointer.y - py;
-      
-      if (Math.abs(dx) > Math.abs(dy)) {
-        this.player.inputQueue.push(dx > 0 ? Direction.RIGHT : Direction.LEFT);
-      } else {
-        this.player.inputQueue.push(dy > 0 ? Direction.DOWN : Direction.UP);
-      }
+      this.player.processPointerInput({ x: pointer.x, y: pointer.y });
     });
-    
+
     this.input.on('pointermove', (pointer: Phaser.Input.Pointer) => {
       if (pointer.isDown && pointer.primaryDown) {
-        const px = this.player.sprite.x;
-        const py = this.player.sprite.y;
-        const dx = pointer.x - px;
-        const dy = pointer.y - py;
-        
-        if (Math.abs(dx) > Math.abs(dy)) {
-          this.player.inputQueue = [dx > 0 ? Direction.RIGHT : Direction.LEFT];
-        } else {
-          this.player.inputQueue = [dy > 0 ? Direction.DOWN : Direction.UP];
-        }
+        // Clear queue and set new direction for drag
+        this.player.inputQueue = [];
+        this.player.processPointerInput({ x: pointer.x, y: pointer.y });
       }
     });
   }
@@ -209,41 +193,26 @@ export class GameScene extends Phaser.Scene {
       return;
     }
 
-    if (this.cursors.up.isDown || this.wasd.up.isDown) {
-      this.player.inputQueue.push(Direction.UP);
-    }
-    if (this.cursors.down.isDown || this.wasd.down.isDown) {
-      this.player.inputQueue.push(Direction.DOWN);
-    }
-    if (this.cursors.left.isDown || this.wasd.left.isDown) {
-      this.player.inputQueue.push(Direction.LEFT);
-    }
-    if (this.cursors.right.isDown || this.wasd.right.isDown) {
-      this.player.inputQueue.push(Direction.RIGHT);
-    }
-    
+    // Delegate keyboard input to player
+    this.player.processKeyboardInput(this.cursors, this.wasd);
+
+    // Handle fire key
     if (Phaser.Input.Keyboard.JustDown(this.fireKey)) {
       this.player.activateFire();
     }
-    
+
+    // Delegate gamepad input to player
     if (this.input.gamepad && this.input.gamepad.total > 0) {
       const pad = this.input.gamepad.getPad(0);
       if (pad) {
-        if (pad.leftStick.x < -0.5) this.player.inputQueue.push(Direction.LEFT);
-        if (pad.leftStick.x > 0.5) this.player.inputQueue.push(Direction.RIGHT);
-        if (pad.leftStick.y < -0.5) this.player.inputQueue.push(Direction.UP);
-        if (pad.leftStick.y > 0.5) this.player.inputQueue.push(Direction.DOWN);
-        
+        this.player.processGamepadInput(pad);
+
         if (pad.buttons[gameConfig.controls.gamepad.fire].pressed) {
           this.player.activateFire();
         }
       }
     }
-    
-    if (this.player.inputQueue.length > 2) {
-      this.player.inputQueue = this.player.inputQueue.slice(-2);
-    }
-    
+
     this.player.update(time, delta);
     this.enemies.forEach(enemy => enemy.update(time, delta));
 
@@ -326,34 +295,22 @@ export class GameScene extends Phaser.Scene {
   }
   
   checkEnemyCollision() {
-    const firePositions = this.player.getFirePositions();
-    
-    for (let i = this.enemies.length - 1; i >= 0; i--) {
-      const enemy = this.enemies[i];
-      
-      const hitByFire = firePositions.some(pos => 
-        pos.x === enemy.gridX && pos.y === enemy.gridY
-      );
-      
-      if (hitByFire) {
+    const collisionResult = this.player.checkEnemyCollisions(this.enemies);
+
+    if (collisionResult.hasCollision) {
+      if (collisionResult.hitByFire && collisionResult.enemy) {
+        // Enemy was hit by fire
         this.score += gameConfig.map.enemyScore;
         const uiRenderer = new UIRenderer(this, this.localization);
         uiRenderer.updateScoreText(this.scoreText, this.orientation, this.score);
 
         // Respawn enemy to pen after delay
         this.time.delayedCall(gameConfig.enemy.respawnDelay, () => {
-          enemy.moveTo(this.mapData.penCenter.x, this.mapData.penCenter.y);
+          collisionResult.enemy!.moveTo(this.mapData.penCenter.x, this.mapData.penCenter.y);
         });
-        
-        continue;
-      }
-      
-      const dist = Math.abs(this.player.gridX - enemy.gridX) + 
-                   Math.abs(this.player.gridY - enemy.gridY);
-      
-      if (dist < 1) {
+      } else {
+        // Player collided with enemy
         this.loseLife();
-        return;
       }
     }
   }
@@ -457,6 +414,15 @@ export class GameScene extends Phaser.Scene {
           }
         }
       }
+    }
+
+    // Clean up powerups
+    if (this.powerups) {
+      this.powerups.forEach(powerup => {
+        if (powerup) {
+          powerup.destroy();
+        }
+      });
     }
 
     // Clean up map rectangles (pen interiors and tunnels)

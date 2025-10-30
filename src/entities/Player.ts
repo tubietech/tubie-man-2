@@ -1,8 +1,12 @@
 import Phaser from 'phaser';
 import { Entity } from './Entity';
+import { Enemy } from './enemies/Enemy';
 import { Direction } from '../enums/Direction';
 import { gameConfig } from '../config/gameConfig';
 import { IMapData } from '../interfaces/IMapData';
+import { ICoordinate } from '../interfaces/ICoordinate';
+import { IMovementInput } from '../interfaces/IMovementInput';
+import { ICollisionResult } from '../interfaces/ICollisionResult';
 
 export class Player extends Entity {
   hasFirePower: boolean = false;
@@ -39,23 +43,78 @@ export class Player extends Entity {
     this.lastDirection = Direction.RIGHT;
   }
   
+  /**
+   * Process a movement input and add to queue
+   */
+  processInput(input: IMovementInput): void {
+    this.inputQueue.push(input.direction);
+
+    // Limit queue size to prevent overflow
+    if (this.inputQueue.length > 2) {
+      this.inputQueue = this.inputQueue.slice(-2);
+    }
+  }
+
+  /**
+   * Process keyboard input directly
+   */
+  processKeyboardInput(cursors: Phaser.Types.Input.Keyboard.CursorKeys, wasd: any): void {
+    if (cursors.up.isDown || wasd.up.isDown) {
+      this.processInput({ direction: Direction.UP });
+    }
+    if (cursors.down.isDown || wasd.down.isDown) {
+      this.processInput({ direction: Direction.DOWN });
+    }
+    if (cursors.left.isDown || wasd.left.isDown) {
+      this.processInput({ direction: Direction.LEFT });
+    }
+    if (cursors.right.isDown || wasd.right.isDown) {
+      this.processInput({ direction: Direction.RIGHT });
+    }
+  }
+
+  /**
+   * Process gamepad input
+   */
+  processGamepadInput(pad: Phaser.Input.Gamepad.Gamepad): void {
+    if (pad.leftStick.x < -0.5) this.processInput({ direction: Direction.LEFT });
+    if (pad.leftStick.x > 0.5) this.processInput({ direction: Direction.RIGHT });
+    if (pad.leftStick.y < -0.5) this.processInput({ direction: Direction.UP });
+    if (pad.leftStick.y > 0.5) this.processInput({ direction: Direction.DOWN });
+  }
+
+  /**
+   * Process pointer/touch input
+   */
+  processPointerInput(pointerPos: ICoordinate): void {
+    const playerPos = this.getPixelPosition();
+    const dx = pointerPos.x - playerPos.x;
+    const dy = pointerPos.y - playerPos.y;
+
+    if (Math.abs(dx) > Math.abs(dy)) {
+      this.processInput({ direction: dx > 0 ? Direction.RIGHT : Direction.LEFT });
+    } else {
+      this.processInput({ direction: dy > 0 ? Direction.DOWN : Direction.UP });
+    }
+  }
+
   update(time: number, delta: number): void {
     const moveSpeed = this.speed * delta / 1000;
-    
+
     if (this.fireActive) {
       this.fireDuration -= delta;
       if (this.fireDuration <= 0) {
         this.deactivateFire();
       }
     }
-    
+
     if (this.inputQueue.length > 0) {
       const nextDir = this.inputQueue[0];
       if (this.tryChangeDirection(nextDir)) {
         this.inputQueue.shift();
       }
     }
-    
+
     this.moveInDirection(moveSpeed);
   }
   
@@ -196,26 +255,64 @@ export class Player extends Entity {
     this.fireParticles = [];
   }
   
-  getFirePositions(): { x: number, y: number }[] {
+  getFirePositions(): ICoordinate[] {
     if (!this.fireActive) return [];
-    
-    const positions: { x: number, y: number }[] = [];
+
+    const positions: ICoordinate[] = [];
     const range = gameConfig.player.fireBreathRange;
-    
+
     for (let i = 1; i <= range; i++) {
       let fx = this.gridX;
       let fy = this.gridY;
-      
+
       switch (this.direction) {
         case Direction.UP: fy -= i; break;
         case Direction.DOWN: fy += i; break;
         case Direction.LEFT: fx -= i; break;
         case Direction.RIGHT: fx += i; break;
       }
-      
+
       positions.push({ x: fx, y: fy });
     }
-    
+
     return positions;
+  }
+
+  /**
+   * Check for collisions with enemies
+   * Returns collision result with details about what was hit
+   */
+  checkEnemyCollisions(enemies: Enemy[]): ICollisionResult {
+    const firePositions = this.getFirePositions();
+    const playerPos = this.getGridPosition();
+
+    for (const enemy of enemies) {
+      const enemyPos = enemy.getGridPosition();
+
+      // Check if enemy is hit by fire
+      const hitByFire = firePositions.some(pos =>
+        pos.x === enemyPos.x && pos.y === enemyPos.y
+      );
+
+      if (hitByFire) {
+        return {
+          hasCollision: true,
+          enemy: enemy,
+          hitByFire: true
+        };
+      }
+
+      // Check if player collides with enemy
+      const dist = this.getGridDistance(playerPos, enemyPos);
+      if (dist < 1) {
+        return {
+          hasCollision: true,
+          enemy: enemy,
+          hitByFire: false
+        };
+      }
+    }
+
+    return { hasCollision: false };
   }
 }

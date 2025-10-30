@@ -569,6 +569,46 @@
       "sourceSize": { "w": 330, "h": 330 }
     },
     {
+      "filename": "player_projectile_frame_1.png",
+      "frame": { "x": 2310, "y": 2310, "w": 330, "h": 330 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 2310, "y": 2310, "w": 330, "h": 330 },
+      "sourceSize": { "w": 330, "h": 330 }
+    },
+    {
+      "filename": "player_projectile_frame_2.png",
+      "frame": { "x": 2640, "y": 2310, "w": 330, "h": 330 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 2640, "y": 2310, "w": 330, "h": 330 },
+      "sourceSize": { "w": 330, "h": 330 }
+    },
+    {
+      "filename": "player_projectile_frame_3.png",
+      "frame": { "x": 2970, "y": 2310, "w": 330, "h": 330 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 2970, "y": 2310, "w": 330, "h": 330 },
+      "sourceSize": { "w": 330, "h": 330 }
+    },
+    {
+      "filename": "player_projectile_frame_4.png",
+      "frame": { "x": 3300, "y": 2310, "w": 330, "h": 330 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 3300, "y": 2310, "w": 330, "h": 330 },
+      "sourceSize": { "w": 330, "h": 330 }
+    },
+    {
+      "filename": "player_projectile_frame_5.png",
+      "frame": { "x": 3630, "y": 2310, "w": 330, "h": 330 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 3630, "y": 2310, "w": 330, "h": 330 },
+      "sourceSize": { "w": 330, "h": 330 }
+    },
+    {
       "filename": "player_up_frame_1.png",
       "frame": { "x": 0, "y": 2640, "w": 330, "h": 330 },
       "rotated": false,
