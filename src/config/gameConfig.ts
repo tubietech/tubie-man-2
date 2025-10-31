@@ -5,7 +5,7 @@ export const gameConfig = {
     fireBreathCooldown: 1000,
     fireBreathRange: 3,
     projectile: {
-      speed: 350, // Pixels per second
+      speed: 250, // Pixels per second
       maxDistance: 10, // Maximum distance in tiles
       spriteScale: 15.0, // Scale for projectile sprite (make it much more visible)
       animationFrameRate: 20, // Frame rate for projectile animation
@@ -28,7 +28,7 @@ export const gameConfig = {
     tileSize: 10,
     pellet: {
       score: 10,
-      size: 0.2, // Pellet radius as fraction of tile size (tileSize / 5 = 0.2)
+      size: 0.135, // Pellet radius as fraction of tile size 
       eatDistance: 0.3, // Distance from pellet center (as fraction of tile size) to eat it
     },
     powerup: {
