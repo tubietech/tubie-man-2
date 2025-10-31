@@ -9,33 +9,39 @@ import { gameConfig } from '../config/gameConfig';
  */
 export class BonusPathGenerator {
   /**
-   * Generate bonus path: entry tunnel -> pen door -> circle pen -> exit tunnel
+   * Generate bonus path: entry tunnel -> pen top-left corner -> circle pen -> exit tunnel
    */
   static generateBonusPath(mapData: IMapData, entryTunnelIndex: number): ICoordinate[] {
     const path: ICoordinate[] = [];
     const entryTunnel = mapData.tunnels[entryTunnelIndex];
     const exitTunnel = mapData.tunnels[entryTunnelIndex + 1] || mapData.tunnels[0]; // Linked tunnel
 
+    // Calculate pen top-left corner (2 tiles away from pen bounds)
+    const penTopLeft: ICoordinate = {
+      x: mapData.penBounds.minX - 2,
+      y: mapData.penBounds.minY - 2
+    };
+
     // Start at entry tunnel
     path.push({ x: entryTunnel.location.x, y: entryTunnel.location.y });
 
-    // Find path from tunnel to pen door
-    const pathToDoor = this.findPath(
+    // Find path from tunnel to pen top-left corner
+    const pathToPen = this.findPath(
       mapData.map,
       entryTunnel.location,
-      mapData.penDoor,
+      penTopLeft,
       mapData.penBounds
     );
-    path.push(...pathToDoor);
+    path.push(...pathToPen);
 
     // Add pen circling path
     const penCirclePath = this.generatePenCirclePath(mapData, gameConfig.map.bonus.penCircles);
     path.push(...penCirclePath);
 
-    // Find path from pen door to exit tunnel
+    // Find path from pen top-left corner to exit tunnel
     const pathToExit = this.findPath(
       mapData.map,
-      mapData.penDoor,
+      penTopLeft,
       exitTunnel.location,
       mapData.penBounds
     );

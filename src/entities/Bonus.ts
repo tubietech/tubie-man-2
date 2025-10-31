@@ -11,6 +11,8 @@ export class Bonus {
   active: boolean;
   collected: boolean;
   score: number;
+  gridX: number;
+  gridY: number;
 
   private scene: Phaser.Scene;
   private path: ICoordinate[];
@@ -43,6 +45,8 @@ export class Bonus {
 
     // Create sprite at first path position
     const startPos = this.path[0];
+    this.gridX = startPos.x;
+    this.gridY = startPos.y;
     const pixelX = mapOffsetX + startPos.x * tileSize + tileSize / 2;
     const pixelY = mapOffsetY + startPos.y * tileSize + tileSize / 2;
 
@@ -86,9 +90,15 @@ export class Bonus {
     const distance = Math.sqrt(dx * dx + dy * dy);
 
     if (distance <= moveDistance) {
-      // Reached target
+      // Reached target - update grid position
       this.sprite.x = this.targetPixelPosition.x;
       this.sprite.y = this.targetPixelPosition.y;
+
+      // Update grid position to match current path position
+      const currentGridPos = this.path[this.currentPathIndex];
+      this.gridX = currentGridPos.x;
+      this.gridY = currentGridPos.y;
+
       this.targetPixelPosition = null;
     } else {
       // Move towards target
@@ -101,9 +111,7 @@ export class Bonus {
    * Get current grid position
    */
   getGridPosition(): ICoordinate {
-    const gridX = Math.round((this.sprite.x - this.mapOffsetX) / this.tileSize);
-    const gridY = Math.round((this.sprite.y - this.mapOffsetY) / this.tileSize);
-    return { x: gridX, y: gridY };
+    return { x: this.gridX, y: this.gridY };
   }
 
   /**

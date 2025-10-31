@@ -403,6 +403,11 @@ export class GameScene extends Phaser.Scene {
     const playerPos = this.player.getGridPosition();
     const distance = this.player.getGridDistance(playerPos, bonusPos);
 
+    // Debug logging for first few frames
+    if (this.bonus && Math.random() < 0.01) {
+      console.log(`[BONUS] Player: (${playerPos.x}, ${playerPos.y}), Bonus: (${bonusPos.x}, ${bonusPos.y}), Distance: ${distance}`);
+    }
+
     if (distance < 1) {
       // Collect bonus
       this.bonus.collect();
@@ -411,7 +416,7 @@ export class GameScene extends Phaser.Scene {
       const uiRenderer = new UIRenderer(this, this.localization);
       uiRenderer.updateScoreText(this.scoreText, this.orientation, this.score);
 
-      console.log(`[BONUS] Collected! Score +${this.bonus.score}`);
+      console.log(`[BONUS] Collected! Score +${this.bonus.score}, New total: ${this.score}`);
 
       // Clean up bonus
       this.bonus = null;
