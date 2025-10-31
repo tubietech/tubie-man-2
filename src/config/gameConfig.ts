@@ -37,6 +37,20 @@ export const gameConfig = {
       min: 4,
       max: 6,
     },
+    bonus: {
+      sprites: [
+        'gtube.png', 'ephemeral_pump.png', 'oppossum_uni_pump.png', 'opossum_pump.png', 'tt_charger.png',
+        'ephemeral_bag.png', 'food_bottle.png', 'y_extension.png', 'enfit_wrench.png', 'pump_holder.png', 'straightnen_pump.png'
+      ],
+      scores: [100, 200, 300, 500, 700, 800, 1000, 1600, 2000, 3000, 5000],
+      defaultScore: 5000, // Score for level 12+
+      scale: 1.5, // Scale bonus sprite relative to tile size
+      speed: { easy: 60, medium: 100, hard: 140 }, // Pixels per second by difficulty
+      appearancesPerLevel: 2,
+      firstAppearance: { min: 50, max: 70 }, // Dots eaten before first appearance
+      secondAppearance: { min: 170, max: 180 }, // Dots eaten before second appearance
+      penCircles: 2, // Number of times to circle the pen
+    },
     enemyScore: 200,
     minTunnels: 1,
     maxTunnels: 2,

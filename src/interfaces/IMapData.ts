@@ -19,6 +19,8 @@ export interface IMapData {
   playerStart: ICoordinate;
   /** Positions of powerups */
   powerPellets: ICoordinate[];
+  /** Bonus path through the map (tunnel -> pen -> tunnel) */
+  bonusPath: ICoordinate[];
   /** Hash of the map for uniqueness comparison */
   hash: string;
 }

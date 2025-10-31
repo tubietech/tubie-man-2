@@ -1,6 +1,7 @@
 import { gameConfig } from '../config/gameConfig';
 import { IMapData } from '../interfaces/IMapData';
 import { generateMapHash } from './utils';
+import { BonusPathGenerator } from './BonusPathGenerator';
 
 export class MapGenerator {
   private static readonly MAX_GENERATION_ATTEMPTS = 5;
@@ -176,7 +177,7 @@ export class MapGenerator {
     // Place powerups
     const powerups = this.placePowerups(map, width, height, finalDeadEnds, penLeft, penRight, penTop, penBottom);
 
-    return {
+    const mapData: IMapData = {
       map,
       tunnels,
       penCenter: { x: centerX, y: centerY },
@@ -189,8 +190,17 @@ export class MapGenerator {
       },
       playerStart: { x: playerX, y: playerY },
       powerPellets,
+      bonusPath: [],
       hash: '' // Will be populated by generate() method
     };
+
+    // Generate bonus path if there are tunnels
+    if (tunnels.length > 0) {
+      const entryTunnelIndex = 0; // Use first tunnel by default
+      mapData.bonusPath = BonusPathGenerator.generateBonusPath(mapData, entryTunnelIndex);
+    }
+
+    return mapData;
   }
 
   /**

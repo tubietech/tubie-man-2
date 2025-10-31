@@ -9,6 +9,7 @@ import { MapTile } from '../enums/MapTile';
 import { MapValue } from '../enums/MapValue';
 import { getRandomInt, shuffleArray, getRandomArrayElement, generateMapHash } from './utils';
 import { getRandomPreloadedMap } from './preloadedMaps';
+import { BonusPathGenerator } from './BonusPathGenerator';
 
 export class MapGeneratorV2 {
   private static cells: ICell[] = [];
@@ -97,7 +98,7 @@ export class MapGeneratorV2 {
     const playerX = Math.floor(width / 2);
     const playerY = height - 1 - gameConfig.player.playerStartingHeight;
 
-    return {
+    const mapData: IMapData = {
       map,
       tunnels,
       penCenter: penData.penCenter,
@@ -105,8 +106,17 @@ export class MapGeneratorV2 {
       penBounds: penData.penBounds,
       playerStart: { x: playerX, y: playerY },
       powerPellets: powerups,
+      bonusPath: [],
       hash: '' // Will be populated by generate() method
     };
+
+    // Generate bonus path if there are tunnels
+    if (tunnels.length > 0) {
+      const entryTunnelIndex = 0;
+      mapData.bonusPath = BonusPathGenerator.generateBonusPath(mapData, entryTunnelIndex);
+    }
+
+    return mapData;
   }
 
   /**

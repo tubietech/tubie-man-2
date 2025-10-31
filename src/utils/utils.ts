@@ -2,8 +2,10 @@
  * Utility functions for common operations
  */
 
-import Phaser from 'phaser';
 import { ICoordinate } from '../interfaces/ICoordinate';
+
+// Phaser type import (type-only, doesn't cause runtime import)
+import type Phaser from 'phaser';
 
 /**
  * Check if a coordinate position is a wall tile
@@ -16,6 +18,15 @@ export function isWall(coord: ICoordinate, map: number[][]): boolean {
     return false;
   }
   return map[coord.y][coord.x] === 1;
+}
+
+/**
+ * Convert degrees to radians
+ * @param degrees Angle in degrees
+ * @returns Angle in radians
+ */
+function degToRad(degrees: number): number {
+  return degrees * Math.PI / 180;
 }
 
 /**
@@ -36,7 +47,7 @@ export function drawCorner(
   endAngle: number
 ): void {
   graphics.beginPath();
-  graphics.arc(centerX, centerY, radius, Phaser.Math.DegToRad(startAngle), Phaser.Math.DegToRad(endAngle), false);
+  graphics.arc(centerX, centerY, radius, degToRad(startAngle), degToRad(endAngle), false);
   graphics.strokePath();
 }
 

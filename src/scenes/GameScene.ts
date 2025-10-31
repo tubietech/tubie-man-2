@@ -13,6 +13,9 @@ import { Direction } from '../enums/Direction';
 import { Orientation } from '../enums/Orientation';
 import { LocalizationManager } from '../config/localization/LocalizationManager';
 import { gameConfig } from '../config/gameConfig';
+import { Bonus } from '../entities/Bonus';
+import { BonusSelector } from '../utils/BonusSelector';
+import { IBonusData } from '../interfaces/IBonusData';
 
 export class GameScene extends Phaser.Scene {
   mapData!: IMapData;
@@ -20,6 +23,11 @@ export class GameScene extends Phaser.Scene {
   powerups: Phaser.GameObjects.Sprite[] = [];
   player!: Player;
   enemies: Enemy[] = [];
+  bonus: Bonus | null = null;
+  bonusData!: IBonusData;
+  bonusAppearances: number[] = [];
+  currentBonusAppearance: number = 0;
+  pelletsEaten: number = 0;
   score: number = 0;
   level: number = 1;
   lives: number = 3;
@@ -115,8 +123,39 @@ export class GameScene extends Phaser.Scene {
     this.player = new Player(this, startX, startY, gameConfig.colors.player, playerSpeed, this.mapData, tileSize, this.mapOffsetX, this.mapOffsetY);
 
     this.createEnemies();
+    this.initializeBonus();
     this.setupInput();
     this.createUI();
+  }
+
+  initializeBonus() {
+    // Select bonus for this level
+    const bonusSelection = BonusSelector.selectBonus(this.level);
+
+    // Create bonus data
+    this.bonusData = {
+      sprite: bonusSelection.sprite,
+      score: bonusSelection.score,
+      entryTunnel: 0, // Use first tunnel
+      path: this.mapData.bonusPath
+    };
+
+    // Calculate when bonus should appear
+    const firstMin = gameConfig.map.bonus.firstAppearance.min;
+    const firstMax = gameConfig.map.bonus.firstAppearance.max;
+    const secondMin = gameConfig.map.bonus.secondAppearance.min;
+    const secondMax = gameConfig.map.bonus.secondAppearance.max;
+
+    this.bonusAppearances = [
+      firstMin + Math.floor(Math.random() * (firstMax - firstMin + 1)),
+      secondMin + Math.floor(Math.random() * (secondMax - secondMin + 1))
+    ];
+
+    this.currentBonusAppearance = 0;
+    this.pelletsEaten = 0;
+
+    console.log(`[BONUS] Initialized for level ${this.level}: ${bonusSelection.sprite}, score: ${bonusSelection.score}`);
+    console.log(`[BONUS] Will appear at ${this.bonusAppearances[0]} and ${this.bonusAppearances[1]} pellets eaten`);
   }
   
   createEnemies() {
@@ -216,6 +255,11 @@ export class GameScene extends Phaser.Scene {
     this.player.update(time, delta);
     this.enemies.forEach(enemy => enemy.update(time, delta));
 
+    // Update bonus
+    if (this.bonus && this.bonus.isActive()) {
+      this.bonus.update(delta);
+    }
+
     // Update tunnel cooldown
     if (this.tunnelCooldown > 0) {
       this.tunnelCooldown -= delta;
@@ -256,6 +300,10 @@ export class GameScene extends Phaser.Scene {
           uiRenderer.updatePowerText(this.powerText, this.orientation, true, false);
         } else {
           this.score += gameConfig.map.pellet.score;
+          this.pelletsEaten++;
+
+          // Check if bonus should spawn
+          this.checkBonusSpawn();
         }
 
         const uiRenderer = new UIRenderer(this, this.localization);
@@ -264,7 +312,10 @@ export class GameScene extends Phaser.Scene {
         this.checkWinCondition();
       }
     }
-    
+
+    // Check bonus collection
+    this.checkBonusCollection();
+
     this.checkEnemyCollision();
 
     const uiRenderer = new UIRenderer(this, this.localization);
@@ -315,9 +366,61 @@ export class GameScene extends Phaser.Scene {
     }
   }
   
+  checkBonusSpawn() {
+    // Check if we should spawn the bonus
+    if (this.currentBonusAppearance < this.bonusAppearances.length &&
+        this.pelletsEaten >= this.bonusAppearances[this.currentBonusAppearance]) {
+      this.spawnBonus();
+      this.currentBonusAppearance++;
+    }
+  }
+
+  spawnBonus() {
+    // Don't spawn if bonus is already active
+    if (this.bonus && this.bonus.isActive()) {
+      return;
+    }
+
+    const tileSize = this.getTileSize();
+
+    // Get bonus speed based on difficulty
+    const baseSpeed = gameConfig.map.bonus.speed[this.difficulty as keyof typeof gameConfig.map.bonus.speed];
+    // Scale speed based on tile size (base tile size is 10)
+    const bonusSpeed = baseSpeed * (tileSize / gameConfig.map.tileSize);
+
+    this.bonus = new Bonus(this, this.bonusData, tileSize, this.mapOffsetX, this.mapOffsetY, bonusSpeed);
+
+    console.log(`[BONUS] Spawned bonus #${this.currentBonusAppearance + 1}`);
+  }
+
+  checkBonusCollection() {
+    if (!this.bonus || !this.bonus.isActive()) {
+      return;
+    }
+
+    // Check distance from player to bonus
+    const bonusPos = this.bonus.getGridPosition();
+    const playerPos = this.player.getGridPosition();
+    const distance = this.player.getGridDistance(playerPos, bonusPos);
+
+    if (distance < 1) {
+      // Collect bonus
+      this.bonus.collect();
+      this.score += this.bonus.score;
+
+      const uiRenderer = new UIRenderer(this, this.localization);
+      uiRenderer.updateScoreText(this.scoreText, this.orientation, this.score);
+
+      console.log(`[BONUS] Collected! Score +${this.bonus.score}`);
+
+      // Clean up bonus
+      this.bonus = null;
+    }
+  }
+
   checkWinCondition() {
     let pelletsRemaining = 0;
-    
+
     for (let y = 0; y < this.pellets.length; y++) {
       for (let x = 0; x < this.pellets[y].length; x++) {
         if (this.pellets[y][x]) {
@@ -325,7 +428,7 @@ export class GameScene extends Phaser.Scene {
         }
       }
     }
-    
+
     if (pelletsRemaining === 0) {
       this.nextLevel();
     }
@@ -423,6 +526,12 @@ export class GameScene extends Phaser.Scene {
           powerup.destroy();
         }
       });
+    }
+
+    // Clean up bonus
+    if (this.bonus) {
+      this.bonus.deactivate();
+      this.bonus = null;
     }
 
     // Clean up map rectangles (pen interiors and tunnels)
