@@ -244,7 +244,7 @@ export class Player extends Entity {
     this.hasFirePower = false;
 
     // Create multiple projectiles in a row based on config
-    const projectileCount = gameConfig.player.projectileCount;
+    const projectileCount = gameConfig.player.projectile.count;
     console.log(`[PLAYER] Creating ${projectileCount} projectile(s) from player position (${this.gridX}, ${this.gridY}), facing ${Direction[this.direction]}`);
 
     for (let i = 0; i < projectileCount; i++) {
@@ -270,7 +270,7 @@ export class Player extends Entity {
         this.tileSize,
         this.mapOffsetX,
         this.mapOffsetY,
-        gameConfig.player.projectileSpeed
+        gameConfig.player.projectile.speed
       );
 
       this.projectiles.push(projectile);

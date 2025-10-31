@@ -89,7 +89,7 @@
       "sourceSize": { "w": 330, "h": 330 }
     },
     {
-      "filename": "bandaid.png",
+      "filename": "powerup.png",
       "frame": { "x": 3630, "y": 0, "w": 330, "h": 330 },
       "rotated": false,
       "trimmed": false,

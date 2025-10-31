@@ -641,8 +641,8 @@ export class MapGenerator {
     }
 
     // Place powerups in dead ends (if needed to meet minimum)
-    const minPowerups = gameConfig.map.minPowerups;
-    const maxPowerups = gameConfig.map.maxPowerups;
+    const minPowerups = gameConfig.map.powerup.min;
+    const maxPowerups = gameConfig.map.powerup.max;
 
     for (const deadEnd of deadEnds) {
       if (powerups.length >= maxPowerups) {

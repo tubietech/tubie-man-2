@@ -17,7 +17,7 @@ import { gameConfig } from '../config/gameConfig';
 export class GameScene extends Phaser.Scene {
   mapData!: IMapData;
   pellets: Phaser.GameObjects.Arc[][] = [];
-  powerups: Phaser.GameObjects.Arc[] = [];
+  powerups: Phaser.GameObjects.Sprite[] = [];
   player!: Player;
   enemies: Enemy[] = [];
   score: number = 0;
@@ -243,19 +243,19 @@ export class GameScene extends Phaser.Scene {
       const distance = Math.sqrt(distX * distX + distY * distY);
 
       // Only eat pellet when player is within configured distance from center
-      if (distance < tileSize * gameConfig.player.pelletEatDistance) {
+      if (distance < tileSize * gameConfig.map.pellet.eatDistance) {
         const isPower = this.powerups.includes(pellet);
 
         pellet.destroy();
         this.pellets[py][px] = null as any;
 
         if (isPower) {
-          this.score += gameConfig.map.powerupScore;
+          this.score += gameConfig.map.powerup.score;
           this.player.hasFirePower = true;
           const uiRenderer = new UIRenderer(this, this.localization);
           uiRenderer.updatePowerText(this.powerText, this.orientation, true, false);
         } else {
-          this.score += gameConfig.map.pelletScore;
+          this.score += gameConfig.map.pellet.score;
         }
 
         const uiRenderer = new UIRenderer(this, this.localization);

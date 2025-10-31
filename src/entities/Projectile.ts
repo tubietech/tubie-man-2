@@ -40,7 +40,7 @@ export class Projectile implements IProjectile {
     this.speed = speed;
     this.active = true;
     this.distanceTraveled = 0;
-    this.maxDistance = gameConfig.player.projectileMaxDistance * tileSize;
+    this.maxDistance = gameConfig.player.projectile.maxDistance * tileSize;
 
     // Calculate starting position one tile ahead of player
     let startX = startPos.x;

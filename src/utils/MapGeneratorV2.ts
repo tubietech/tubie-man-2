@@ -1334,14 +1334,14 @@ export class MapGeneratorV2 {
 
     for (const corner of corners) {
       const nearestPath = this.findNearestPath(map, corner.x, corner.y, width, height);
-      if (nearestPath && powerups.length < gameConfig.map.maxPowerups) {
+      if (nearestPath && powerups.length < gameConfig.map.powerup.max) {
         powerups.push(nearestPath);
         map[nearestPath.y][nearestPath.x] = MapValue.POWERUP;
       }
     }
 
     // Add more if needed
-    while (powerups.length < gameConfig.map.minPowerups) {
+    while (powerups.length < gameConfig.map.powerup.min) {
       const x = getRandomInt(1, width - 2);
       const y = getRandomInt(1, height - 2);
 

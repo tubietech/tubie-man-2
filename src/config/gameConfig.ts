@@ -1,22 +1,23 @@
 export const gameConfig = {
   player: {
-    speed: { easy: 80, medium: 150, hard: 200 },
+    speed: { easy: 70, medium: 90, hard: 110 },
     fireBreathDuration: 1500, // Halved from 3000
     fireBreathCooldown: 1000,
     fireBreathRange: 3,
-    projectileSpeed: 350, // Pixels per second
-    projectileMaxDistance: 10, // Maximum distance in tiles
-    projectileSpriteScale: 15.0, // Scale for projectile sprite (make it much more visible)
-    projectileAnimationFrameRate: 20, // Frame rate for projectile animation
-    projectileCount: 3, // Number of projectiles fired in a row
+    projectile: {
+      speed: 350, // Pixels per second
+      maxDistance: 10, // Maximum distance in tiles
+      spriteScale: 15.0, // Scale for projectile sprite (make it much more visible)
+      animationFrameRate: 20, // Frame rate for projectile animation
+      count: 3, // Number of projectiles fired in a row
+    },
     startLives: 3,
     playerStartingHeight: 7, // Player starts 7 rows above bottom of map
     animationFrameRate: 15,
-    spriteScale: 1.95,
-    pelletEatDistance: 0.3 // Distance from pellet center (as fraction of tile size) to eat it
+    spriteScale: 2,
   },
   enemy: {
-    speed: { easy: 80, medium: 120, hard: 180 },
+    speed: { easy: 70, medium: 95, hard: 120 },
     scaredDuration: 5000,
     types: ['blinky', 'pinky', 'inky', 'clyde'],
     respawnDelay: 2000
@@ -25,18 +26,25 @@ export const gameConfig = {
     width: 28,
     height: 31,
     tileSize: 10,
-    pelletScore: 10,
-    powerupScore: 50,
+    pellet: {
+      score: 10,
+      size: 0.2, // Pellet radius as fraction of tile size (tileSize / 5 = 0.2)
+      eatDistance: 0.3, // Distance from pellet center (as fraction of tile size) to eat it
+    },
+    powerup: {
+      score: 50,
+      scale: 1.7, // Scale powerup sprite relative to tile size (0-1)
+      min: 4,
+      max: 6,
+    },
     enemyScore: 200,
     minTunnels: 1,
     maxTunnels: 2,
     tunnelCooldown: 500, // Milliseconds to wait before allowing re-entry to a tunnel
     fillIterations: 3,
-    minPowerups: 4,
-    maxPowerups: 6,
     maxDeadEndsPerHalf: 2,
     wallRadius: 4, // Corner radius for wall tiles
-    wallEdgeOffset: 0.5, // Inset walls by 50% from tile edges (0-1 scale)
+    wallEdgeOffset: 0.6, // Inset walls by 60% from tile edges (0-1 scale)
     wallOutlineThickness: 3,
     thinWallAdjustment: 1.5,
     generation: {
@@ -76,5 +84,9 @@ export const gameConfig = {
     gamepad: {
       fire: 0
     }
+  },
+  window: {
+    widthModifier: 0.99, // Percentage of viewport width (0-1)
+    heightModifier: 0.99, // Percentage of viewport height (0-1)
   }
 };

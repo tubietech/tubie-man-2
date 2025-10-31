@@ -4,6 +4,7 @@ import { Orientation } from '../enums/Orientation';
 import { PreloadScene } from '../scenes/PreloadScene';
 import { GameScene } from '../scenes/GameScene';
 import { MenuScene } from '../scenes/MenuScene';
+import { gameConfig } from '../config/gameConfig';
 
 export default function FireBreatherGame() {
   const gameRef = useRef<HTMLDivElement>(null);
@@ -26,9 +27,9 @@ export default function FireBreatherGame() {
     if (!gameRef.current || phaserGameRef.current) return;
 
     // Calculate optimal dimensions based on viewport
-    // Use a percentage of viewport size to ensure it scales well on all screens
-    const targetWidth = Math.floor(window.innerWidth * 0.95);
-    const targetHeight = Math.floor(window.innerHeight * 0.95);
+    // Use config modifiers to ensure it scales well on all screens
+    const targetWidth = Math.floor(window.innerWidth * gameConfig.window.widthModifier);
+    const targetHeight = Math.floor(window.innerHeight * gameConfig.window.heightModifier);
 
     const config: Phaser.Types.Core.GameConfig = {
       type: Phaser.AUTO,

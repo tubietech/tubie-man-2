@@ -412,7 +412,7 @@ export class MapRenderer {
 
   createPellets(): IPelletData {
     const pellets: Phaser.GameObjects.Arc[][] = [];
-    const powerups: Phaser.GameObjects.Arc[] = [];
+    const powerups: Phaser.GameObjects.Sprite[] = [];
     const doorStartX = this.mapData.penDoor.x;
     const doorY = this.mapData.penDoor.y;
     const doorWidth = gameConfig.map.enemyPen.doorWidth;
@@ -440,7 +440,7 @@ export class MapRenderer {
           const pellet = this.scene.add.circle(
             this.mapOffsetX + x * this.tileSize + this.tileSize / 2,
             this.mapOffsetY + y * this.tileSize + this.tileSize / 2,
-            this.tileSize / 5,
+            this.tileSize * gameConfig.map.pellet.size,
             gameConfig.colors.pellet
           );
           pellets[y][x] = pellet;
@@ -458,13 +458,19 @@ export class MapRenderer {
         pellets[y][x].destroy();
       }
 
-      // Create powerup
-      const powerup = this.scene.add.circle(
+      // Create powerup sprite
+      const powerup = this.scene.add.sprite(
         this.mapOffsetX + x * this.tileSize + this.tileSize / 2,
         this.mapOffsetY + y * this.tileSize + this.tileSize / 2,
-        this.tileSize / 2.5,
-        gameConfig.colors.powerup
+        'atlas',
+        'powerup.png'
       );
+
+      // Scale sprite based on config value
+      const targetSize = this.tileSize * gameConfig.map.powerup.scale;
+      const spriteScale = targetSize / powerup.width;
+      powerup.setScale(spriteScale);
+
       powerups.push(powerup);
 
       if (!pellets[y]) {

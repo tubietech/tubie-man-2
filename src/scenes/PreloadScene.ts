@@ -108,7 +108,7 @@ export class PreloadScene extends Phaser.Scene {
   }
 
   private createProjectileAnimation() {
-    const frameRate = gameConfig.player.projectileAnimationFrameRate;
+    const frameRate = gameConfig.player.projectile.animationFrameRate;
 
     // Projectile animation
     this.anims.create({
