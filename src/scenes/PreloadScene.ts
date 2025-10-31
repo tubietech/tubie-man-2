@@ -7,8 +7,12 @@ export class PreloadScene extends Phaser.Scene {
   }
 
   preload() {
+    // Load local fonts
+    this.load.font('PressStart2P', '/assets/fonts/PressStart2P.ttf', 'truetype');
+
     // Load the sprite atlas
     this.load.atlas('atlas', '/assets/sprites/atlas.png', '/assets/sprites/atlas.json');
+
 
     // Optional: Add a loading bar
     const width = this.cameras.main.width;
@@ -20,11 +24,13 @@ export class PreloadScene extends Phaser.Scene {
     progressBox.fillRect(width / 2 - 160, height / 2 - 25, 320, 50);
 
     const loadingText = this.add.text(width / 2, height / 2 - 50, 'Loading...', {
+      fontFamily: 'PressStart2P',
       fontSize: '20px',
       color: '#ffffff'
     }).setOrigin(0.5);
 
     const percentText = this.add.text(width / 2, height / 2, '0%', {
+      fontFamily: 'PressStart2P',
       fontSize: '18px',
       color: '#ffffff'
     }).setOrigin(0.5);

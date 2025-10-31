@@ -480,6 +480,7 @@ export class GameScene extends Phaser.Scene {
       this.cameras.main.centerY,
       `${loc.getText('gameOver')}\n\n${loc.getText('clickToRestart')}`,
       {
+        fontFamily: 'PressStart2P',
         fontSize: '32px',
         color: '#fff',
         align: 'center'

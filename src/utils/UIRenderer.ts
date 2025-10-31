@@ -49,26 +49,31 @@ export class UIRenderer {
     loc: LocalizationManager
   ): IUIElements {
     const scoreText = this.scene.add.text(mapOffsetX + 10, mapOffsetY + 10, `${loc.getText('score')}: ${score}`, {
+      fontFamily: 'PressStart2P',
       fontSize: '16px',
       color: '#fff'
     }).setScrollFactor(0);
 
     const highScoreText = this.scene.add.text(mapOffsetX + mapWidth / 2, mapOffsetY + 10, `${loc.getText('highScore')}: 0`, {
+      fontFamily: 'PressStart2P',
       fontSize: '16px',
       color: '#fff'
     }).setOrigin(0.5, 0).setScrollFactor(0);
 
     const levelText = this.scene.add.text(mapOffsetX + mapWidth - 10, mapOffsetY + 10, `${loc.getText('level')}: ${level}`, {
+      fontFamily: 'PressStart2P',
       fontSize: '16px',
       color: '#fff'
     }).setOrigin(1, 0).setScrollFactor(0);
 
     const livesText = this.scene.add.text(mapOffsetX + 10, mapOffsetY + mapHeight + 10, `${loc.getText('lives')}: ${lives}`, {
+      fontFamily: 'PressStart2P',
       fontSize: '16px',
       color: '#fff'
     }).setScrollFactor(0);
 
     const powerText = this.scene.add.text(mapOffsetX + mapWidth / 2, mapOffsetY + mapHeight + 10, `${loc.getText('power')}: ${loc.getText('powerReady')}`, {
+      fontFamily: 'PressStart2P',
       fontSize: '16px',
       color: '#00ff00'
     }).setOrigin(0.5, 0).setScrollFactor(0);
@@ -93,30 +98,35 @@ export class UIRenderer {
     const uiX = mapOffsetX + mapWidth + 20;
 
     const scoreText = this.scene.add.text(uiX, 50, `${loc.getText('score')}:\n${score}`, {
+      fontFamily: 'PressStart2P',
       fontSize: '18px',
       color: '#fff',
       align: 'left'
     }).setScrollFactor(0);
 
     const highScoreText = this.scene.add.text(uiX, 120, `${loc.getText('highScore')}:\n0`, {
+      fontFamily: 'PressStart2P',
       fontSize: '18px',
       color: '#fff',
       align: 'left'
     }).setScrollFactor(0);
 
     const livesText = this.scene.add.text(uiX, 190, `${loc.getText('lives')}:\n${lives}`, {
+      fontFamily: 'PressStart2P',
       fontSize: '18px',
       color: '#fff',
       align: 'left'
     }).setScrollFactor(0);
 
     const levelText = this.scene.add.text(uiX, 260, `${loc.getText('level')}:\n${level}`, {
+      fontFamily: 'PressStart2P',
       fontSize: '18px',
       color: '#fff',
       align: 'left'
     }).setScrollFactor(0);
 
     const powerText = this.scene.add.text(uiX, 330, `${loc.getText('power')}:\n${loc.getText('powerReady')}`, {
+      fontFamily: 'PressStart2P',
       fontSize: '18px',
       color: '#00ff00',
       align: 'left'

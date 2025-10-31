@@ -28,6 +28,7 @@ export class MenuScene extends Phaser.Scene {
       this.cameras.main.height - 30,
       'Loading maps...',
       {
+        fontFamily: 'PressStart2P',
         fontSize: '14px',
         color: '#888'
       }
@@ -50,12 +51,14 @@ export class MenuScene extends Phaser.Scene {
       });
     
     this.add.text(centerX, 80, loc.getText('gameTitle'), {
+      fontFamily: 'PressStart2P',
       fontSize: '48px',
       color: '#ffff00',
       fontStyle: 'bold'
     }).setOrigin(0.5).setScrollFactor(0);
 
     this.add.text(centerX, 150, loc.getText('selectDifficulty'), {
+      fontFamily: 'PressStart2P',
       fontSize: '24px',
       color: '#fff'
     }).setOrigin(0.5).setScrollFactor(0);
@@ -80,6 +83,7 @@ export class MenuScene extends Phaser.Scene {
         y,
         loc.getText(diff.key as any),
         {
+          fontFamily: 'PressStart2P',
           fontSize: '28px',
           color: diff.color
         }
@@ -95,6 +99,7 @@ export class MenuScene extends Phaser.Scene {
     });
 
     this.add.text(centerX, 450, loc.getText('controls'), {
+      fontFamily: 'PressStart2P',
       fontSize: '16px',
       color: '#aaa',
       align: 'center'
@@ -108,6 +113,7 @@ export class MenuScene extends Phaser.Scene {
     ];
 
     this.add.text(centerX, 520, 'Language:', {
+      fontFamily: 'PressStart2P',
       fontSize: '14px',
       color: '#888'
     }).setOrigin(0.5).setScrollFactor(0);
@@ -127,6 +133,7 @@ export class MenuScene extends Phaser.Scene {
         y,
         langObj.label,
         {
+          fontFamily: 'PressStart2P',
           fontSize: '16px',
           color: this.localization.getLanguage() === langObj.lang ? '#ffff00' : '#fff'
         }
