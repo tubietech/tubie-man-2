@@ -1,9 +1,14 @@
 export const gameConfig = {
   player: {
     speed: { easy: 80, medium: 150, hard: 200 },
-    fireBreathDuration: 3000,
+    fireBreathDuration: 1500, // Halved from 3000
     fireBreathCooldown: 1000,
     fireBreathRange: 3,
+    projectileSpeed: 350, // Pixels per second
+    projectileMaxDistance: 10, // Maximum distance in tiles
+    projectileSpriteScale: 15.0, // Scale for projectile sprite (make it much more visible)
+    projectileAnimationFrameRate: 20, // Frame rate for projectile animation
+    projectileCount: 3, // Number of projectiles fired in a row
     startLives: 3,
     playerStartingHeight: 7, // Player starts 7 rows above bottom of map
     animationFrameRate: 15,

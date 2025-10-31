@@ -48,6 +48,9 @@ export class PreloadScene extends Phaser.Scene {
     // Create player animations here so they're available in all scenes
     this.createPlayerAnimations();
 
+    // Create projectile animation
+    this.createProjectileAnimation();
+
     // Start the menu scene
     this.scene.start('MenuScene');
   }
@@ -98,6 +101,24 @@ export class PreloadScene extends Phaser.Scene {
         { key: 'atlas', frame: 'player_right_frame_1.png' },
         { key: 'atlas', frame: 'player_right_frame_2.png' },
         { key: 'atlas', frame: 'player_right_frame_3.png' }
+      ],
+      frameRate: frameRate,
+      repeat: -1
+    });
+  }
+
+  private createProjectileAnimation() {
+    const frameRate = gameConfig.player.projectileAnimationFrameRate;
+
+    // Projectile animation
+    this.anims.create({
+      key: 'projectile_anim',
+      frames: [
+        { key: 'atlas', frame: 'player_projectile_frame_1.png' },
+        { key: 'atlas', frame: 'player_projectile_frame_2.png' },
+        { key: 'atlas', frame: 'player_projectile_frame_3.png' },
+        { key: 'atlas', frame: 'player_projectile_frame_4.png' },
+        { key: 'atlas', frame: 'player_projectile_frame_5.png' }
       ],
       frameRate: frameRate,
       repeat: -1

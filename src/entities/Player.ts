@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { Entity } from './Entity';
 import { Enemy } from './enemies/Enemy';
+import { Projectile } from './Projectile';
 import { Direction } from '../enums/Direction';
 import { gameConfig } from '../config/gameConfig';
 import { IMapData } from '../interfaces/IMapData';
@@ -12,7 +13,7 @@ export class Player extends Entity {
   hasFirePower: boolean = false;
   fireActive: boolean = false;
   fireDuration: number = 0;
-  fireParticles: Phaser.GameObjects.Arc[] = [];
+  projectiles: Projectile[] = [];
   inputQueue: Direction[] = [];
   animatedSprite!: Phaser.GameObjects.Sprite;
   isMoving: boolean = false;
@@ -101,9 +102,23 @@ export class Player extends Entity {
   update(time: number, delta: number): void {
     const moveSpeed = this.speed * delta / 1000;
 
+    // Update all projectiles
+    for (let i = this.projectiles.length - 1; i >= 0; i--) {
+      const projectile = this.projectiles[i];
+      projectile.update(delta);
+
+      // Clean up inactive projectiles
+      if (!projectile.active) {
+        console.log(`[PLAYER] Projectile ${i} became inactive, cleaning up`);
+        this.projectiles.splice(i, 1);
+      }
+    }
+
+    // Update fire duration timer
     if (this.fireActive) {
       this.fireDuration -= delta;
       if (this.fireDuration <= 0) {
+        console.log(`[PLAYER] Fire duration expired, deactivating`);
         this.deactivateFire();
       }
     }
@@ -217,65 +232,72 @@ export class Player extends Entity {
   }
   
   activateFire(): void {
-    if (!this.hasFirePower || this.fireActive) return;
+    console.log(`[PLAYER] activateFire called - hasFirePower: ${this.hasFirePower}, fireActive: ${this.fireActive}`);
+
+    if (!this.hasFirePower || this.fireActive) {
+      console.log(`[PLAYER] Fire activation blocked - hasFirePower: ${this.hasFirePower}, fireActive: ${this.fireActive}`);
+      return;
+    }
 
     this.fireActive = true;
     this.fireDuration = gameConfig.player.fireBreathDuration;
     this.hasFirePower = false;
 
-    const range = gameConfig.player.fireBreathRange;
+    // Create multiple projectiles in a row based on config
+    const projectileCount = gameConfig.player.projectileCount;
+    console.log(`[PLAYER] Creating ${projectileCount} projectile(s) from player position (${this.gridX}, ${this.gridY}), facing ${Direction[this.direction]}`);
 
-    this.fireParticles = [];
-    for (let i = 1; i <= range; i++) {
-      let fx = this.gridX;
-      let fy = this.gridY;
+    for (let i = 0; i < projectileCount; i++) {
+      // Calculate starting position for this projectile (player position + i tiles ahead)
+      let startX = this.gridX;
+      let startY = this.gridY;
 
+      // Offset by i tiles in the firing direction
       switch (this.direction) {
-        case Direction.UP: fy -= i; break;
-        case Direction.DOWN: fy += i; break;
-        case Direction.LEFT: fx -= i; break;
-        case Direction.RIGHT: fx += i; break;
+        case Direction.UP: startY -= i; break;
+        case Direction.DOWN: startY += i; break;
+        case Direction.LEFT: startX -= i; break;
+        case Direction.RIGHT: startX += i; break;
       }
 
-      if (this.canMove(fx, fy)) {
-        const fire = this.scene.add.circle(
-          this.mapOffsetX + fx * this.tileSize + this.tileSize / 2,
-          this.mapOffsetY + fy * this.tileSize + this.tileSize / 2,
-          this.tileSize / 3,
-          gameConfig.colors.fire
-        );
-        this.fireParticles.push(fire);
-      }
+      const startPos: ICoordinate = { x: startX, y: startY };
+
+      const projectile = new Projectile(
+        this.scene,
+        startPos,
+        this.direction,
+        this.mapData,
+        this.tileSize,
+        this.mapOffsetX,
+        this.mapOffsetY,
+        gameConfig.player.projectileSpeed
+      );
+
+      this.projectiles.push(projectile);
     }
+
+    console.log(`[PLAYER] ${projectileCount} projectile(s) created successfully`);
   }
-  
+
   deactivateFire(): void {
     this.fireActive = false;
-    this.fireParticles.forEach(p => p.destroy());
-    this.fireParticles = [];
-  }
-  
-  getFirePositions(): ICoordinate[] {
-    if (!this.fireActive) return [];
 
-    const positions: ICoordinate[] = [];
-    const range = gameConfig.player.fireBreathRange;
-
-    for (let i = 1; i <= range; i++) {
-      let fx = this.gridX;
-      let fy = this.gridY;
-
-      switch (this.direction) {
-        case Direction.UP: fy -= i; break;
-        case Direction.DOWN: fy += i; break;
-        case Direction.LEFT: fx -= i; break;
-        case Direction.RIGHT: fx += i; break;
+    // Clean up all projectiles
+    if (this.projectiles && this.projectiles.length > 0) {
+      for (const projectile of this.projectiles) {
+        if (projectile && projectile.active) {
+          projectile.destroy();
+        }
       }
-
-      positions.push({ x: fx, y: fy });
+      this.projectiles = [];
     }
+  }
 
-    return positions;
+  getFirePositions(): ICoordinate[] {
+    // Return positions of all active projectiles
+    return this.projectiles
+      .filter(p => p.active)
+      .map(p => p.getGridPosition());
   }
 
   /**

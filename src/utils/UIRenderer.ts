@@ -150,6 +150,11 @@ export class UIRenderer {
   }
 
   updatePowerText(powerText: Phaser.GameObjects.Text, orientation: Orientation, hasFirePower: boolean, fireActive: boolean): void {
+    // Safety check: ensure text object is still active and not destroyed
+    if (!powerText || !powerText.active || !powerText.scene) {
+      return;
+    }
+
     const loc = this.localization;
 
     if (!hasFirePower && !fireActive) {

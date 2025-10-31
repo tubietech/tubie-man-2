@@ -184,7 +184,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   private isInitialized(): boolean {
-    return !!(this.cursors && this.player);
+    return !!(this.cursors && this.player && this.powerText);
   }
 
   update(time: number, delta: number) {

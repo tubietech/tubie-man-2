@@ -769,21 +769,42 @@ export class MapGenerator {
       }
     }
 
-    // Count total walkable tiles (excluding pen)
+    // Count total walkable tiles (excluding pen) and check for unreachable PATH tiles
     let totalWalkable = 0;
+    let totalPaths = 0;
+    const unreachablePaths: { x: number, y: number }[] = [];
+
     for (let y = 0; y < height; y++) {
       for (let x = 0; x < width; x++) {
         const isWalkable = map[y][x] === 0 || map[y][x] === 3 || map[y][x] === 4 || map[y][x] === 5;
+        const isPath = map[y][x] === 0; // PATH tiles where pellets spawn
         const isInPen = (x >= penBounds.minX && x <= penBounds.maxX &&
                         y >= penBounds.minY && y <= penBounds.maxY);
 
         if (isWalkable && !isInPen) {
           totalWalkable++;
         }
+
+        // Track unreachable PATH tiles specifically (these would have isolated pellets)
+        if (isPath && !isInPen) {
+          totalPaths++;
+          if (!visited[y][x]) {
+            unreachablePaths.push({ x, y });
+          }
+        }
       }
     }
 
     console.log(`Flood fill: visited ${visitedCount} / ${totalWalkable} walkable tiles`);
+
+    // Check if any PATH tiles are unreachable (these would create isolated pellets)
+    if (unreachablePaths.length > 0) {
+      console.log(`CONNECTIVITY FAILED: ${unreachablePaths.length} unreachable PATH tiles detected (would create isolated/surrounded pellets)`);
+      console.log(`Unreachable PATH positions:`, unreachablePaths.slice(0, 10)); // Show first 10
+      return false;
+    }
+
+    console.log(`All ${totalPaths} PATH tiles are reachable - no isolated pellets`);
 
     // All walkable tiles should be visited
     return visitedCount === totalWalkable;
