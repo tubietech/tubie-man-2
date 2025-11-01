@@ -8,7 +8,7 @@ import { Doc } from '../entities/enemies/Doc';
 import { MapGeneratorV2 } from '../utils/MapGeneratorV2';
 import { MapRenderer } from '../utils/MapRenderer';
 import { UIRenderer } from '../utils/UIRenderer';
-import { canEatPellet } from '../utils/utils';
+import { canEatPellet, calculateScaledSpeed, calculateBonusAppearances } from '../utils/utils';
 import { IMapData } from '../interfaces/IMapData';
 import { Direction } from '../enums/Direction';
 import { Orientation } from '../enums/Orientation';
@@ -35,6 +35,7 @@ export class GameScene extends Phaser.Scene {
   difficulty: string = 'medium';
   orientation: Orientation = Orientation.HORIZONTAL;
   localization!: LocalizationManager;
+  uiRenderer!: UIRenderer;
   tunnelCooldown: number = 0;
   mapOffsetX: number = 0;
   mapOffsetY: number = 0;
@@ -62,9 +63,10 @@ export class GameScene extends Phaser.Scene {
     this.difficulty = data.difficulty || 'medium';
     this.orientation = data.orientation || Orientation.HORIZONTAL;
     this.localization = LocalizationManager.getInstance();
+    this.uiRenderer = new UIRenderer(this, this.localization);
 
     this.graphics = this.add.graphics();
-    
+
     if (data.reset) {
       this.score = 0;
       this.level = 1;
@@ -114,9 +116,8 @@ export class GameScene extends Phaser.Scene {
     this.pellets = pellets;
     this.powerups = powerups;
 
-    const baseSpeed = gameConfig.player.speed[this.difficulty as keyof typeof gameConfig.player.speed];
-    // Scale speed based on tile size (base tile size is 10)
-    const playerSpeed = baseSpeed * (tileSize / gameConfig.map.tileSize);
+    // Calculate scaled player speed
+    const playerSpeed = calculateScaledSpeed(gameConfig.player.speed, this.difficulty, tileSize);
 
     // Use player start position from map data
     const startX = this.mapData.playerStart.x;
@@ -143,16 +144,7 @@ export class GameScene extends Phaser.Scene {
     };
 
     // Calculate when bonus should appear
-    const firstMin = gameConfig.map.bonus.firstAppearance.min;
-    const firstMax = gameConfig.map.bonus.firstAppearance.max;
-    const secondMin = gameConfig.map.bonus.secondAppearance.min;
-    const secondMax = gameConfig.map.bonus.secondAppearance.max;
-
-    this.bonusAppearances = [
-      firstMin + Math.floor(Math.random() * (firstMax - firstMin + 1)),
-      secondMin + Math.floor(Math.random() * (secondMax - secondMin + 1))
-    ];
-
+    this.bonusAppearances = calculateBonusAppearances();
     this.currentBonusAppearance = 0;
     this.pelletsEaten = 0;
 
@@ -162,9 +154,7 @@ export class GameScene extends Phaser.Scene {
   
   createEnemies() {
     const tileSize = this.getTileSize();
-    const baseSpeed = gameConfig.enemy.speed[this.difficulty as keyof typeof gameConfig.enemy.speed];
-    // Scale speed based on tile size (base tile size is 10)
-    const enemySpeed = baseSpeed * (tileSize / gameConfig.map.tileSize);
+    const enemySpeed = calculateScaledSpeed(gameConfig.enemy.speed, this.difficulty, tileSize);
     const types = [Pokey, Pricky, Stingy, Doc];
 
     const penX = this.mapData.penCenter.x;
@@ -239,8 +229,7 @@ export class GameScene extends Phaser.Scene {
     const mapWidth = gameConfig.map.width * tileSize;
     const mapHeight = gameConfig.map.height * tileSize;
 
-    const uiRenderer = new UIRenderer(this, this.localization);
-    const uiElements = uiRenderer.createUI(
+    const uiElements = this.uiRenderer.createUI(
       this.orientation,
       this.mapOffsetX,
       this.mapOffsetY,
@@ -260,6 +249,14 @@ export class GameScene extends Phaser.Scene {
 
   private isInitialized(): boolean {
     return !!(this.cursors && this.player && this.powerText);
+  }
+
+  private getSceneRestartData(reset: boolean): { difficulty: string; orientation: Orientation; reset: boolean } {
+    return {
+      difficulty: this.difficulty,
+      orientation: this.orientation,
+      reset
+    };
   }
 
   update(time: number, delta: number) {
@@ -332,8 +329,7 @@ export class GameScene extends Phaser.Scene {
         if (isPower) {
           this.score += gameConfig.map.powerup.score;
           this.player.hasFirePower = true;
-          const uiRenderer = new UIRenderer(this, this.localization);
-          uiRenderer.updatePowerText(this.powerText, this.orientation, true, false);
+          this.uiRenderer.updatePowerText(this.powerText, this.orientation, true, false);
         } else {
           this.score += gameConfig.map.pellet.score;
           this.pelletsEaten++;
@@ -342,8 +338,7 @@ export class GameScene extends Phaser.Scene {
           this.checkBonusSpawn();
         }
 
-        const uiRenderer = new UIRenderer(this, this.localization);
-        uiRenderer.updateScoreText(this.scoreText, this.orientation, this.score);
+        this.uiRenderer.updateScoreText(this.scoreText, this.orientation, this.score);
 
         this.checkWinCondition();
       }
@@ -354,8 +349,7 @@ export class GameScene extends Phaser.Scene {
 
     this.checkEnemyCollision();
 
-    const uiRenderer = new UIRenderer(this, this.localization);
-    uiRenderer.updatePowerText(this.powerText, this.orientation, this.player.hasFirePower, this.player.fireActive);
+    this.uiRenderer.updatePowerText(this.powerText, this.orientation, this.player.hasFirePower, this.player.fireActive);
   }
   
   checkTunnels() {
@@ -400,8 +394,7 @@ export class GameScene extends Phaser.Scene {
 
         // Enemy was hit by fire
         this.score += gameConfig.map.enemyScore;
-        const uiRenderer = new UIRenderer(this, this.localization);
-        uiRenderer.updateScoreText(this.scoreText, this.orientation, this.score);
+        this.uiRenderer.updateScoreText(this.scoreText, this.orientation, this.score);
 
         // Respawn enemy to pen after delay
         this.time.delayedCall(gameConfig.enemy.respawnDelay, () => {
@@ -445,11 +438,7 @@ export class GameScene extends Phaser.Scene {
     }
 
     const tileSize = this.getTileSize();
-
-    // Get bonus speed based on difficulty
-    const baseSpeed = gameConfig.map.bonus.speed[this.difficulty as keyof typeof gameConfig.map.bonus.speed];
-    // Scale speed based on tile size (base tile size is 10)
-    const bonusSpeed = baseSpeed * (tileSize / gameConfig.map.tileSize);
+    const bonusSpeed = calculateScaledSpeed(gameConfig.map.bonus.speed, this.difficulty, tileSize);
 
     this.bonus = new Bonus(this, this.bonusData, tileSize, this.mapOffsetX, this.mapOffsetY, bonusSpeed);
 
@@ -476,8 +465,7 @@ export class GameScene extends Phaser.Scene {
       this.bonus.collect();
       this.score += this.bonus.score;
 
-      const uiRenderer = new UIRenderer(this, this.localization);
-      uiRenderer.updateScoreText(this.scoreText, this.orientation, this.score);
+      this.uiRenderer.updateScoreText(this.scoreText, this.orientation, this.score);
 
       console.log(`[BONUS] Collected! Score +${this.bonus.score}, New total: ${this.score}`);
 
@@ -494,8 +482,7 @@ export class GameScene extends Phaser.Scene {
   
   async loseLife() {
     this.lives--;
-    const uiRenderer = new UIRenderer(this, this.localization);
-    uiRenderer.updateLivesText(this.livesText, this.orientation, this.lives);
+    this.uiRenderer.updateLivesText(this.livesText, this.orientation, this.lives);
 
     // Play death animation
     await this.player.playDeathAnimation();
@@ -523,11 +510,7 @@ export class GameScene extends Phaser.Scene {
   
   nextLevel() {
     this.level++;
-    this.scene.restart({ 
-      difficulty: this.difficulty, 
-      orientation: this.orientation,
-      reset: false 
-    });
+    this.scene.restart(this.getSceneRestartData(false));
   }
   
   gameOver() {
@@ -543,15 +526,11 @@ export class GameScene extends Phaser.Scene {
         align: 'center'
       }
     ).setOrigin(0.5);
-    
+
     this.input.once('pointerdown', () => {
-      this.scene.restart({ 
-        difficulty: this.difficulty, 
-        orientation: this.orientation,
-        reset: true 
-      });
+      this.scene.restart(this.getSceneRestartData(true));
     });
-    
+
     this.scene.pause();
   }
 

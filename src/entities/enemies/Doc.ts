@@ -3,6 +3,7 @@ import { Enemy } from './Enemy';
 import { GameScene } from '../../scenes/GameScene';
 import { IMapData } from '../../interfaces/IMapData';
 import { gameConfig } from '../../config/gameConfig';
+import { getRandomInt, getRandomFloat } from '../../utils/utils';
 
 /**
  * Doc - The laid-back supervisor who pretends to be above the chase.
@@ -28,7 +29,7 @@ export class Doc extends Enemy {
 
     // Random pause duration from config
     const { min, max } = gameConfig.enemy.quirks.doc.pauseTime;
-    this.pauseDuration = min + Math.random() * (max - min);
+    this.pauseDuration = getRandomFloat(min, max);
   }
 
   update(time: number, delta: number): void {
@@ -61,8 +62,8 @@ export class Doc extends Enemy {
            Math.abs(this.gridY - this.wanderTarget.y) < 2)) {
         // Pick a random point to wander toward
         this.wanderTarget = {
-          x: Math.floor(Math.random() * this.mapData.map[0].length),
-          y: Math.floor(Math.random() * this.mapData.map.length)
+          x: getRandomInt(0, this.mapData.map[0].length - 1),
+          y: getRandomInt(0, this.mapData.map.length - 1)
         };
       }
 

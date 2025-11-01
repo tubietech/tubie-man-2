@@ -3,6 +3,7 @@ import { Entity } from '../Entity';
 import { Direction } from '../../enums/Direction';
 import { gameConfig } from '../../config/gameConfig';
 import { IMapData } from '../../interfaces/IMapData';
+import { getRandomFloat } from '../../utils/utils';
 
 export class Enemy extends Entity {
   type: string;
@@ -46,7 +47,7 @@ export class Enemy extends Entity {
     const quirkConfig = gameConfig.enemy.quirks.triggerTime[this.difficulty as keyof typeof gameConfig.enemy.quirks.triggerTime];
     const min = quirkConfig.min;
     const max = quirkConfig.max;
-    this.nextQuirkTime = min + Math.random() * (max - min);
+    this.nextQuirkTime = getRandomFloat(min, max);
     this.quirkTimer = 0;
   }
 

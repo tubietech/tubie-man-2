@@ -4,9 +4,13 @@
 
 import { ICoordinate } from '../interfaces/ICoordinate';
 import { gameConfig } from '../config/gameConfig';
+import { Random } from './Random';
 
 // Phaser type import (type-only, doesn't cause runtime import)
 import type Phaser from 'phaser';
+
+// Re-export Random class for direct access
+export { Random } from './Random';
 
 /**
  * Check if a coordinate position is a wall tile
@@ -54,12 +58,24 @@ export function drawCorner(
 
 /**
  * Get a random integer between min and max (inclusive)
+ * Uses seeded random for deterministic replay
  * @param min Minimum value
  * @param max Maximum value
  * @returns Random integer between min and max
  */
 export function getRandomInt(min: number, max: number): number {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
+  return Random.getInt(min, max);
+}
+
+/**
+ * Get a random floating-point number between min and max
+ * Uses seeded random for deterministic replay
+ * @param min Minimum value
+ * @param max Maximum value
+ * @returns Random float between min and max
+ */
+export function getRandomFloat(min: number, max: number): number {
+  return Random.getFloat(min, max);
 }
 
 /**
@@ -67,12 +83,7 @@ export function getRandomInt(min: number, max: number): number {
  * @param list Array to shuffle
  */
 export function shuffleArray<T>(list: T[]): void {
-  for (let i = 0; i < list.length; i++) {
-    const j = getRandomInt(0, list.length - 1);
-    const temp = list[i];
-    list[i] = list[j];
-    list[j] = temp;
-  }
+  Random.shuffleArray(list);
 }
 
 /**
@@ -81,10 +92,7 @@ export function shuffleArray<T>(list: T[]): void {
  * @returns Random element from the array, or undefined if array is empty
  */
 export function getRandomArrayElement<T>(list: T[]): T | undefined {
-  if (list.length > 0) {
-    return list[getRandomInt(0, list.length - 1)];
-  }
-  return undefined;
+  return Random.getArrayElement(list);
 }
 
 /**
@@ -132,4 +140,32 @@ export function canEatPellet(pelletCenter: ICoordinate, playerPos: ICoordinate, 
 
   // Only eat pellet when player is within configured distance from center
   return distance < tileSize * gameConfig.map.pellet.eatDistance;
+}
+
+/**
+ * Calculate scaled speed based on difficulty and tile size
+ * @param baseSpeedConfig The base speed configuration object (e.g., gameConfig.player.speed)
+ * @param difficulty The current difficulty level
+ * @param tileSize The current tile size in pixels
+ * @returns Scaled speed value
+ */
+export function calculateScaledSpeed(baseSpeedConfig: { easy: number; medium: number; hard: number }, difficulty: string, tileSize: number): number {
+  const baseSpeed = baseSpeedConfig[difficulty as keyof typeof baseSpeedConfig];
+  return baseSpeed * (tileSize / gameConfig.map.tileSize);
+}
+
+/**
+ * Calculate random pellet counts for bonus appearances
+ * @returns Array of two pellet counts when bonuses should appear
+ */
+export function calculateBonusAppearances(): number[] {
+  const firstMin = gameConfig.map.bonus.firstAppearance.min;
+  const firstMax = gameConfig.map.bonus.firstAppearance.max;
+  const secondMin = gameConfig.map.bonus.secondAppearance.min;
+  const secondMax = gameConfig.map.bonus.secondAppearance.max;
+
+  return [
+    getRandomInt(firstMin, firstMax),
+    getRandomInt(secondMin, secondMax)
+  ];
 }

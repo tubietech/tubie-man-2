@@ -4,6 +4,7 @@ import { GameScene } from '../../scenes/GameScene';
 import { IMapData } from '../../interfaces/IMapData';
 import { Direction } from '../../enums/Direction';
 import { gameConfig } from '../../config/gameConfig';
+import { getRandomInt } from '../../utils/utils';
 
 /**
  * Pricky - The twitchy one with nervous energy and unpredictable moves.
@@ -133,8 +134,8 @@ export class Pricky extends Enemy {
       } else if (randomBehavior < fleeChance + wanderChance) {
         // Wander behavior - pick a random nearby point
         const randomOffset = 8;
-        this.targetX = this.gridX + Math.floor(Math.random() * randomOffset * 2 - randomOffset);
-        this.targetY = this.gridY + Math.floor(Math.random() * randomOffset * 2 - randomOffset);
+        this.targetX = this.gridX + getRandomInt(-randomOffset, randomOffset);
+        this.targetY = this.gridY + getRandomInt(-randomOffset, randomOffset);
       } else {
         // Chase behavior - move toward player
         this.targetX = player.gridX;

@@ -1,4 +1,5 @@
 import { IMapData } from '../interfaces/IMapData';
+import { getRandomInt } from './utils';
 
 /**
  * Preloaded maps loader
@@ -74,7 +75,7 @@ export function getRandomPreloadedMap(): IMapData | null {
     return null;
   }
 
-  const randomIndex = Math.floor(Math.random() * preloadedMaps.length);
+  const randomIndex = getRandomInt(0, preloadedMaps.length - 1);
   return preloadedMaps[randomIndex];
 }
 

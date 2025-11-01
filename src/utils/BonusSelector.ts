@@ -1,4 +1,5 @@
 import { gameConfig } from '../config/gameConfig';
+import { getRandomInt } from './utils';
 
 /**
  * Handles bonus sprite and score selection based on level
@@ -54,10 +55,10 @@ export class BonusSelector {
 
     // If somehow all are excluded, allow any
     if (availableIndices.length === 0) {
-      return Math.floor(Math.random() * sprites.length);
+      return getRandomInt(0, sprites.length - 1);
     }
 
-    const randomIndex = Math.floor(Math.random() * availableIndices.length);
+    const randomIndex = getRandomInt(0, availableIndices.length - 1);
     return availableIndices[randomIndex];
   }
 

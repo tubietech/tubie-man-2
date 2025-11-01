@@ -1,6 +1,6 @@
 import { gameConfig } from '../config/gameConfig';
 import { IMapData } from '../interfaces/IMapData';
-import { generateMapHash } from './utils';
+import { generateMapHash, getRandomInt } from './utils';
 import { BonusPathGenerator } from './BonusPathGenerator';
 
 export class MapGenerator {
@@ -163,8 +163,7 @@ export class MapGenerator {
     map[playerY][playerX] = 0;
 
     // Generate tunnels
-    const numTunnels = gameConfig.map.minTunnels +
-      Math.floor(Math.random() * (gameConfig.map.maxTunnels - gameConfig.map.minTunnels + 1));
+    const numTunnels = getRandomInt(gameConfig.map.minTunnels, gameConfig.map.maxTunnels);
     const tunnels = this.generateTunnels(map, width, height, numTunnels, penTop, penBottom);
 
     // Detect and manage dead ends
