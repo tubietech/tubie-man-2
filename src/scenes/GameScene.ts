@@ -1,13 +1,14 @@
 import Phaser from 'phaser';
 import { Player } from '../entities/Player';
 import { Enemy } from '../entities/enemies/Enemy';
-import { Blinky } from '../entities/enemies/Blinky';
-import { Pinky } from '../entities/enemies/Pinky';
-import { Inky } from '../entities/enemies/Inky';
-import { Clyde } from '../entities/enemies/Clyde';
+import { Pokey } from '../entities/enemies/Pokey';
+import { Pricky } from '../entities/enemies/Pricky';
+import { Stingy } from '../entities/enemies/Stingy';
+import { Doc } from '../entities/enemies/Doc';
 import { MapGeneratorV2 } from '../utils/MapGeneratorV2';
 import { MapRenderer } from '../utils/MapRenderer';
 import { UIRenderer } from '../utils/UIRenderer';
+import { canEatPellet } from '../utils/utils';
 import { IMapData } from '../interfaces/IMapData';
 import { Direction } from '../enums/Direction';
 import { Orientation } from '../enums/Orientation';
@@ -37,6 +38,7 @@ export class GameScene extends Phaser.Scene {
   tunnelCooldown: number = 0;
   mapOffsetX: number = 0;
   mapOffsetY: number = 0;
+  enemiesReleased: number = 0;
 
   scoreText!: Phaser.GameObjects.Text;
   highScoreText!: Phaser.GameObjects.Text;
@@ -163,15 +165,49 @@ export class GameScene extends Phaser.Scene {
     const baseSpeed = gameConfig.enemy.speed[this.difficulty as keyof typeof gameConfig.enemy.speed];
     // Scale speed based on tile size (base tile size is 10)
     const enemySpeed = baseSpeed * (tileSize / gameConfig.map.tileSize);
-    const types = [Blinky, Pinky, Inky, Clyde];
+    const types = [Pokey, Pricky, Stingy, Doc];
 
     const penX = this.mapData.penCenter.x;
     const penY = this.mapData.penCenter.y;
 
-    for (let i = 0; i < Math.min(this.level + 2, 4); i++) {
+    // Determine number of enemies based on level from config
+    const countConfig = gameConfig.enemy.countPerLevel;
+    const enemyCount = countConfig[this.level as keyof typeof countConfig] || countConfig[2]; // Default to level 2+ count
+
+    for (let i = 0; i < enemyCount; i++) {
       const EnemyClass = types[i % types.length];
-      const enemy = new EnemyClass(this, penX, penY, enemySpeed, this.mapData, tileSize, this.mapOffsetX, this.mapOffsetY);
+      const enemy = new EnemyClass(this, penX, penY, enemySpeed, this.mapData, tileSize, this.mapOffsetX, this.mapOffsetY, this.difficulty);
       this.enemies.push(enemy);
+    }
+
+    // Release first enemy immediately
+    this.enemiesReleased = 0;
+    this.scheduleNextEnemyRelease();
+  }
+
+  /**
+   * Schedule the release of the next enemy from the pen
+   */
+  scheduleNextEnemyRelease() {
+    if (this.enemiesReleased < this.enemies.length) {
+      if (this.enemiesReleased === 0) {
+        // Release first enemy immediately
+        this.enemies[0].release();
+        this.enemiesReleased++;
+        console.log(`[ENEMY RELEASE] Released enemy ${this.enemiesReleased} of ${this.enemies.length}`);
+        this.scheduleNextEnemyRelease();
+      } else {
+        // Schedule next enemy release after delay
+        const releaseDelay = gameConfig.enemy.releaseDelay[this.difficulty as keyof typeof gameConfig.enemy.releaseDelay];
+        this.time.delayedCall(releaseDelay, () => {
+          if (this.enemiesReleased < this.enemies.length) {
+            this.enemies[this.enemiesReleased].release();
+            this.enemiesReleased++;
+            console.log(`[ENEMY RELEASE] Released enemy ${this.enemiesReleased} of ${this.enemies.length}`);
+            this.scheduleNextEnemyRelease();
+          }
+        });
+      }
     }
   }
   
@@ -276,18 +312,18 @@ export class GameScene extends Phaser.Scene {
       const pellet = this.pellets[py][px];
       const tileSize = this.getTileSize();
 
-      // Calculate player's distance from pellet center
-      const pelletCenterX = this.mapOffsetX + px * tileSize + tileSize / 2;
-      const pelletCenterY = this.mapOffsetY + py * tileSize + tileSize / 2;
-      const playerX = this.player.sprite.x;
-      const playerY = this.player.sprite.y;
+      // Calculate pellet center and player position
+      const pelletCenter = {
+        x: this.mapOffsetX + px * tileSize + tileSize / 2,
+        y: this.mapOffsetY + py * tileSize + tileSize / 2
+      };
+      const playerPos = {
+        x: this.player.sprite.x,
+        y: this.player.sprite.y
+      };
 
-      const distX = Math.abs(playerX - pelletCenterX);
-      const distY = Math.abs(playerY - pelletCenterY);
-      const distance = Math.sqrt(distX * distX + distY * distY);
-
-      // Only eat pellet when player is within configured distance from center
-      if (distance < tileSize * gameConfig.map.pellet.eatDistance) {
+      // Check if player can eat the pellet
+      if (canEatPellet(pelletCenter, playerPos, tileSize)) {
         const isPower = this.powerups.includes(pellet);
 
         pellet.destroy();
@@ -346,10 +382,22 @@ export class GameScene extends Phaser.Scene {
   }
   
   checkEnemyCollision() {
+    // Skip collision detection if player is dying or invulnerable
+    if (this.player.isDying || this.player.isInvulnerable) {
+      return;
+    }
+
     const collisionResult = this.player.checkEnemyCollisions(this.enemies);
 
     if (collisionResult.hasCollision) {
       if (collisionResult.hitByFire && collisionResult.enemy) {
+        // Check if enemy is fire-resistant (Stingy in Sterile Mode)
+        const enemy = collisionResult.enemy as any;
+        if (enemy.isFireResistant) {
+          console.log('[GAME] Enemy is fire-resistant! Fire has no effect.');
+          return; // Fire has no effect
+        }
+
         // Enemy was hit by fire
         this.score += gameConfig.map.enemyScore;
         const uiRenderer = new UIRenderer(this, this.localization);
@@ -360,10 +408,25 @@ export class GameScene extends Phaser.Scene {
           collisionResult.enemy!.moveTo(this.mapData.penCenter.x, this.mapData.penCenter.y);
         });
       } else {
-        // Player collided with enemy
+        // Player collided with enemy - lose a life
         this.loseLife();
       }
     }
+  }
+
+  /**
+   * Count remaining pellets on the map
+   */
+  countRemainingPellets(): number {
+    let count = 0;
+    for (let y = 0; y < this.pellets.length; y++) {
+      for (let x = 0; x < this.pellets[y].length; x++) {
+        if (this.pellets[y][x] && this.pellets[y][x].visible) {
+          count++;
+        }
+      }
+    }
+    return count;
   }
   
   checkBonusSpawn() {
@@ -424,17 +487,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   checkWinCondition() {
-    let pelletsRemaining = 0;
-
-    for (let y = 0; y < this.pellets.length; y++) {
-      for (let x = 0; x < this.pellets[y].length; x++) {
-        if (this.pellets[y][x]) {
-          pelletsRemaining++;
-        }
-      }
-    }
-
-    if (pelletsRemaining === 0) {
+    if (this.countRemainingPellets() === 0) {
       this.nextLevel();
     }
   }
@@ -455,16 +508,17 @@ export class GameScene extends Phaser.Scene {
   }
   
   resetPositions() {
-    // Use player start position from map data
-    this.player.moveTo(this.mapData.playerStart.x, this.mapData.playerStart.y);
-    this.player.direction = Direction.RIGHT;
-    this.player.deactivateFire();
-    this.player.hasFirePower = false;
+    // Reset player to starting position
+    this.player.reset(this.mapData.playerStart.x, this.mapData.playerStart.y);
 
-    // Return all enemies to pen
+    // Reset all enemies to pen
     this.enemies.forEach(enemy => {
-      enemy.moveTo(this.mapData.penCenter.x, this.mapData.penCenter.y);
+      enemy.reset(this.mapData.penCenter.x, this.mapData.penCenter.y);
     });
+
+    // Restart staggered release
+    this.enemiesReleased = 0;
+    this.scheduleNextEnemyRelease();
   }
   
   nextLevel() {

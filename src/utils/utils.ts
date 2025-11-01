@@ -3,6 +3,7 @@
  */
 
 import { ICoordinate } from '../interfaces/ICoordinate';
+import { gameConfig } from '../config/gameConfig';
 
 // Phaser type import (type-only, doesn't cause runtime import)
 import type Phaser from 'phaser';
@@ -115,4 +116,20 @@ export function generateMapHash(mapData: { map: number[][], tunnels: any[], powe
   // Combine all strings and hash
   const combined = `${mapString}:${tunnelsString}:${powerupsString}`;
   return simpleHash(combined);
+}
+
+/**
+ * Check if player is close enough to eat a pellet
+ * @param pelletCenter The center coordinates of the pellet
+ * @param playerPos The current position of the player
+ * @param tileSize The size of a tile in pixels
+ * @returns True if player can eat the pellet, false otherwise
+ */
+export function canEatPellet(pelletCenter: ICoordinate, playerPos: ICoordinate, tileSize: number): boolean {
+  const distX = Math.abs(playerPos.x - pelletCenter.x);
+  const distY = Math.abs(playerPos.y - pelletCenter.y);
+  const distance = Math.sqrt(distX * distX + distY * distY);
+
+  // Only eat pellet when player is within configured distance from center
+  return distance < tileSize * gameConfig.map.pellet.eatDistance;
 }

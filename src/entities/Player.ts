@@ -18,6 +18,9 @@ export class Player extends Entity {
   animatedSprite!: Phaser.GameObjects.Sprite;
   isMoving: boolean = false;
   lastDirection: Direction = Direction.RIGHT;
+  isDying: boolean = false;
+  isInvulnerable: boolean = false;
+  invulnerabilityTimer: number = 0;
 
   constructor(scene: Phaser.Scene, x: number, y: number, color: number, speed: number, mapData: IMapData, tileSize: number, mapOffsetX: number, mapOffsetY: number) {
     super(scene, x, y, color, speed, mapData, tileSize, mapOffsetX, mapOffsetY);
@@ -48,6 +51,9 @@ export class Player extends Entity {
    * Process a movement input and add to queue
    */
   processInput(input: IMovementInput): void {
+    // Ignore input during death animation
+    if (this.isDying) return;
+
     this.inputQueue.push(input.direction);
 
     // Limit queue size to prevent overflow
@@ -100,6 +106,18 @@ export class Player extends Entity {
   }
 
   update(time: number, delta: number): void {
+    // Skip all updates during death animation
+    if (this.isDying) return;
+
+    // Update invulnerability timer
+    if (this.isInvulnerable) {
+      this.invulnerabilityTimer -= delta;
+      if (this.invulnerabilityTimer <= 0) {
+        this.isInvulnerable = false;
+        this.invulnerabilityTimer = 0;
+      }
+    }
+
     const moveSpeed = this.speed * delta / 1000;
 
     // Update all projectiles
@@ -339,12 +357,36 @@ export class Player extends Entity {
   }
 
   /**
+   * Activate invulnerability for the configured duration
+   */
+  activateInvulnerability(): void {
+    this.isInvulnerable = true;
+    this.invulnerabilityTimer = gameConfig.player.invulnerabilityDuration;
+  }
+
+  /**
+   * Reset player to starting position and state
+   */
+  reset(startX: number, startY: number): void {
+    this.moveTo(startX, startY);
+    this.direction = Direction.RIGHT;
+    this.deactivateFire();
+    this.hasFirePower = false;
+  }
+
+  /**
    * Play death animation
    * Changes to frame 2 and spins the sprite
    * Returns a Promise that resolves when animation is complete
    */
   playDeathAnimation(): Promise<void> {
     return new Promise<void>((resolve) => {
+      // Set dying state to disable input and movement
+      this.isDying = true;
+
+      // Clear input queue
+      this.inputQueue = [];
+
       // Stop any current animations
       if (this.animatedSprite && this.animatedSprite.anims && this.animatedSprite.anims.isPlaying) {
         this.animatedSprite.anims.stop();
@@ -369,6 +411,10 @@ export class Player extends Entity {
         onComplete: () => {
           // Reset angle to 0 after animation
           this.animatedSprite.setAngle(0);
+          // Re-enable input and movement
+          this.isDying = false;
+          // Activate invulnerability after respawn
+          this.activateInvulnerability();
           resolve();
         }
       });

@@ -19,12 +19,45 @@ export const gameConfig = {
       spinCount: 2, // Number of 360-degree spins
       spinDuration: 500, // Duration of each spin in milliseconds
     },
+    invulnerabilityDuration: 2000, // Duration of invulnerability after losing a life (ms)
   },
   enemy: {
     speed: { easy: 70, medium: 95, hard: 120 },
     scaredDuration: 5000,
-    types: ['blinky', 'pinky', 'inky', 'clyde'],
-    respawnDelay: 2000
+    types: ['pokey', 'pricky', 'stingy', 'doc'],
+    countPerLevel: {
+      1: 3,  // Level 1: Pokey, Pricky, Stingy
+      2: 4   // Level 2+: All four enemies (Doc appears)
+    },
+    respawnDelay: 2000,
+    releaseDelay: { easy: 3000, medium: 2500, hard: 1500 }, // Delay between enemy releases (ms)
+    quirks: {
+      // Time range for quirk triggers (in milliseconds)
+      // Quirks happen less frequently at higher difficulties
+      triggerTime: {
+        easy: { min: 5000, max: 10000 },    // 5-10 seconds
+        medium: { min: 8000, max: 15000 },   // 8-15 seconds
+        hard: { min: 12000, max: 20000 }     // 12-20 seconds
+      },
+      pokey: {
+        loopDuration: 2000, // How long Pokey stays stuck in loop (ms)
+        loopRadius: 2       // Radius of the loop pattern
+      },
+      pricky: {
+        panicDuration: 1500,   // How long Pricky runs straight when panicked (ms)
+        wallPauseDuration: 1000, // How long Pricky pauses after hitting wall (ms)
+        fleeChance: 0.3,       // Chance to flee from player (0-1)
+        wanderChance: 0.3,     // Chance to wander randomly (0-1)
+        // Chase chance is implied: 1 - fleeChance - wanderChance
+      },
+      stingy: {
+        sterileModeThreshold: 20,  // Pellets remaining to trigger Sterile Mode
+        sterileModeSpeedMultiplier: { easy: 1.2, medium: 1.5, hard: 1.8 }  // Speed multiplier in Sterile Mode by difficulty
+      },
+      doc: {
+        pauseTime: { min: 1000, max: 3000 } // Random pause duration range (ms)
+      }
+    }
   },
   map: {
     width: 28,
@@ -79,15 +112,15 @@ export const gameConfig = {
   },
   colors: {
     wall: 0x2121ff,
-    wallOutline: 0xffa500, // Orange outline for walls
+    wallOutline: 0xffa500,
     pellet: 0xffb897,
     powerup: 0xffffff,
     player: 0xffff00,
     fire: 0xff4500,
-    blinky: 0xff0000,
-    pinky: 0xffb8ff,
-    inky: 0x00ffff,
-    clyde: 0xffb851,
+    pokey: 0xff0000,
+    pricky: 0xffb8ff,
+    stingy: 0x00ffff,
+    doc: 0xffb851,
     penDoor: 0xff8800,
     tunnel: 0x00ff00
   },

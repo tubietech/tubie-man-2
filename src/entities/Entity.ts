@@ -55,8 +55,9 @@ export class Entity implements IEntity {
       return false;
     }
     const tile = this.mapData.map[y][x];
-    // Can move on paths, door, tunnels, and powerups
+    // Can move on paths, pen interior, door, tunnels, and powerups
     return tile === MapValue.PATH ||
+           tile === MapValue.PEN_INTERIOR ||
            tile === MapValue.PEN_DOOR ||
            tile === MapValue.TUNNEL ||
            tile === MapValue.POWERUP;

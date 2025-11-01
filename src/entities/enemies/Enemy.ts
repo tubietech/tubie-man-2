@@ -9,24 +9,75 @@ export class Enemy extends Entity {
   pathfindTimer: number = 0;
   targetX: number;
   targetY: number;
-  
-  constructor(scene: Phaser.Scene, x: number, y: number, type: string, speed: number, mapData: IMapData, tileSize: number, mapOffsetX: number, mapOffsetY: number) {
+  difficulty: string;
+  quirkTimer: number = 0;
+  nextQuirkTime: number = 0;
+  isReleased: boolean = false;
+
+  constructor(scene: Phaser.Scene, x: number, y: number, type: string, speed: number, mapData: IMapData, tileSize: number, mapOffsetX: number, mapOffsetY: number, difficulty: string = 'medium') {
     const color = gameConfig.colors[type as keyof typeof gameConfig.colors] as number;
     super(scene, x, y, color, speed, mapData, tileSize, mapOffsetX, mapOffsetY);
     this.type = type;
     this.targetX = x;
     this.targetY = y;
+    this.difficulty = difficulty;
+    this.scheduleNextQuirk();
+  }
+
+  /**
+   * Release the enemy from the pen to start chasing
+   */
+  release(): void {
+    this.isReleased = true;
+  }
+
+  /**
+   * Reset enemy to pen position and unreleased state
+   */
+  reset(penX: number, penY: number): void {
+    this.moveTo(penX, penY);
+    this.isReleased = false;
+  }
+
+  /**
+   * Schedule the next quirk based on difficulty
+   */
+  protected scheduleNextQuirk(): void {
+    const quirkConfig = gameConfig.enemy.quirks.triggerTime[this.difficulty as keyof typeof gameConfig.enemy.quirks.triggerTime];
+    const min = quirkConfig.min;
+    const max = quirkConfig.max;
+    this.nextQuirkTime = min + Math.random() * (max - min);
+    this.quirkTimer = 0;
+  }
+
+  /**
+   * Override this in subclasses to implement quirk behavior
+   */
+  protected triggerQuirk(): void {
+    // Override in subclasses
   }
   
   update(time: number, delta: number): void {
+    // Don't move or update if not released from pen yet
+    if (!this.isReleased) {
+      return;
+    }
+
     const moveSpeed = this.speed * delta / 1000;
-    
+
+    // Update quirk timer
+    this.quirkTimer += delta;
+    if (this.quirkTimer >= this.nextQuirkTime) {
+      this.triggerQuirk();
+      this.scheduleNextQuirk();
+    }
+
     this.pathfindTimer += delta;
     if (this.pathfindTimer >= 500) {
       this.pathfindTimer = 0;
       this.updateTarget();
     }
-    
+
     this.moveTowardsTarget(moveSpeed);
   }
   
