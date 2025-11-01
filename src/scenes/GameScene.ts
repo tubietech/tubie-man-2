@@ -439,10 +439,13 @@ export class GameScene extends Phaser.Scene {
     }
   }
   
-  loseLife() {
+  async loseLife() {
     this.lives--;
     const uiRenderer = new UIRenderer(this, this.localization);
     uiRenderer.updateLivesText(this.livesText, this.orientation, this.lives);
+
+    // Play death animation
+    await this.player.playDeathAnimation();
 
     if (this.lives <= 0) {
       this.gameOver();

@@ -15,6 +15,10 @@ export const gameConfig = {
     playerStartingHeight: 7, // Player starts 7 rows above bottom of map
     animationFrameRate: 15,
     spriteScale: 2,
+    deathAnimation: {
+      spinCount: 2, // Number of 360-degree spins
+      spinDuration: 500, // Duration of each spin in milliseconds
+    },
   },
   enemy: {
     speed: { easy: 70, medium: 95, hard: 120 },

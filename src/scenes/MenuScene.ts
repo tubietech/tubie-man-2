@@ -16,6 +16,14 @@ export class MenuScene extends Phaser.Scene {
   }
 
   async create() {
+    if (this.renderer instanceof Phaser.Renderer.WebGL.WebGLRenderer) {
+        console.log("Phaser is using WebGL.");
+    } else if (this.renderer instanceof Phaser.Renderer.Canvas.CanvasRenderer) {
+        console.log("Phaser is using Canvas.");
+    } else {
+        console.log("Unknown renderer type.");
+    }
+
     this.localization = LocalizationManager.getInstance();
     const loc = this.localization;
 

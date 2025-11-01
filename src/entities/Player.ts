@@ -337,4 +337,59 @@ export class Player extends Entity {
 
     return { hasCollision: false };
   }
+
+  /**
+   * Play death animation
+   * Changes to frame 2 and spins the sprite
+   * Returns a Promise that resolves when animation is complete
+   */
+  playDeathAnimation(): Promise<void> {
+    return new Promise<void>((resolve) => {
+      // Stop any current animations
+      if (this.animatedSprite && this.animatedSprite.anims && this.animatedSprite.anims.isPlaying) {
+        this.animatedSprite.anims.stop();
+      }
+
+      // Set sprite to frame 2 of the current direction animation
+      const frame = this.getDeathFrame();
+      if (frame) {
+        this.animatedSprite.setFrame(frame);
+      }
+
+      // Calculate total spin duration
+      const { spinCount, spinDuration } = gameConfig.player.deathAnimation;
+      const totalDuration = spinCount * spinDuration;
+
+      // Create spin animation using Phaser tweens
+      this.scene.tweens.add({
+        targets: this.animatedSprite,
+        angle: 360 * spinCount, // Total degrees to rotate
+        duration: totalDuration,
+        ease: 'Linear',
+        onComplete: () => {
+          // Reset angle to 0 after animation
+          this.animatedSprite.setAngle(0);
+          resolve();
+        }
+      });
+    });
+  }
+
+  /**
+   * Get the second frame for the death animation based on last direction
+   */
+  private getDeathFrame(): string {
+    switch (this.lastDirection) {
+      case Direction.UP:
+        return 'player_up_frame_2.png';
+      case Direction.DOWN:
+        return 'player_down_frame_2.png';
+      case Direction.LEFT:
+        return 'player_left_frame_2.png';
+      case Direction.RIGHT:
+        return 'player_right_frame_2.png';
+      default:
+        return 'player_right_frame_2.png';
+    }
+  }
 }
