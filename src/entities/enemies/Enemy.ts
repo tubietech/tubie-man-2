@@ -14,6 +14,12 @@ export class Enemy extends Entity {
   quirkTimer: number = 0;
   nextQuirkTime: number = 0;
   isReleased: boolean = false;
+  isInjured: boolean = false;
+  injuredSpeed: number;
+  normalSpeed: number;
+  originalColor: number;
+  respawnTimer: number = 0;
+  isRespawning: boolean = false;
 
   constructor(scene: Phaser.Scene, x: number, y: number, type: string, speed: number, mapData: IMapData, tileSize: number, mapOffsetX: number, mapOffsetY: number, difficulty: string = 'medium') {
     const color = gameConfig.colors[type as keyof typeof gameConfig.colors] as number;
@@ -22,6 +28,13 @@ export class Enemy extends Entity {
     this.targetX = x;
     this.targetY = y;
     this.difficulty = difficulty;
+    this.normalSpeed = speed;
+    this.originalColor = color;
+
+    // Calculate injured speed using the speed scaling utility
+    const baseInjuredSpeed = gameConfig.enemy.injuredSpeed[this.difficulty as keyof typeof gameConfig.enemy.injuredSpeed];
+    this.injuredSpeed = baseInjuredSpeed * (this.tileSize / gameConfig.map.tileSize);
+
     this.scheduleNextQuirk();
   }
 
@@ -38,6 +51,62 @@ export class Enemy extends Entity {
   reset(penX: number, penY: number): void {
     this.moveTo(penX, penY);
     this.isReleased = false;
+    this.isInjured = false;
+    this.isRespawning = false;
+    this.respawnTimer = 0;
+    this.speed = this.normalSpeed;
+
+    // Restore original color (Arc uses setFillStyle, not setTint)
+    if (this.sprite instanceof Phaser.GameObjects.Arc) {
+      this.sprite.setFillStyle(this.originalColor);
+    }
+  }
+
+  /**
+   * Injure the enemy - changes color to gray and flees to pen
+   */
+  injure(): void {
+    if (this.isInjured || this.isRespawning) return;
+
+    this.isInjured = true;
+    this.speed = this.injuredSpeed;
+
+    // Change color to gray (Arc uses setFillStyle, not setTint)
+    if (this.sprite instanceof Phaser.GameObjects.Arc) {
+      this.sprite.setFillStyle(0x808080);
+    }
+
+    console.log(`[ENEMY] ${this.type} injured! Fleeing to pen at speed ${this.speed}`);
+  }
+
+  /**
+   * Start respawning process - waits in pen before returning to normal
+   */
+  startRespawn(): void {
+    if (this.isRespawning) return;
+
+    this.isInjured = false;
+    this.isRespawning = true;
+    this.isReleased = false;
+    this.respawnTimer = 0;
+
+    console.log(`[ENEMY] ${this.type} starting respawn in pen`);
+  }
+
+  /**
+   * Complete respawn - return to normal state and leave pen
+   */
+  completeRespawn(): void {
+    this.isRespawning = false;
+    this.isReleased = true;
+    this.speed = this.normalSpeed;
+
+    // Restore original color (Arc uses setFillStyle, not setTint)
+    if (this.sprite instanceof Phaser.GameObjects.Arc) {
+      this.sprite.setFillStyle(this.originalColor);
+    }
+
+    console.log(`[ENEMY] ${this.type} respawn complete, leaving pen`);
   }
 
   /**
@@ -59,6 +128,15 @@ export class Enemy extends Entity {
   }
   
   update(time: number, delta: number): void {
+    // Handle respawning state - pause in pen
+    if (this.isRespawning) {
+      this.respawnTimer += delta;
+      if (this.respawnTimer >= gameConfig.enemy.respawnDelay) {
+        this.completeRespawn();
+      }
+      return;
+    }
+
     // Don't move or update if not released from pen yet
     if (!this.isReleased) {
       return;
@@ -66,17 +144,30 @@ export class Enemy extends Entity {
 
     const moveSpeed = this.speed * delta / 1000;
 
-    // Update quirk timer
-    this.quirkTimer += delta;
-    if (this.quirkTimer >= this.nextQuirkTime) {
-      this.triggerQuirk();
-      this.scheduleNextQuirk();
-    }
+    // If injured, pathfind to pen
+    if (this.isInjured) {
+      this.targetX = this.mapData.penCenter.x;
+      this.targetY = this.mapData.penCenter.y;
 
-    this.pathfindTimer += delta;
-    if (this.pathfindTimer >= 500) {
-      this.pathfindTimer = 0;
-      this.updateTarget();
+      // Check if reached pen
+      if (this.gridX === this.mapData.penCenter.x && this.gridY === this.mapData.penCenter.y) {
+        this.startRespawn();
+        return;
+      }
+    } else {
+      // Normal behavior - update quirk timer
+      this.quirkTimer += delta;
+      if (this.quirkTimer >= this.nextQuirkTime) {
+        this.triggerQuirk();
+        this.scheduleNextQuirk();
+      }
+
+      // Update target for normal pathfinding
+      this.pathfindTimer += delta;
+      if (this.pathfindTimer >= 500) {
+        this.pathfindTimer = 0;
+        this.updateTarget();
+      }
     }
 
     this.moveTowardsTarget(moveSpeed);

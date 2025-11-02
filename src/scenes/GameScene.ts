@@ -8,6 +8,7 @@ import { Doc } from '../entities/enemies/Doc';
 import { MapGeneratorV2 } from '../utils/MapGeneratorV2';
 import { MapRenderer } from '../utils/MapRenderer';
 import { UIRenderer } from '../utils/UIRenderer';
+import { PerformanceMonitor } from '../utils/PerformanceMonitor';
 import { canEatPellet, calculateScaledSpeed, calculateBonusAppearances } from '../utils/utils';
 import { IMapData } from '../interfaces/IMapData';
 import { Direction } from '../enums/Direction';
@@ -36,10 +37,14 @@ export class GameScene extends Phaser.Scene {
   orientation: Orientation = Orientation.HORIZONTAL;
   localization!: LocalizationManager;
   uiRenderer!: UIRenderer;
+  performanceMonitor!: PerformanceMonitor;
+  mapRenderer: MapRenderer | null = null;
   tunnelCooldown: number = 0;
   mapOffsetX: number = 0;
   mapOffsetY: number = 0;
   enemiesReleased: number = 0;
+  injuryComboCount: number = 0;
+  lastInjuryTime: number = 0;
 
   scoreText!: Phaser.GameObjects.Text;
   highScoreText!: Phaser.GameObjects.Text;
@@ -64,6 +69,7 @@ export class GameScene extends Phaser.Scene {
     this.orientation = data.orientation || Orientation.HORIZONTAL;
     this.localization = LocalizationManager.getInstance();
     this.uiRenderer = new UIRenderer(this, this.localization);
+    this.performanceMonitor = PerformanceMonitor.getInstance();
 
     this.graphics = this.add.graphics();
 
@@ -102,7 +108,7 @@ export class GameScene extends Phaser.Scene {
     this.calculateMapOffset();
 
     const tileSize = this.getTileSize();
-    const mapRenderer = new MapRenderer(
+    this.mapRenderer = new MapRenderer(
       this,
       this.mapData,
       this.graphics!,
@@ -111,8 +117,8 @@ export class GameScene extends Phaser.Scene {
       tileSize
     );
 
-    this.mapRectangles = mapRenderer.drawMap();
-    const { pellets, powerups } = mapRenderer.createPellets();
+    this.mapRectangles = this.mapRenderer.drawMap();
+    const { pellets, powerups } = this.mapRenderer.createPellets();
     this.pellets = pellets;
     this.powerups = powerups;
 
@@ -260,6 +266,9 @@ export class GameScene extends Phaser.Scene {
   }
 
   update(time: number, delta: number) {
+    // Update performance monitoring
+    this.performanceMonitor.update(delta);
+
     // Guard: Don't update until scene is fully initialized
     if (!this.isInitialized()) {
       return;
@@ -392,17 +401,40 @@ export class GameScene extends Phaser.Scene {
           return; // Fire has no effect
         }
 
-        // Enemy was hit by fire
-        this.score += gameConfig.map.enemyScore;
+        // Enemy was hit by fire - injure them
+        const currentTime = this.time.now;
+
+        // Check if combo timer has expired (more than 10 seconds since last injury)
+        if (currentTime - this.lastInjuryTime > gameConfig.player.injuryComboResetTime) {
+          this.injuryComboCount = 0;
+        }
+
+        // Calculate score based on combo count
+        const baseScore = gameConfig.enemy.injuryScore.base;
+        const increment = gameConfig.enemy.injuryScore.increment;
+        const maxScore = gameConfig.enemy.injuryScore.max;
+
+        const injuryScore = Math.min(baseScore + (increment * this.injuryComboCount), maxScore);
+        this.score += injuryScore;
         this.uiRenderer.updateScoreText(this.scoreText, this.orientation, this.score);
 
-        // Respawn enemy to pen after delay
-        this.time.delayedCall(gameConfig.enemy.respawnDelay, () => {
-          collisionResult.enemy!.moveTo(this.mapData.penCenter.x, this.mapData.penCenter.y);
-        });
+        // Increment combo count (0-indexed, so max combo count is 3 for 400 points)
+        if (this.injuryComboCount < 3) {
+          this.injuryComboCount++;
+        }
+
+        // Update last injury time
+        this.lastInjuryTime = currentTime;
+
+        console.log(`[GAME] Enemy injured! Score +${injuryScore}, Combo: ${this.injuryComboCount}`);
+
+        // Injure the enemy (changes to gray, pathfinds to pen)
+        collisionResult.enemy.injure();
       } else {
-        // Player collided with enemy - lose a life
-        this.loseLife();
+        // Player collided with enemy - only lose life if enemy is not injured
+        if (!collisionResult.enemy?.isInjured) {
+          this.loseLife();
+        }
       }
     }
   }
@@ -535,6 +567,12 @@ export class GameScene extends Phaser.Scene {
   }
 
   shutdown() {
+    // Clean up map renderer and texture
+    if (this.mapRenderer) {
+      this.mapRenderer.destroy();
+      this.mapRenderer = null;
+    }
+
     // Clean up player sprite
     if (this.player && this.player.animatedSprite) {
       this.player.deactivateFire();

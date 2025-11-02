@@ -20,17 +20,24 @@ export const gameConfig = {
       spinDuration: 500, // Duration of each spin in milliseconds
     },
     invulnerabilityDuration: 2000, // Duration of invulnerability after losing a life (ms)
+    injuryComboResetTime: 10000, // Time before injury combo resets (ms)
   },
   enemy: {
     speed: { easy: 70, medium: 95, hard: 120 },
+    injuredSpeed: { easy: 110, medium: 140, hard: 180 }, // Speed when injured and fleeing to pen
     scaredDuration: 5000,
     types: ['pokey', 'pricky', 'stingy', 'doc'],
     countPerLevel: {
       1: 3,  // Level 1: Pokey, Pricky, Stingy
       2: 4   // Level 2+: All four enemies (Doc appears)
     },
-    respawnDelay: 2000,
+    respawnDelay: 2000, // Time to pause in pen before respawning (ms)
     releaseDelay: { easy: 3000, medium: 2500, hard: 1500 }, // Delay between enemy releases (ms)
+    injuryScore: {
+      base: 100,        // Base points for injuring enemy
+      increment: 100,   // Points increase per combo
+      max: 400          // Maximum points per injury
+    },
     quirks: {
       // Time range for quirk triggers (in milliseconds)
       // Quirks happen less frequently at higher difficulties
@@ -94,10 +101,10 @@ export const gameConfig = {
     tunnelCooldown: 500, // Milliseconds to wait before allowing re-entry to a tunnel
     fillIterations: 3,
     maxDeadEndsPerHalf: 2,
-    wallRadius: 4, // Corner radius for wall tiles
-    wallEdgeOffset: 0.6, // Inset walls by 60% from tile edges (0-1 scale)
-    wallOutlineThickness: 3,
-    thinWallAdjustment: 1.5,
+    wallRadius: 8, // Corner radius for wall tiles
+    wallEdgeOffset: 0.48, // Inset walls by 48% from tile edges (0-1 scale). This value should not exceed o.5, as single thickness walls will dissappear
+    minimumWallThickness: 0.3, // Minimum thickness for walls in grid units (prevents over-thinning)
+    wallOutlineThickness: 2,
     generation: {
       maxGenerationAttempts: 10,
       gridRows: 9,

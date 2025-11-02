@@ -6,9 +6,6 @@ import { ICoordinate } from '../interfaces/ICoordinate';
 import { gameConfig } from '../config/gameConfig';
 import { Random } from './Random';
 
-// Phaser type import (type-only, doesn't cause runtime import)
-import type Phaser from 'phaser';
-
 // Re-export Random class for direct access
 export { Random } from './Random';
 
@@ -23,37 +20,6 @@ export function isWall(coord: ICoordinate, map: number[][]): boolean {
     return false;
   }
   return map[coord.y][coord.x] === 1;
-}
-
-/**
- * Convert degrees to radians
- * @param degrees Angle in degrees
- * @returns Angle in radians
- */
-function degToRad(degrees: number): number {
-  return degrees * Math.PI / 180;
-}
-
-/**
- * Draw a rounded corner arc on a graphics object
- * @param graphics The Phaser graphics object to draw on
- * @param centerX The x coordinate of the arc center
- * @param centerY The y coordinate of the arc center
- * @param radius The radius of the arc
- * @param startAngle The starting angle in degrees
- * @param endAngle The ending angle in degrees
- */
-export function drawCorner(
-  graphics: Phaser.GameObjects.Graphics,
-  centerX: number,
-  centerY: number,
-  radius: number,
-  startAngle: number,
-  endAngle: number
-): void {
-  graphics.beginPath();
-  graphics.arc(centerX, centerY, radius, degToRad(startAngle), degToRad(endAngle), false);
-  graphics.strokePath();
 }
 
 /**

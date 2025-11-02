@@ -1,6 +1,6 @@
 💉 Pokey
 
-Color: Pink (or yellow — something bright and impulsive)
+Color: Chartreuse
 Personality: The eager rookie who always lunges first and thinks later.
 Behavior: Direct chaser. Pokey constantly tries to close distance with Tubie-Man, following the most obvious path through the maze.
 Quirk: Often overshoots corners or gets stuck in loops because it can’t plan ahead.
@@ -17,7 +17,7 @@ Weakness: Corners himself easily
 
 💉 Pricky
 
-Color: Blue
+Color: Ceruleanhn b
 Personality: The twitchy one — nervous energy and unpredictable moves.
 Behavior: Moves semi-randomly, changing direction frequently. Sometimes seems to flee, sometimes attacks head-on.
 Quirk: When Tubie-Man breathes fire, Pricky panics and bolts erratically, often straight into walls.

@@ -353,7 +353,7 @@
       "sourceSize": { "w": 330, "h": 330 }
     },
     {
-      "filename": "enemy_eyes_up.png",
+      "filename": "enemy_injured_up.png",
       "frame": { "x": 0, "y": 1650, "w": 330, "h": 330 },
       "rotated": false,
       "trimmed": false,
@@ -361,7 +361,7 @@
       "sourceSize": { "w": 330, "h": 330 }
     },
     {
-      "filename": "enemy_eyes_left.png",
+      "filename": "enemy_injured_left.png",
       "frame": { "x": 330, "y": 1650, "w": 330, "h": 330 },
       "rotated": false,
       "trimmed": false,
@@ -369,7 +369,7 @@
       "sourceSize": { "w": 330, "h": 330 }
     },
     {
-      "filename": "enemy_eyes_down.png",
+      "filename": "enemy_injured_down.png",
       "frame": { "x": 660, "y": 1650, "w": 330, "h": 330 },
       "rotated": false,
       "trimmed": false,
@@ -377,7 +377,7 @@
       "sourceSize": { "w": 330, "h": 330 }
     },
     {
-      "filename": "enemy_eyes_right.png",
+      "filename": "enemy_injured_right.png",
       "frame": { "x": 990, "y": 1650, "w": 330, "h": 330 },
       "rotated": false,
       "trimmed": false,
@@ -401,7 +401,7 @@
       "sourceSize": { "w": 330, "h": 330 }
     },
     {
-      "filename": "enemy_flash_on_frame_1.png",
+      "filename": "sterialization_mode_frame_1.png",
       "frame": { "x": 1980, "y": 1650, "w": 330, "h": 330 },
       "rotated": false,
       "trimmed": false,
@@ -409,7 +409,7 @@
       "sourceSize": { "w": 330, "h": 330 }
     },
     {
-      "filename": "enemy_flash_on_frame_2.png",
+      "filename": "sterialization_mode_frame_2.png",
       "frame": { "x": 2310, "y": 1650, "w": 330, "h": 330 },
       "rotated": false,
       "trimmed": false,
