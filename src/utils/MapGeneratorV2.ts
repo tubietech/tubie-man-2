@@ -122,14 +122,6 @@ export class MapGeneratorV2 {
   /**
    * Rotate direction functions
    */
-  private static rotateLeft(dir: Direction): Direction {
-    return (dir + 3) % 4;
-  }
-
-  private static rotateRight(dir: Direction): Direction {
-    return (dir + 1) % 4;
-  }
-
   private static rotateAboutFace(dir: Direction): Direction {
     return (dir + 2) % 4;
   }
@@ -568,7 +560,6 @@ export class MapGeneratorV2 {
    */
   private static chooseTallRows(): boolean {
     const cols = gameConfig.map.generation.gridCols;
-    const rows = gameConfig.map.generation.gridRows;
 
     const canRaiseHeight = (coord: ICoordinate): boolean => {
       if (coord.x === cols - 1) {

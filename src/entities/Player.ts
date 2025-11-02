@@ -105,7 +105,7 @@ export class Player extends Entity {
     }
   }
 
-  update(time: number, delta: number): void {
+  update(_time: number, delta: number): void {
     // Skip all updates during death animation
     if (this.isDying) return;
 

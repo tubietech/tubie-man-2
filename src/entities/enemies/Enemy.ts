@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { Entity } from '../Entity';
 import { Direction } from '../../enums/Direction';
+import { MapValue } from '../../enums/MapValue';
 import { gameConfig } from '../../config/gameConfig';
 import { IMapData } from '../../interfaces/IMapData';
 import { getRandomFloat } from '../../utils/utils';
@@ -20,6 +21,9 @@ export class Enemy extends Entity {
   originalColor: number;
   respawnTimer: number = 0;
   isRespawning: boolean = false;
+  exitPath: { x: number; y: number }[] = [];
+  exitPathIndex: number = 0;
+  isFollowingExitPath: boolean = false;
 
   constructor(scene: Phaser.Scene, x: number, y: number, type: string, speed: number, mapData: IMapData, tileSize: number, mapOffsetX: number, mapOffsetY: number, difficulty: string = 'medium') {
     const color = gameConfig.colors[type as keyof typeof gameConfig.colors] as number;
@@ -39,10 +43,24 @@ export class Enemy extends Entity {
   }
 
   /**
+   * Set the exit path for the enemy to follow when leaving the pen
+   */
+  setExitPath(path: { x: number; y: number }[]): void {
+    this.exitPath = path;
+    this.exitPathIndex = 0;
+    this.isFollowingExitPath = path.length > 0;
+  }
+
+  /**
    * Release the enemy from the pen to start chasing
    */
   release(): void {
     this.isReleased = true;
+    // If there's an exit path, start following it
+    if (this.exitPath.length > 0) {
+      this.isFollowingExitPath = true;
+      this.exitPathIndex = 0;
+    }
   }
 
   /**
@@ -127,7 +145,7 @@ export class Enemy extends Entity {
     // Override in subclasses
   }
   
-  update(time: number, delta: number): void {
+  update(_time: number, delta: number): void {
     // Handle respawning state - pause in pen
     if (this.isRespawning) {
       this.respawnTimer += delta;
@@ -143,6 +161,12 @@ export class Enemy extends Entity {
     }
 
     const moveSpeed = this.speed * delta / 1000;
+
+    // If following exit path, use that instead of normal pathfinding
+    if (this.isFollowingExitPath) {
+      this.followExitPath(moveSpeed);
+      return;
+    }
 
     // If injured, pathfind to pen
     if (this.isInjured) {
@@ -176,7 +200,43 @@ export class Enemy extends Entity {
   updateTarget(): void {
     // Override in subclasses
   }
-  
+
+  /**
+   * Follow the predefined exit path from the pen
+   */
+  followExitPath(speed: number): void {
+    // Check if we've completed the path
+    if (this.exitPathIndex >= this.exitPath.length) {
+      this.isFollowingExitPath = false;
+      this.updateTarget(); // Start normal pathfinding
+      this.moveTowardsTarget(speed);
+      return;
+    }
+
+    const nextWaypoint = this.exitPath[this.exitPathIndex];
+    const targetX = this.mapOffsetX + nextWaypoint.x * this.tileSize + this.tileSize / 2;
+    const targetY = this.mapOffsetY + nextWaypoint.y * this.tileSize + this.tileSize / 2;
+
+    const dx = targetX - this.sprite.x;
+    const dy = targetY - this.sprite.y;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+
+    // If we're close enough to the current waypoint, move to the next one
+    if (dist < 2) {
+      this.gridX = nextWaypoint.x;
+      this.gridY = nextWaypoint.y;
+      this.exitPathIndex++;
+      return;
+    }
+
+    // Move towards the current waypoint
+    if (dist > 0) {
+      const actualSpeed = Math.min(speed, dist);
+      this.sprite.x += (dx / dist) * actualSpeed;
+      this.sprite.y += (dy / dist) * actualSpeed;
+    }
+  }
+
   moveTowardsTarget(speed: number): void {
     const targetX = this.mapOffsetX + this.gridX * this.tileSize + this.tileSize / 2;
     const targetY = this.mapOffsetY + this.gridY * this.tileSize + this.tileSize / 2;
@@ -235,5 +295,40 @@ export class Enemy extends Entity {
     }
     
     return bestDir;
+  }
+
+  /**
+   * Override canMove to prevent enemies from entering the pen after they've exited,
+   * unless they are injured and returning to respawn
+   */
+  canMove(x: number, y: number): boolean {
+    // First check if the position is valid using parent class logic
+    if (!super.canMove(x, y)) {
+      return false;
+    }
+
+    const tile = this.mapData.map[y][x];
+
+    // If following exit path, allow movement to pen interior and door
+    if (this.isFollowingExitPath) {
+      return true;
+    }
+
+    // If injured, allow movement to pen (returning to respawn)
+    if (this.isInjured) {
+      return true;
+    }
+
+    // If not released yet, allow movement in pen
+    if (!this.isReleased) {
+      return true;
+    }
+
+    // Normal case: don't allow entering pen interior or door once outside
+    if (tile === MapValue.PEN_INTERIOR || tile === MapValue.PEN_DOOR) {
+      return false;
+    }
+
+    return true;
   }
 }

@@ -1,6 +1,4 @@
-import Phaser from 'phaser';
 import { ICoordinate } from '../interfaces/ICoordinate';
-import { gameConfig } from '../config/gameConfig';
 
 export type Point = [number, number];
 export type Polygon = Point[];
@@ -266,9 +264,6 @@ export function thinWalls(outline: Polygon, insetFraction: number): Polygon {
     const prevPerpY = prevDirX;
     const nextPerpX = -nextDirY;
     const nextPerpY = nextDirX;
-
-    // Determine if this is a convex or concave corner using cross product
-    const cross = prevDirX * nextDirY - prevDirY * nextDirX;
 
     // For both convex and concave corners, we always inset in the same perpendicular direction
     // The key insight: we're moving each edge inward by the same amount
@@ -585,8 +580,6 @@ export function roundCorners(outline: Polygon, r: number, arcSegments: number = 
     // Calculate perpendicular vectors (rotate 90° counter-clockwise)
     const prevPerpX = -prevDirY;
     const prevPerpY = prevDirX;
-    const nextPerpX = -nextDirY;
-    const nextPerpY = nextDirX;
 
     // Determine turn direction using cross product
     const cross = prevDirX * nextDirY - prevDirY * nextDirX;

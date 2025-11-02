@@ -14,7 +14,6 @@ export class Bonus {
   gridX: number;
   gridY: number;
 
-  private scene: Phaser.Scene;
   private path: ICoordinate[];
   private currentPathIndex: number;
   private speed: number;
@@ -31,7 +30,6 @@ export class Bonus {
     mapOffsetY: number,
     speed: number
   ) {
-    this.scene = scene;
     this.path = bonusData.path;
     this.score = bonusData.score;
     this.tileSize = tileSize;

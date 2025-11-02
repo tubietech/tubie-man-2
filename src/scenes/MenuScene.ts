@@ -28,7 +28,6 @@ export class MenuScene extends Phaser.Scene {
     const loc = this.localization;
 
     const centerX = this.cameras.main.centerX;
-    const centerY = this.cameras.main.centerY;
 
     // Add loading indicator for map preloading
     this.loadingText = this.add.text(

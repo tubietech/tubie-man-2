@@ -3,7 +3,6 @@ import { IMapData } from '../interfaces/IMapData';
 import { IPelletData } from '../interfaces/IPelletData';
 import { ICoordinate } from '../interfaces/ICoordinate';
 import { gameConfig } from '../config/gameConfig';
-import { isWall } from './utils';
 import { findConnectedWallSections, traceWallOutline, thinWalls, enforceMinimumThickness, roundCorners } from './renderUtils';
 
 export class MapRenderer {
@@ -99,8 +98,7 @@ export class MapRenderer {
 
   private drawPenDoor(tiles: ICoordinate[]): void {
     const offset = gameConfig.map.wallEdgeOffset;
-    const adjustedOffset = offset / gameConfig.map.thinWallAdjustment;
-    const inset = this.tileSize * adjustedOffset;
+    const inset = this.tileSize * offset;
     const outlineThickness = gameConfig.map.wallOutlineThickness;
     const barHeight = this.tileSize * 0.3;
 
@@ -241,7 +239,7 @@ export class MapRenderer {
   }
 
   createPellets(): IPelletData {
-    const pellets: Phaser.GameObjects.Arc[][] = [];
+    const pellets: (Phaser.GameObjects.Arc | Phaser.GameObjects.Sprite)[][] = [];
     const powerups: Phaser.GameObjects.Sprite[] = [];
     const doorStartX = this.mapData.penDoor.x;
     const doorY = this.mapData.penDoor.y;

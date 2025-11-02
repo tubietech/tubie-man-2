@@ -11,7 +11,6 @@ import { UIRenderer } from '../utils/UIRenderer';
 import { PerformanceMonitor } from '../utils/PerformanceMonitor';
 import { canEatPellet, calculateScaledSpeed, calculateBonusAppearances } from '../utils/utils';
 import { IMapData } from '../interfaces/IMapData';
-import { Direction } from '../enums/Direction';
 import { Orientation } from '../enums/Orientation';
 import { LocalizationManager } from '../config/localization/LocalizationManager';
 import { gameConfig } from '../config/gameConfig';
@@ -161,22 +160,144 @@ export class GameScene extends Phaser.Scene {
   createEnemies() {
     const tileSize = this.getTileSize();
     const enemySpeed = calculateScaledSpeed(gameConfig.enemy.speed, this.difficulty, tileSize);
-    const types = [Pokey, Pricky, Stingy, Doc];
 
-    const penX = this.mapData.penCenter.x;
-    const penY = this.mapData.penCenter.y;
+    const penCenterX = this.mapData.penCenter.x;
+    const penCenterY = this.mapData.penCenter.y;
+    const doorX = this.mapData.penDoor.x;
+    const doorY = this.mapData.penDoor.y;
 
     // Determine number of enemies based on level from config
     const countConfig = gameConfig.enemy.countPerLevel;
     const enemyCount = countConfig[this.level as keyof typeof countConfig] || countConfig[2]; // Default to level 2+ count
 
-    for (let i = 0; i < enemyCount; i++) {
-      const EnemyClass = types[i % types.length];
-      const enemy = new EnemyClass(this, penX, penY, enemySpeed, this.mapData, tileSize, this.mapOffsetX, this.mapOffsetY, this.difficulty);
-      this.enemies.push(enemy);
+    // Always include Stingy (index 2)
+    // Stingy starts outside the pen, in front of the door
+    const stingy = new Stingy(
+      this,
+      doorX,
+      doorY - 1, // One tile above the door (outside the pen)
+      enemySpeed,
+      this.mapData,
+      tileSize,
+      this.mapOffsetX,
+      this.mapOffsetY,
+      this.difficulty
+    );
+    // Stingy is already outside, no exit path needed
+    stingy.setExitPath([]);
+    this.enemies.push(stingy);
+
+    // Create exit path: from pen center -> door -> outside door
+    // This path guides enemies from their starting position to outside the pen
+    const exitPath = [
+      { x: penCenterX, y: penCenterY },     // Start at pen center
+      { x: doorX, y: doorY },                // Move to door
+      { x: doorX, y: doorY - 1 }             // Exit through door to outside
+    ];
+
+    // Position other enemies inside the pen based on count
+    if (enemyCount === 3) {
+      // 3 enemies: Stingy (already placed), Pokey, Pricky
+      // Place Pokey and Pricky side by side, centered in pen
+      const pokey = new Pokey(
+        this,
+        penCenterX - 1, // Left of center
+        penCenterY,
+        enemySpeed,
+        this.mapData,
+        tileSize,
+        this.mapOffsetX,
+        this.mapOffsetY,
+        this.difficulty
+      );
+      // Exit path for Pokey: left position -> center -> door -> outside
+      pokey.setExitPath([
+        { x: penCenterX, y: penCenterY },
+        { x: doorX, y: doorY },
+        { x: doorX, y: doorY - 1 }
+      ]);
+      this.enemies.push(pokey);
+
+      const pricky = new Pricky(
+        this,
+        penCenterX + 1, // Right of center
+        penCenterY,
+        enemySpeed,
+        this.mapData,
+        tileSize,
+        this.mapOffsetX,
+        this.mapOffsetY,
+        this.difficulty
+      );
+      // Exit path for Pricky: right position -> center -> door -> outside
+      pricky.setExitPath([
+        { x: penCenterX, y: penCenterY },
+        { x: doorX, y: doorY },
+        { x: doorX, y: doorY - 1 }
+      ]);
+      this.enemies.push(pricky);
+    } else if (enemyCount >= 4) {
+      // 4 enemies: Stingy (already placed), Pokey, Pricky, Doc
+      // Place Pokey, Pricky, and Doc in a row inside the pen
+      const pokey = new Pokey(
+        this,
+        penCenterX - 1, // Left
+        penCenterY,
+        enemySpeed,
+        this.mapData,
+        tileSize,
+        this.mapOffsetX,
+        this.mapOffsetY,
+        this.difficulty
+      );
+      // Exit path for Pokey: left -> center -> door -> outside
+      pokey.setExitPath([
+        { x: penCenterX, y: penCenterY },
+        { x: doorX, y: doorY },
+        { x: doorX, y: doorY - 1 }
+      ]);
+      this.enemies.push(pokey);
+
+      const pricky = new Pricky(
+        this,
+        penCenterX, // Center
+        penCenterY,
+        enemySpeed,
+        this.mapData,
+        tileSize,
+        this.mapOffsetX,
+        this.mapOffsetY,
+        this.difficulty
+      );
+      // Exit path for Pricky: already at center -> door -> outside
+      pricky.setExitPath([
+        { x: doorX, y: doorY },
+        { x: doorX, y: doorY - 1 }
+      ]);
+      this.enemies.push(pricky);
+
+      const doc = new Doc(
+        this,
+        penCenterX + 1, // Right
+        penCenterY,
+        enemySpeed,
+        this.mapData,
+        tileSize,
+        this.mapOffsetX,
+        this.mapOffsetY,
+        this.difficulty
+      );
+      // Exit path for Doc: right -> center -> door -> outside
+      doc.setExitPath([
+        { x: penCenterX, y: penCenterY },
+        { x: doorX, y: doorY },
+        { x: doorX, y: doorY - 1 }
+      ]);
+      this.enemies.push(doc);
     }
 
-    // Release first enemy immediately
+    // All enemies are now visible from the start and properly positioned
+    // Release Stingy immediately since he's already outside
     this.enemiesReleased = 0;
     this.scheduleNextEnemyRelease();
   }
@@ -330,7 +451,7 @@ export class GameScene extends Phaser.Scene {
 
       // Check if player can eat the pellet
       if (canEatPellet(pelletCenter, playerPos, tileSize)) {
-        const isPower = this.powerups.includes(pellet);
+        const isPower = pellet instanceof Phaser.GameObjects.Sprite && this.powerups.includes(pellet);
 
         pellet.destroy();
         this.pellets[py][px] = null as any;
@@ -515,6 +636,12 @@ export class GameScene extends Phaser.Scene {
   async loseLife() {
     this.lives--;
     this.uiRenderer.updateLivesText(this.livesText, this.orientation, this.lives);
+
+    // Remove bonus if it's currently on screen
+    if (this.bonus && this.bonus.isActive()) {
+      this.bonus.deactivate();
+      console.log('[BONUS] Removed due to player death');
+    }
 
     // Play death animation
     await this.player.playDeathAnimation();

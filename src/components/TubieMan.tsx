@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Phaser from 'phaser';
 import { Orientation } from '../enums/Orientation';
 import { PreloadScene } from '../scenes/PreloadScene';
@@ -52,6 +52,10 @@ export default function FireBreatherGame() {
         autoCenter: Phaser.Scale.CENTER_BOTH,
         width: targetWidth,
         height: targetHeight
+      },
+      fps: {
+        target: 120,
+        forceSetTimeOut: false
       }
     };
 

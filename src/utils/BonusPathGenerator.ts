@@ -1,6 +1,5 @@
 import { ICoordinate } from '../interfaces/ICoordinate';
 import { IMapData } from '../interfaces/IMapData';
-import { ITunnel } from '../interfaces/ITunnel';
 import { MapValue } from '../enums/MapValue';
 import { gameConfig } from '../config/gameConfig';
 

@@ -12,7 +12,6 @@ export class Projectile implements IProjectile {
   direction: Direction;
   active: boolean;
 
-  private scene: Phaser.Scene;
   private mapData: IMapData;
   private tileSize: number;
   private mapOffsetX: number;
@@ -31,7 +30,6 @@ export class Projectile implements IProjectile {
     mapOffsetY: number,
     speed: number
   ) {
-    this.scene = scene;
     this.direction = direction;
     this.mapData = mapData;
     this.tileSize = tileSize;

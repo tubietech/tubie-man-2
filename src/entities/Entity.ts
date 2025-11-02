@@ -2,7 +2,6 @@ import Phaser from 'phaser';
 import { IEntity } from '../interfaces/IEntity';
 import { ICoordinate } from '../interfaces/ICoordinate';
 import { Direction } from '../enums/Direction';
-import { gameConfig } from '../config/gameConfig';
 import { IMapData } from '../interfaces/IMapData';
 import { MapValue } from '../enums/MapValue';
 
@@ -37,7 +36,7 @@ export class Entity implements IEntity {
     );
   }
   
-  update(time: number, delta: number): void {
+  update(_time: number, _delta: number): void {
     // Override in subclasses
   }
   
