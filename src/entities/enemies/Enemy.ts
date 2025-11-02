@@ -8,6 +8,7 @@ import { getRandomFloat } from '../../utils/utils';
 
 export class Enemy extends Entity {
   type: string;
+  enemyNumber: number; // 1=Stingy, 2=Pokey, 3=Pricky, 4=Doc
   pathfindTimer: number = 0;
   targetX: number;
   targetY: number;
@@ -24,11 +25,14 @@ export class Enemy extends Entity {
   exitPath: { x: number; y: number }[] = [];
   exitPathIndex: number = 0;
   isFollowingExitPath: boolean = false;
+  animatedSprite: Phaser.GameObjects.Sprite | null = null;
+  currentAnimKey: string = '';
 
-  constructor(scene: Phaser.Scene, x: number, y: number, type: string, speed: number, mapData: IMapData, tileSize: number, mapOffsetX: number, mapOffsetY: number, difficulty: string = 'medium') {
+  constructor(scene: Phaser.Scene, x: number, y: number, type: string, enemyNumber: number, speed: number, mapData: IMapData, tileSize: number, mapOffsetX: number, mapOffsetY: number, difficulty: string = 'medium') {
     const color = gameConfig.colors[type as keyof typeof gameConfig.colors] as number;
     super(scene, x, y, color, speed, mapData, tileSize, mapOffsetX, mapOffsetY);
     this.type = type;
+    this.enemyNumber = enemyNumber;
     this.targetX = x;
     this.targetY = y;
     this.difficulty = difficulty;
@@ -39,7 +43,113 @@ export class Enemy extends Entity {
     const baseInjuredSpeed = gameConfig.enemy.injuredSpeed[this.difficulty as keyof typeof gameConfig.enemy.injuredSpeed];
     this.injuredSpeed = baseInjuredSpeed * (this.tileSize / gameConfig.map.tileSize);
 
+    // Create animations and sprite
+    this.createAnimations();
+    this.createAnimatedSprite(x, y);
+
     this.scheduleNextQuirk();
+  }
+
+  /**
+   * Create all animations for this enemy
+   */
+  private createAnimations(): void {
+    const scene = this.scene;
+
+    // Create normal movement animations for each direction
+    const directions = ['up', 'left', 'down', 'right'];
+    directions.forEach(dir => {
+      const animKey = `enemy${this.enemyNumber}_${dir}`;
+
+      // Only create if it doesn't exist
+      if (!scene.anims.exists(animKey)) {
+        scene.anims.create({
+          key: animKey,
+          frames: [
+            { key: 'atlas', frame: `enemy${this.enemyNumber}_${dir}_frame_1.png` },
+            { key: 'atlas', frame: `enemy${this.enemyNumber}_${dir}_frame_2.png` }
+          ],
+          frameRate: 8,
+          repeat: -1
+        });
+      }
+    });
+
+    // Create injured animations for each direction
+    directions.forEach(dir => {
+      const animKey = `enemy_injured_${dir}`;
+
+      if (!scene.anims.exists(animKey)) {
+        scene.anims.create({
+          key: animKey,
+          frames: [{ key: 'atlas', frame: `enemy_injured_${dir}.png` }],
+          frameRate: 1,
+          repeat: -1
+        });
+      }
+    });
+  }
+
+  /**
+   * Create the animated sprite for this enemy
+   */
+  private createAnimatedSprite(x: number, y: number): void {
+    const pixelX = this.mapOffsetX + x * this.tileSize + this.tileSize / 2;
+    const pixelY = this.mapOffsetY + y * this.tileSize + this.tileSize / 2;
+
+    // Create sprite
+    this.animatedSprite = this.scene.add.sprite(pixelX, pixelY, 'atlas');
+
+    // Scale sprite using config value
+    const spriteScale = (this.tileSize * gameConfig.enemy.spriteScale) / this.animatedSprite.width;
+    this.animatedSprite.setScale(spriteScale);
+
+    // Hide the circle sprite from Entity base class
+    if (this.sprite instanceof Phaser.GameObjects.Arc) {
+      this.sprite.setVisible(false);
+    }
+
+    // Start with right-facing animation
+    this.updateAnimation();
+  }
+
+  /**
+   * Update the animation based on current state (direction, injured)
+   */
+  protected updateAnimation(): void {
+    if (!this.animatedSprite || !this.animatedSprite.anims) return;
+
+    let animKey = '';
+
+    if (this.isInjured) {
+      // Use injured sprite based on direction
+      const dirMap = {
+        [Direction.UP]: 'up',
+        [Direction.DOWN]: 'down',
+        [Direction.LEFT]: 'left',
+        [Direction.RIGHT]: 'right'
+      };
+      const dirStr = dirMap[this.direction];
+      animKey = `enemy_injured_${dirStr}`;
+    } else {
+      // Use normal sprite based on direction
+      const dirMap = {
+        [Direction.UP]: 'up',
+        [Direction.DOWN]: 'down',
+        [Direction.LEFT]: 'left',
+        [Direction.RIGHT]: 'right'
+      };
+      const dirStr = dirMap[this.direction];
+      animKey = `enemy${this.enemyNumber}_${dirStr}`;
+    }
+
+    // Only change animation if it's different from current
+    if (animKey !== this.currentAnimKey) {
+      this.currentAnimKey = animKey;
+      if (this.scene.anims.exists(animKey)) {
+        this.animatedSprite.play(animKey);
+      }
+    }
   }
 
   /**
@@ -74,6 +184,9 @@ export class Enemy extends Entity {
     this.respawnTimer = 0;
     this.speed = this.normalSpeed;
 
+    // Update animation to normal
+    this.updateAnimation();
+
     // Restore original color (Arc uses setFillStyle, not setTint)
     if (this.sprite instanceof Phaser.GameObjects.Arc) {
       this.sprite.setFillStyle(this.originalColor);
@@ -81,13 +194,16 @@ export class Enemy extends Entity {
   }
 
   /**
-   * Injure the enemy - changes color to gray and flees to pen
+   * Injure the enemy - changes sprite to injured and flees to pen
    */
   injure(): void {
     if (this.isInjured || this.isRespawning) return;
 
     this.isInjured = true;
     this.speed = this.injuredSpeed;
+
+    // Update to injured animation
+    this.updateAnimation();
 
     // Change color to gray (Arc uses setFillStyle, not setTint)
     if (this.sprite instanceof Phaser.GameObjects.Arc) {
@@ -234,6 +350,12 @@ export class Enemy extends Entity {
       const actualSpeed = Math.min(speed, dist);
       this.sprite.x += (dx / dist) * actualSpeed;
       this.sprite.y += (dy / dist) * actualSpeed;
+
+      // Sync animated sprite position
+      if (this.animatedSprite) {
+        this.animatedSprite.x = this.sprite.x;
+        this.animatedSprite.y = this.sprite.y;
+      }
     }
   }
 
@@ -249,9 +371,15 @@ export class Enemy extends Entity {
       const next = this.getNextPosition(nextDir);
 
       if (this.canMove(next.x, next.y)) {
+        const prevDir = this.direction;
         this.direction = nextDir;
         this.gridX = next.x;
         this.gridY = next.y;
+
+        // Update animation if direction changed
+        if (prevDir !== nextDir) {
+          this.updateAnimation();
+        }
       }
     }
 
@@ -266,6 +394,12 @@ export class Enemy extends Entity {
       const actualSpeed = Math.min(speed, dist);
       this.sprite.x += (moveX / dist) * actualSpeed;
       this.sprite.y += (moveY / dist) * actualSpeed;
+
+      // Sync animated sprite position
+      if (this.animatedSprite) {
+        this.animatedSprite.x = this.sprite.x;
+        this.animatedSprite.y = this.sprite.y;
+      }
     }
   }
   

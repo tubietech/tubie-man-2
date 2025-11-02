@@ -21,7 +21,7 @@ export class Pricky extends Enemy {
   private lastPlayerFireState: boolean = false;
 
   constructor(scene: Phaser.Scene, x: number, y: number, speed: number, mapData: IMapData, tileSize: number, mapOffsetX: number, mapOffsetY: number, difficulty: string = 'medium') {
-    super(scene, x, y, 'pricky', speed, mapData, tileSize, mapOffsetX, mapOffsetY, difficulty);
+    super(scene, x, y, 'pricky', 3, speed, mapData, tileSize, mapOffsetX, mapOffsetY, difficulty); // Enemy number 3
   }
 
   protected triggerQuirk(): void {

@@ -15,8 +15,29 @@ export class Stingy extends Enemy {
   public isFireResistant: boolean = false;
 
   constructor(scene: Phaser.Scene, x: number, y: number, speed: number, mapData: IMapData, tileSize: number, mapOffsetX: number, mapOffsetY: number, difficulty: string = 'medium') {
-    super(scene, x, y, 'stingy', speed, mapData, tileSize, mapOffsetX, mapOffsetY, difficulty);
+    super(scene, x, y, 'stingy', 1, speed, mapData, tileSize, mapOffsetX, mapOffsetY, difficulty); // Enemy number 1
     this.baseSpeed = speed;
+    this.createSterilizationModeAnimation();
+  }
+
+  /**
+   * Create sterilization mode animation
+   */
+  private createSterilizationModeAnimation(): void {
+    const scene = this.scene;
+    const animKey = 'sterialization_mode';
+
+    if (!scene.anims.exists(animKey)) {
+      scene.anims.create({
+        key: animKey,
+        frames: [
+          { key: 'atlas', frame: 'sterialization_mode_frame_1.png' },
+          { key: 'atlas', frame: 'sterialization_mode_frame_2.png' }
+        ],
+        frameRate: 8,
+        repeat: -1
+      });
+    }
   }
 
   /**
@@ -42,6 +63,10 @@ export class Stingy extends Enemy {
     this.isFireResistant = true;
     const speedMultiplier = gameConfig.enemy.quirks.stingy.sterileModeSpeedMultiplier[this.difficulty as keyof typeof gameConfig.enemy.quirks.stingy.sterileModeSpeedMultiplier];
     this.speed = this.baseSpeed * speedMultiplier;
+
+    // Update to sterilization mode animation
+    this.updateAnimation();
+
     console.log(`[STINGY] Sterile Mode activated! Speed: ${this.speed}, Fire Resistant: ${this.isFireResistant}`);
   }
 
@@ -52,7 +77,32 @@ export class Stingy extends Enemy {
     this.inSterileMode = false;
     this.isFireResistant = false;
     this.speed = this.baseSpeed;
+
+    // Return to normal animation
+    this.updateAnimation();
+
     console.log(`[STINGY] Sterile Mode deactivated. Returning to normal.`);
+  }
+
+  /**
+   * Override to use sterilization mode sprite when active
+   */
+  protected updateAnimation(): void {
+    if (!this.animatedSprite || !this.animatedSprite.anims) return;
+
+    // Use sterilization mode sprite if active
+    if (this.inSterileMode && !this.isInjured) {
+      const animKey = 'sterialization_mode';
+      if (animKey !== this.currentAnimKey) {
+        this.currentAnimKey = animKey;
+        if (this.scene.anims.exists(animKey)) {
+          this.animatedSprite.play(animKey);
+        }
+      }
+    } else {
+      // Use parent class logic for normal/injured sprites
+      super.updateAnimation();
+    }
   }
 
   update(time: number, delta: number): void {

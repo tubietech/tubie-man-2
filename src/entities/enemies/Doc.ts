@@ -19,7 +19,7 @@ export class Doc extends Enemy {
   private pauseDuration: number = 0;
 
   constructor(scene: Phaser.Scene, x: number, y: number, speed: number, mapData: IMapData, tileSize: number, mapOffsetX: number, mapOffsetY: number, difficulty: string = 'medium') {
-    super(scene, x, y, 'doc', speed, mapData, tileSize, mapOffsetX, mapOffsetY, difficulty);
+    super(scene, x, y, 'doc', 4, speed, mapData, tileSize, mapOffsetX, mapOffsetY, difficulty); // Enemy number 4
   }
 
   protected triggerQuirk(): void {

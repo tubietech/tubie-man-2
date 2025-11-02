@@ -33,6 +33,7 @@ export const gameConfig = {
     },
     respawnDelay: 2000, // Time to pause in pen before respawning (ms)
     releaseDelay: { easy: 3000, medium: 2500, hard: 1500 }, // Delay between enemy releases (ms)
+    spriteScale: 2, // Scale multiplier for enemy sprites
     injuryScore: {
       base: 100,        // Base points for injuring enemy
       increment: 100,   // Points increase per combo
