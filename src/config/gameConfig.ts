@@ -61,7 +61,7 @@ export const gameConfig = {
       },
       stingy: {
         sterileModeThreshold: 20,  // Pellets remaining to trigger Sterile Mode
-        sterileModeSpeedMultiplier: { easy: 1.2, medium: 1.5, hard: 1.8 }  // Speed multiplier in Sterile Mode by difficulty
+        sterileModeSpeedMultiplier: { easy: 1, medium: 1.2, hard: 1.5 }  // Speed multiplier in Sterile Mode by difficulty
       },
       doc: {
         pauseTime: { min: 1000, max: 3000 } // Random pause duration range (ms)
@@ -90,7 +90,7 @@ export const gameConfig = {
       ],
       scores: [100, 200, 300, 500, 700, 800, 1000, 1600, 2000, 3000, 5000],
       defaultScore: 5000, // Score for level 12+
-      scale: 1.9, // Scale bonus sprite relative to tile size
+      scale: 2.2, // Scale bonus sprite relative to tile size
       speed: { easy: 60, medium: 100, hard: 140 }, // Pixels per second by difficulty
       appearancesPerLevel: 2,
       firstAppearance: { min: 60, max: 75 }, // Dots eaten before first appearance

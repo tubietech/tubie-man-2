@@ -81,9 +81,15 @@ export class GameScene extends Phaser.Scene {
     this.isGameOver = false;
 
     if (data.reset) {
+      // Full reset - start new game
       this.score = 0;
       this.level = 1;
       this.lives = gameConfig.player.startLives;
+    } else {
+      // Level transition - preserve game state
+      this.score = data.score ?? this.score;
+      this.level = data.level ?? this.level;
+      this.lives = data.lives ?? this.lives;
     }
   }
   
@@ -395,11 +401,14 @@ export class GameScene extends Phaser.Scene {
     return !!(this.cursors && this.player && this.powerText);
   }
 
-  private getSceneRestartData(reset: boolean): { difficulty: string; orientation: Orientation; reset: boolean } {
+  private getSceneRestartData(reset: boolean): { difficulty: string; orientation: Orientation; reset: boolean; score?: number; level?: number; lives?: number } {
     return {
       difficulty: this.difficulty,
       orientation: this.orientation,
-      reset
+      reset,
+      score: reset ? undefined : this.score,
+      level: reset ? undefined : this.level,
+      lives: reset ? undefined : this.lives
     };
   }
 
