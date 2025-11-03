@@ -5,7 +5,7 @@ export const gameConfig = {
     fireBreathCooldown: 1000,
     fireBreathRange: 3,
     projectile: {
-      speed: 250, // Pixels per second
+      speed: 300, // Pixels per second
       maxDistance: 10, // Maximum distance in tiles
       spriteScale: 15.0, // Scale for projectile sprite (make it much more visible)
       animationFrameRate: 20, // Frame rate for projectile animation
@@ -16,8 +16,8 @@ export const gameConfig = {
     animationFrameRate: 15,
     spriteScale: 2,
     deathAnimation: {
-      spinCount: 2, // Number of 360-degree spins
-      spinDuration: 500, // Duration of each spin in milliseconds
+      spinCount: 3, // Number of 360-degree spins
+      spinDuration: 750, // Duration of each spin in milliseconds
     },
     invulnerabilityDuration: 2000, // Duration of invulnerability after losing a life (ms)
     injuryComboResetTime: 10000, // Time before injury combo resets (ms)
@@ -138,7 +138,8 @@ export const gameConfig = {
       down: 'S',
       left: 'A',
       right: 'D',
-      fire: 'SPACE'
+      fire: 'SPACE',
+      continue: 'ENTER'
     },
     gamepad: {
       fire: 0

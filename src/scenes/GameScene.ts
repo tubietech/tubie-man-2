@@ -44,6 +44,7 @@ export class GameScene extends Phaser.Scene {
   enemiesReleased: number = 0;
   injuryComboCount: number = 0;
   lastInjuryTime: number = 0;
+  isGameOver: boolean = false;
 
   scoreText!: Phaser.GameObjects.Text;
   highScoreText!: Phaser.GameObjects.Text;
@@ -70,7 +71,14 @@ export class GameScene extends Phaser.Scene {
     this.uiRenderer = new UIRenderer(this, this.localization);
     this.performanceMonitor = PerformanceMonitor.getInstance();
 
+    // Ensure black background
+    this.cameras.main.setBackgroundColor('#000000');
+
+    // Always create a fresh graphics object
     this.graphics = this.add.graphics();
+
+    // Reset game over flag
+    this.isGameOver = false;
 
     if (data.reset) {
       this.score = 0;
@@ -103,6 +111,12 @@ export class GameScene extends Phaser.Scene {
   }
 
   async create() {
+    // Force black background on both camera and game canvas
+    this.cameras.main.setBackgroundColor('#000000');
+    if (this.game.canvas) {
+      this.game.canvas.style.backgroundColor = '#000000';
+    }
+
     this.mapData = await MapGeneratorV2.generate(gameConfig.map.width, gameConfig.map.height);
     this.calculateMapOffset();
 
@@ -158,6 +172,9 @@ export class GameScene extends Phaser.Scene {
   }
   
   createEnemies() {
+    // Clear the enemies array to prevent duplicates on scene restart
+    this.enemies = [];
+
     const tileSize = this.getTileSize();
     const enemySpeed = calculateScaledSpeed(gameConfig.enemy.speed, this.difficulty, tileSize);
 
@@ -392,6 +409,11 @@ export class GameScene extends Phaser.Scene {
 
     // Guard: Don't update until scene is fully initialized
     if (!this.isInitialized()) {
+      return;
+    }
+
+    // Guard: Don't update game logic if game is over
+    if (this.isGameOver) {
       return;
     }
 
@@ -643,6 +665,13 @@ export class GameScene extends Phaser.Scene {
       console.log('[BONUS] Removed due to player death');
     }
 
+    // Immediately reset enemies to starting positions and hide them
+    this.enemies.forEach(enemy => {
+      enemy.pause();
+      enemy.resetToStart();
+      enemy.hide();
+    });
+
     // Play death animation
     await this.player.playDeathAnimation();
 
@@ -652,14 +681,14 @@ export class GameScene extends Phaser.Scene {
       this.resetPositions();
     }
   }
-  
+
   resetPositions() {
     // Reset player to starting position
     this.player.reset(this.mapData.playerStart.x, this.mapData.playerStart.y);
 
-    // Reset all enemies to pen
+    // Show enemies (they were already reset to start in loseLife)
     this.enemies.forEach(enemy => {
-      enemy.reset(this.mapData.penCenter.x, this.mapData.penCenter.y);
+      enemy.show();
     });
 
     // Restart staggered release
@@ -674,6 +703,11 @@ export class GameScene extends Phaser.Scene {
   
   gameOver() {
     const loc = this.localization;
+    this.isGameOver = true;
+
+    // Clear all timers immediately to prevent duplicate enemy releases on restart
+    this.time.removeAllEvents();
+
     this.add.text(
       this.cameras.main.centerX,
       this.cameras.main.centerY,
@@ -686,14 +720,24 @@ export class GameScene extends Phaser.Scene {
       }
     ).setOrigin(0.5);
 
+    // Set up click to restart
     this.input.once('pointerdown', () => {
       this.scene.restart(this.getSceneRestartData(true));
     });
 
-    this.scene.pause();
+    // Set up Enter key to restart
+    const enterKey = this.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.ENTER);
+    if (enterKey) {
+      enterKey.once('down', () => {
+        this.scene.restart(this.getSceneRestartData(true));
+      });
+    }
   }
 
   shutdown() {
+    // Remove all timed events to prevent them from firing after scene restart
+    this.time.removeAllEvents();
+
     // Clean up map renderer and texture
     if (this.mapRenderer) {
       this.mapRenderer.destroy();
@@ -711,6 +755,9 @@ export class GameScene extends Phaser.Scene {
       this.enemies.forEach(enemy => {
         if (enemy.sprite) {
           enemy.sprite.destroy();
+        }
+        if (enemy.animatedSprite) {
+          enemy.animatedSprite.destroy();
         }
       });
     }

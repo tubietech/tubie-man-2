@@ -214,7 +214,8 @@ export class MapRenderer {
     // Create image from texture at position (0, 0) since texture includes offsets
     this.mapTexture = this.scene.add.image(0, 0, textureKey);
     this.mapTexture.setOrigin(0, 0);
-    this.mapTexture.setDepth(-1); // Put behind everything else
+    this.mapTexture.setDepth(-1000); // Put behind everything else with very low depth
+    this.mapTexture.setVisible(true); // Ensure it's visible
 
     // Clear the graphics object now that we have the texture
     this.graphics.clear();

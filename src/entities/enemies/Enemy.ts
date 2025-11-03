@@ -27,6 +27,9 @@ export class Enemy extends Entity {
   isFollowingExitPath: boolean = false;
   animatedSprite: Phaser.GameObjects.Sprite | null = null;
   currentAnimKey: string = '';
+  isPaused: boolean = false;
+  startX: number;
+  startY: number;
 
   constructor(scene: Phaser.Scene, x: number, y: number, type: string, enemyNumber: number, speed: number, mapData: IMapData, tileSize: number, mapOffsetX: number, mapOffsetY: number, difficulty: string = 'medium') {
     const color = gameConfig.colors[type as keyof typeof gameConfig.colors] as number;
@@ -38,6 +41,10 @@ export class Enemy extends Entity {
     this.difficulty = difficulty;
     this.normalSpeed = speed;
     this.originalColor = color;
+
+    // Store starting position
+    this.startX = x;
+    this.startY = y;
 
     // Calculate injured speed using the speed scaling utility
     const baseInjuredSpeed = gameConfig.enemy.injuredSpeed[this.difficulty as keyof typeof gameConfig.enemy.injuredSpeed];
@@ -194,6 +201,82 @@ export class Enemy extends Entity {
   }
 
   /**
+   * Override moveTo to also update animated sprite position
+   */
+  moveTo(x: number, y: number): void {
+    super.moveTo(x, y);
+
+    // Update animated sprite position to match
+    if (this.animatedSprite) {
+      const pixelX = this.mapOffsetX + x * this.tileSize + this.tileSize / 2;
+      const pixelY = this.mapOffsetY + y * this.tileSize + this.tileSize / 2;
+      this.animatedSprite.setPosition(pixelX, pixelY);
+    }
+  }
+
+  /**
+   * Reset enemy to starting position
+   */
+  resetToStart(): void {
+    this.moveTo(this.startX, this.startY);
+    this.isReleased = false;
+    this.isInjured = false;
+    this.isRespawning = false;
+    this.respawnTimer = 0;
+    this.speed = this.normalSpeed;
+    this.isPaused = false;
+    this.isFollowingExitPath = false;
+    this.exitPathIndex = 0;
+
+    // Update animation to normal
+    this.updateAnimation();
+
+    // Restore original color
+    if (this.sprite instanceof Phaser.GameObjects.Arc) {
+      this.sprite.setFillStyle(this.originalColor);
+    }
+  }
+
+  /**
+   * Pause enemy movement (during player death)
+   */
+  pause(): void {
+    this.isPaused = true;
+  }
+
+  /**
+   * Resume enemy movement
+   */
+  resume(): void {
+    this.isPaused = false;
+  }
+
+  /**
+   * Hide enemy sprites
+   */
+  hide(): void {
+    if (this.animatedSprite) {
+      this.animatedSprite.setVisible(false);
+    }
+    if (this.sprite) {
+      this.sprite.setVisible(false);
+    }
+  }
+
+  /**
+   * Show enemy sprites
+   */
+  show(): void {
+    if (this.animatedSprite) {
+      this.animatedSprite.setVisible(true);
+    }
+    // Keep circle sprite hidden since we're using animated sprite
+    if (this.sprite instanceof Phaser.GameObjects.Arc) {
+      this.sprite.setVisible(false);
+    }
+  }
+
+  /**
    * Injure the enemy - changes sprite to injured and flees to pen
    */
   injure(): void {
@@ -262,6 +345,11 @@ export class Enemy extends Entity {
   }
   
   update(_time: number, delta: number): void {
+    // Don't update if paused (during player death)
+    if (this.isPaused) {
+      return;
+    }
+
     // Handle respawning state - pause in pen
     if (this.isRespawning) {
       this.respawnTimer += delta;
