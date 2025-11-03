@@ -21,6 +21,7 @@ export class Player extends Entity {
   isDying: boolean = false;
   isInvulnerable: boolean = false;
   invulnerabilityTimer: number = 0;
+  originalScale: number = 1;
 
   constructor(scene: Phaser.Scene, x: number, y: number, color: number, speed: number, mapData: IMapData, tileSize: number, mapOffsetX: number, mapOffsetY: number) {
     super(scene, x, y, color, speed, mapData, tileSize, mapOffsetX, mapOffsetY);
@@ -38,7 +39,8 @@ export class Player extends Entity {
 
     // Scale sprite to fit tile size, then scale up by 50%
     const spriteScale = tileSize / Math.max(this.animatedSprite.width, this.animatedSprite.height);
-    this.animatedSprite.setScale(spriteScale * gameConfig.player.spriteScale);
+    this.originalScale = spriteScale * gameConfig.player.spriteScale;
+    this.animatedSprite.setScale(this.originalScale);
 
     // Update sprite reference to point to animated sprite
     this.sprite = this.animatedSprite;
@@ -372,6 +374,11 @@ export class Player extends Entity {
     this.direction = Direction.RIGHT;
     this.deactivateFire();
     this.hasFirePower = false;
+
+    // Restore original sprite scale
+    if (this.animatedSprite) {
+      this.animatedSprite.setScale(this.originalScale);
+    }
   }
 
   /**
@@ -417,6 +424,14 @@ export class Player extends Entity {
           this.activateInvulnerability();
           resolve();
         }
+      });
+
+      // Create shrink animation that runs simultaneously with spin
+      this.scene.tweens.add({
+        targets: this.animatedSprite,
+        scale: 0, // Shrink to nothing
+        duration: totalDuration,
+        ease: 'Linear'
       });
     });
   }

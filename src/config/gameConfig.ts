@@ -29,10 +29,11 @@ export const gameConfig = {
     types: ['pokey', 'pricky', 'stingy', 'doc'],
     countPerLevel: {
       1: 3,  // Level 1: Pokey, Pricky, Stingy
-      2: 4   // Level 2+: All four enemies (Doc appears)
+      2: 3,  // Level 2: Pokey, Pricky, Stingy
+      3: 4   // Level 3+: All four enemies (Doc appears)
     },
     respawnDelay: 2000, // Time to pause in pen before respawning (ms)
-    releaseDelay: { easy: 3000, medium: 2500, hard: 1500 }, // Delay between enemy releases (ms)
+    releaseDelay: { easy: 4000, medium: 3000, hard: 1500 }, // Delay between enemy releases (ms)
     spriteScale: 2, // Scale multiplier for enemy sprites
     injuryScore: {
       base: 100,        // Base points for injuring enemy
