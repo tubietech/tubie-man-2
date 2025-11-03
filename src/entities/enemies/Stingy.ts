@@ -44,6 +44,15 @@ export class Stingy extends Enemy {
    * Check if Sterile Mode should be activated based on pellet count
    */
   private checkSterileMode(): void {
+    // Don't activate sterile mode if injured or respawning
+    if (this.isInjured || this.isRespawning) {
+      // Deactivate if currently in sterile mode
+      if (this.inSterileMode) {
+        this.deactivateSterileMode();
+      }
+      return;
+    }
+
     const gameScene = this.scene as GameScene;
     const pelletsRemaining = gameScene.countRemainingPellets();
     const threshold = gameConfig.enemy.quirks.stingy.sterileModeThreshold;

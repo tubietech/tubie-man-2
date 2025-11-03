@@ -307,7 +307,19 @@ export class Enemy extends Entity {
     this.isReleased = false;
     this.respawnTimer = 0;
 
-    console.log(`[ENEMY] ${this.type} starting respawn in pen`);
+    // Ensure enemy is exactly at pen center
+    this.moveTo(this.mapData.penCenter.x, this.mapData.penCenter.y);
+
+    // Set exit path from pen center to outside
+    const doorX = this.mapData.penDoor.x;
+    const doorY = this.mapData.penDoor.y;
+    this.exitPath = [
+      { x: doorX, y: doorY },           // Move to door
+      { x: doorX, y: doorY - 1 }        // Exit through door to outside
+    ];
+    this.exitPathIndex = 0;
+
+    console.log(`[ENEMY] ${this.type} starting respawn in pen at (${this.gridX}, ${this.gridY}), exit path set with ${this.exitPath.length} waypoints`);
   }
 
   /**
@@ -318,12 +330,24 @@ export class Enemy extends Entity {
     this.isReleased = true;
     this.speed = this.normalSpeed;
 
+    // Update animation back to normal
+    this.updateAnimation();
+
     // Restore original color (Arc uses setFillStyle, not setTint)
     if (this.sprite instanceof Phaser.GameObjects.Arc) {
       this.sprite.setFillStyle(this.originalColor);
     }
 
-    console.log(`[ENEMY] ${this.type} respawn complete, leaving pen`);
+    // Start following exit path to leave the pen
+    if (this.exitPath.length > 0) {
+      this.isFollowingExitPath = true;
+      this.exitPathIndex = 0;
+      console.log(`[ENEMY] ${this.type} starting exit path with ${this.exitPath.length} waypoints`);
+    } else {
+      console.log(`[ENEMY] ${this.type} WARNING: No exit path available!`);
+    }
+
+    console.log(`[ENEMY] ${this.type} respawn complete, leaving pen. isFollowingExitPath=${this.isFollowingExitPath}, isReleased=${this.isReleased}`);
   }
 
   /**
