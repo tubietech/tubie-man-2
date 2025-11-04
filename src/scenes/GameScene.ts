@@ -204,7 +204,7 @@ export class GameScene extends Phaser.Scene {
     const startX = this.mapData.playerStart.x;
     const startY = this.mapData.playerStart.y;
 
-    this.player = new Player(this, startX, startY, gameConfig.colors.player, playerSpeed, this.mapData, tileSize, this.mapOffsetX, this.mapOffsetY);
+    this.player = new Player(this, startX, startY, gameConfig.colors.player, playerSpeed, this.mapData, tileSize, this.mapOffsetX, this.mapOffsetY, this.difficulty);
 
     this.createEnemies();
     this.initializeBonus();
@@ -598,7 +598,7 @@ export class GameScene extends Phaser.Scene {
 
         if (isPower) {
           this.score += gameConfig.map.powerup.score;
-          this.player.hasFirePower = true;
+          this.player.giveFirePower();
           this.uiRenderer.updatePowerText(this.powerText, this.orientation, true, false);
         } else {
           this.score += gameConfig.map.pellet.score;
@@ -1069,7 +1069,7 @@ export class GameScene extends Phaser.Scene {
     this.devKeys.activatePowerup.on('down', () => {
       if (DeveloperMode.getInstance().isEnabled()) {
         console.log('[DEVELOPER MODE] Activating powerup');
-        this.player.hasFirePower = true;
+        this.player.giveFirePower();
         this.uiRenderer.updatePowerText(this.powerText, this.orientation, this.player.hasFirePower, this.player.fireActive);
       }
     });

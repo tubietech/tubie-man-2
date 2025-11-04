@@ -1,15 +1,21 @@
 export const gameConfig = {
   player: {
     speed: { easy: 70, medium: 80, hard: 90 },
-    fireBreathDuration: 1500, // Halved from 3000
-    fireBreathCooldown: 1000,
-    fireBreathRange: 3,
-    projectile: {
-      speed: 300, // Pixels per second
-      maxDistance: 10, // Maximum distance in tiles
-      spriteScale: 15.0, // Scale for projectile sprite (make it much more visible)
-      animationFrameRate: 20, // Frame rate for projectile animation
-      count: 3, // Number of projectiles fired in a row
+    powerup: {
+      v1: {
+        duration: 1500, // Duration of fire breath effect (ms)
+        projectileCount: 3, // Number of projectiles fired in a row
+      },
+      v2: {
+        duration: 5000, // Duration window for firing multiple projectiles (ms)
+        fireRateDelay: { easy: 300, medium: 1000, hard: 2500 }, // Minimum time between projectile fires (ms) by difficulty
+      },
+      projectile: {
+        speed: 300, // Pixels per second
+        maxDistance: 10, // Maximum distance in tiles
+        spriteScale: 15.0, // Scale for projectile sprite (make it much more visible)
+        animationFrameRate: 20, // Frame rate for projectile animation
+      }
     },
     startLives: 3,
     playerStartingHeight: 7, // Player starts 7 rows above bottom of map

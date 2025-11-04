@@ -1,20 +1,19 @@
 import Phaser from 'phaser';
 import { Entity } from './Entity';
 import { Enemy } from './enemies/Enemy';
-import { Projectile } from './Projectile';
 import { Direction } from '../enums/Direction';
-import { MapValue } from '../enums/MapValue';
 import { gameConfig } from '../config/gameConfig';
 import { IMapData } from '../interfaces/IMapData';
 import { ICoordinate } from '../interfaces/ICoordinate';
 import { IMovementInput } from '../interfaces/IMovementInput';
 import { ICollisionResult } from '../interfaces/ICollisionResult';
+import { IPowerActivationStrategy } from '../interfaces/IPowerActivationStrategy';
+import { PowerActivationV2 } from './powerup/PowerActivationV2';
+// import { PowerActivationV1 } from './powerup/PowerActivationV1'; // Uncomment to switch back to V1
 
 export class Player extends Entity {
   hasFirePower: boolean = false;
   fireActive: boolean = false;
-  fireDuration: number = 0;
-  projectiles: Projectile[] = [];
   inputQueue: Direction[] = [];
   animatedSprite!: Phaser.GameObjects.Sprite;
   isMoving: boolean = false;
@@ -24,8 +23,15 @@ export class Player extends Entity {
   invulnerabilityTimer: number = 0;
   originalScale: number = 1;
 
-  constructor(scene: Phaser.Scene, x: number, y: number, color: number, speed: number, mapData: IMapData, tileSize: number, mapOffsetX: number, mapOffsetY: number) {
+  // Power activation strategy (V2 by default, can switch to V1)
+  private powerActivationStrategy: IPowerActivationStrategy;
+
+  constructor(scene: Phaser.Scene, x: number, y: number, color: number, speed: number, mapData: IMapData, tileSize: number, mapOffsetX: number, mapOffsetY: number, difficulty: string = 'medium') {
     super(scene, x, y, color, speed, mapData, tileSize, mapOffsetX, mapOffsetY);
+
+    // Initialize power activation strategy (V2 by default)
+    this.powerActivationStrategy = new PowerActivationV2(scene, mapData, tileSize, mapOffsetX, mapOffsetY, difficulty);
+    // To use V1: this.powerActivationStrategy = new PowerActivationV1(scene, mapData, tileSize, mapOffsetX, mapOffsetY, difficulty);
 
     // Destroy the circle sprite created by parent
     this.sprite.destroy();
@@ -123,26 +129,12 @@ export class Player extends Entity {
 
     const moveSpeed = this.speed * delta / 1000;
 
-    // Update all projectiles
-    for (let i = this.projectiles.length - 1; i >= 0; i--) {
-      const projectile = this.projectiles[i];
-      projectile.update(delta);
+    // Update power activation strategy
+    this.powerActivationStrategy.update(delta);
 
-      // Clean up inactive projectiles
-      if (!projectile.active) {
-        console.log(`[PLAYER] Projectile ${i} became inactive, cleaning up`);
-        this.projectiles.splice(i, 1);
-      }
-    }
-
-    // Update fire duration timer
-    if (this.fireActive) {
-      this.fireDuration -= delta;
-      if (this.fireDuration <= 0) {
-        console.log(`[PLAYER] Fire duration expired, deactivating`);
-        this.deactivateFire();
-      }
-    }
+    // Sync fireActive state from strategy
+    this.fireActive = this.powerActivationStrategy.isActive();
+    this.hasFirePower = this.powerActivationStrategy.hasPower();
 
     if (this.inputQueue.length > 0) {
       const nextDir = this.inputQueue[0];
@@ -253,7 +245,7 @@ export class Player extends Entity {
   }
   
   activateFire(): void {
-    console.log(`[PLAYER] activateFire called - hasFirePower: ${this.hasFirePower}, fireActive: ${this.fireActive}, isDying: ${this.isDying}`);
+    console.log(`[PLAYER] activateFire called - isDying: ${this.isDying}`);
 
     // Cannot activate fire during death animation
     if (this.isDying) {
@@ -261,100 +253,36 @@ export class Player extends Entity {
       return;
     }
 
-    if (!this.hasFirePower || this.fireActive) {
-      console.log(`[PLAYER] Fire activation blocked - hasFirePower: ${this.hasFirePower}, fireActive: ${this.fireActive}`);
-      return;
+    // Delegate to power activation strategy
+    const playerPos: ICoordinate = { x: this.gridX, y: this.gridY };
+    const success = this.powerActivationStrategy.activate(playerPos, this.direction);
+
+    // Sync state from strategy
+    this.fireActive = this.powerActivationStrategy.isActive();
+    this.hasFirePower = this.powerActivationStrategy.hasPower();
+
+    if (success) {
+      console.log(`[PLAYER] Fire activated successfully`);
     }
-
-    // Check if there's a wall directly in front of the player
-    let checkX = this.gridX;
-    let checkY = this.gridY;
-
-    switch (this.direction) {
-      case Direction.UP: checkY--; break;
-      case Direction.DOWN: checkY++; break;
-      case Direction.LEFT: checkX--; break;
-      case Direction.RIGHT: checkX++; break;
-    }
-
-    // Check if the tile in front is a wall
-    if (this.isWall(checkX, checkY)) {
-      console.log(`[PLAYER] Cannot fire - wall directly in front at (${checkX}, ${checkY})`);
-      return;
-    }
-
-    this.fireActive = true;
-    this.fireDuration = gameConfig.player.fireBreathDuration;
-    this.hasFirePower = false;
-
-    // Create multiple projectiles in a row based on config
-    const projectileCount = gameConfig.player.projectile.count;
-    console.log(`[PLAYER] Creating ${projectileCount} projectile(s) from player position (${this.gridX}, ${this.gridY}), facing ${Direction[this.direction]}`);
-
-    for (let i = 1; i <= projectileCount; i++) {
-      // Calculate starting position for this projectile (one tile ahead + i-1 additional tiles)
-      let startX = this.gridX;
-      let startY = this.gridY;
-
-      // Offset by i tiles in the firing direction
-      switch (this.direction) {
-        case Direction.UP: startY -= i; break;
-        case Direction.DOWN: startY += i; break;
-        case Direction.LEFT: startX -= i; break;
-        case Direction.RIGHT: startX += i; break;
-      }
-
-      const startPos: ICoordinate = { x: startX, y: startY };
-
-      const projectile = new Projectile(
-        this.scene,
-        startPos,
-        this.direction,
-        this.mapData,
-        this.tileSize,
-        this.mapOffsetX,
-        this.mapOffsetY,
-        gameConfig.player.projectile.speed
-      );
-
-      // Only add projectile if it was successfully created (not blocked by wall)
-      if (projectile.active) {
-        this.projectiles.push(projectile);
-      }
-    }
-
-    console.log(`[PLAYER] ${this.projectiles.length} projectile(s) created successfully`);
-  }
-
-  private isWall(x: number, y: number): boolean {
-    // Check if out of bounds
-    if (x < 0 || y < 0 || y >= this.mapData.map.length || x >= this.mapData.map[0].length) {
-      return true;
-    }
-
-    const tile = this.mapData.map[y][x];
-    return tile === MapValue.WALL || tile === MapValue.PEN_DOOR;
   }
 
   deactivateFire(): void {
+    this.powerActivationStrategy.deactivate();
     this.fireActive = false;
+    this.hasFirePower = false;
+  }
 
-    // Clean up all projectiles
-    if (this.projectiles && this.projectiles.length > 0) {
-      for (const projectile of this.projectiles) {
-        if (projectile && projectile.active) {
-          projectile.destroy();
-        }
-      }
-      this.projectiles = [];
-    }
+  /**
+   * Give the player fire power
+   * This syncs with the power activation strategy
+   */
+  giveFirePower(): void {
+    this.hasFirePower = true;
+    this.powerActivationStrategy.setPower(true);
   }
 
   getFirePositions(): ICoordinate[] {
-    // Return positions of all active projectiles
-    return this.projectiles
-      .filter(p => p.active)
-      .map(p => p.getGridPosition());
+    return this.powerActivationStrategy.getFirePositions();
   }
 
   /**
