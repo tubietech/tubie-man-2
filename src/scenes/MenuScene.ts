@@ -3,6 +3,8 @@ import { Orientation } from '../enums/Orientation';
 import { Language } from '../enums/Language';
 import { LocalizationManager } from '../config/localization/LocalizationManager';
 import { loadPreloadedMaps } from '../utils/preloadedMaps';
+import { DeveloperMode } from '../utils/DeveloperMode';
+import { gameConfig } from '../config/gameConfig';
 
 export class MenuScene extends Phaser.Scene {
   selectedDifficulty: string = 'medium';
@@ -10,6 +12,8 @@ export class MenuScene extends Phaser.Scene {
   localization!: LocalizationManager;
   mapsLoaded: boolean = false;
   loadingText!: Phaser.GameObjects.Text;
+  konamiCodeInput: string[] = [];
+  konamiCodeKeys: Map<number, string> = new Map();
 
   constructor() {
     super({ key: 'MenuScene' });
@@ -26,6 +30,9 @@ export class MenuScene extends Phaser.Scene {
 
     this.localization = LocalizationManager.getInstance();
     const loc = this.localization;
+
+    // Set up Konami code detection
+    this.setupKonamiCode();
 
     const centerX = this.cameras.main.centerX;
 
@@ -161,6 +168,45 @@ export class MenuScene extends Phaser.Scene {
       difficulty: this.selectedDifficulty,
       orientation: this.orientation,
       reset: true
+    });
+  }
+
+  private setupKonamiCode(): void {
+    // Map keyboard keycodes to Konami code string identifiers
+    this.konamiCodeKeys.set(Phaser.Input.Keyboard.KeyCodes.UP, 'UP');
+    this.konamiCodeKeys.set(Phaser.Input.Keyboard.KeyCodes.DOWN, 'DOWN');
+    this.konamiCodeKeys.set(Phaser.Input.Keyboard.KeyCodes.LEFT, 'LEFT');
+    this.konamiCodeKeys.set(Phaser.Input.Keyboard.KeyCodes.RIGHT, 'RIGHT');
+    this.konamiCodeKeys.set(Phaser.Input.Keyboard.KeyCodes.B, 'B');
+    this.konamiCodeKeys.set(Phaser.Input.Keyboard.KeyCodes.A, 'A');
+
+    // Listen for keyboard input
+    this.input.keyboard?.on('keydown', (event: KeyboardEvent) => {
+      const keyCode = event.keyCode;
+      const keyString = this.konamiCodeKeys.get(keyCode);
+
+      // Only track keys that are part of the Konami code
+      if (keyString) {
+        this.konamiCodeInput.push(keyString);
+
+        // Keep only the last N inputs (where N is the length of the Konami code)
+        const codeLength = gameConfig.developer.konamiCode.length;
+        if (this.konamiCodeInput.length > codeLength) {
+          this.konamiCodeInput.shift();
+        }
+
+        // Check if the input matches the Konami code
+        if (this.konamiCodeInput.length === codeLength) {
+          const inputString = this.konamiCodeInput.join(',');
+          const konamiString = gameConfig.developer.konamiCode.join(',');
+
+          if (inputString === konamiString) {
+            console.log('[KONAMI CODE] Developer mode activated!');
+            DeveloperMode.getInstance().enable();
+            this.konamiCodeInput = []; // Reset input
+          }
+        }
+      }
     });
   }
 }

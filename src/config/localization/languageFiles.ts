@@ -2,7 +2,7 @@ import { Language } from '../../enums/Language';
 
 export const languageFiles = {
   [Language.ENGLISH]: {
-    gameTitle: 'FIRE BREATHER',
+    gameTitle: 'Tubie-Man',
     gameOver: 'GAME OVER',
     clickToRestart: 'Click to Restart',
     selectDifficulty: 'Select Difficulty:',
@@ -11,16 +11,19 @@ export const languageFiles = {
     hard: 'HARD',
     controls: 'Controls: Arrow Keys or WASD\nFire: SPACE\nTouch: Swipe direction',
     score: 'Score',
-    highScore: 'Hi-Score',
+    highScore: ' High\nScore',
     lives: 'Lives',
     level: 'Level',
     power: 'Power',
     powerReady: 'Ready',
     powerNone: 'None',
-    powerActive: 'Active'
+    powerActive: 'Active',
+    paused: 'PAUSED',
+    continue: 'CONTINUE',
+    quit: 'QUIT'
   },
   [Language.SPANISH]: {
-    gameTitle: 'LANZA FUEGO',
+    gameTitle: 'Hombre Tubía',
     gameOver: 'JUEGO TERMINADO',
     clickToRestart: 'Clic para Reiniciar',
     selectDifficulty: 'Seleccionar Dificultad:',
@@ -35,10 +38,13 @@ export const languageFiles = {
     power: 'Poder',
     powerReady: 'Listo',
     powerNone: 'Ninguno',
-    powerActive: 'Activo'
+    powerActive: 'Activo',
+    paused: 'PAUSADO',
+    continue: 'CONTINUAR',
+    quit: 'SALIR'
   },
   [Language.FRENCH]: {
-    gameTitle: 'CRACHEUR DE FEU',
+    gameTitle: 'Tubie-Man',
     gameOver: 'JEU TERMINÉ',
     clickToRestart: 'Cliquer pour Redémarrer',
     selectDifficulty: 'Sélectionner Difficulté:',
@@ -53,10 +59,13 @@ export const languageFiles = {
     power: 'Pouvoir',
     powerReady: 'Prêt',
     powerNone: 'Aucun',
-    powerActive: 'Actif'
+    powerActive: 'Actif',
+    paused: 'PAUSE',
+    continue: 'CONTINUER',
+    quit: 'QUITTER'
   },
   [Language.GERMAN]: {
-    gameTitle: 'FEUERATEM',
+    gameTitle: 'Tubie-Man',
     gameOver: 'SPIEL VORBEI',
     clickToRestart: 'Klicken zum Neustarten',
     selectDifficulty: 'Schwierigkeit Wählen:',
@@ -71,7 +80,10 @@ export const languageFiles = {
     power: 'Kraft',
     powerReady: 'Bereit',
     powerNone: 'Keine',
-    powerActive: 'Aktiv'
+    powerActive: 'Aktiv',
+    paused: 'PAUSIERT',
+    continue: 'FORTSETZEN',
+    quit: 'BEENDEN'
   }
 };
 

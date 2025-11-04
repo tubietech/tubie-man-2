@@ -15,7 +15,7 @@ import { getRandomInt } from '../../utils/utils';
 export class Pricky extends Enemy {
   private isPanicking: boolean = false;
   private panicTimer: number = 0;
-  private isPaused: boolean = false;
+  private panicPaused: boolean = false;
   private pauseTimer: number = 0;
   private panicDirection: Direction | null = null;
   private lastPlayerFireState: boolean = false;
@@ -39,7 +39,7 @@ export class Pricky extends Enemy {
   private startPanic(): void {
     this.isPanicking = true;
     this.panicTimer = 0;
-    this.isPaused = false;
+    this.panicPaused = false;
     // Run in opposite direction from player
     const player = (this.scene as GameScene).player;
     const dx = this.gridX - player.gridX;
@@ -63,10 +63,10 @@ export class Pricky extends Enemy {
     this.lastPlayerFireState = player.fireActive;
 
     // Handle pause state
-    if (this.isPaused) {
+    if (this.panicPaused) {
       this.pauseTimer += delta;
       if (this.pauseTimer >= gameConfig.enemy.quirks.pricky.wallPauseDuration) {
-        this.isPaused = false;
+        this.panicPaused = false;
         this.isPanicking = false;
         this.panicDirection = null;
       }
@@ -112,7 +112,7 @@ export class Pricky extends Enemy {
       const next = this.getNextPosition(this.panicDirection);
       if (!this.canMove(next.x, next.y)) {
         // Hit a wall! Pause
-        this.isPaused = true;
+        this.panicPaused = true;
         this.pauseTimer = 0;
       }
     } else {

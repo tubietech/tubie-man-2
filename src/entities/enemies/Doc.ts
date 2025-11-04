@@ -14,7 +14,7 @@ import { getRandomInt, getRandomFloat } from '../../utils/utils';
 export class Doc extends Enemy {
   private wanderTarget: { x: number; y: number } | null = null;
   private readonly closeDistance: number = 8; // Distance threshold to start chasing
-  private isPaused: boolean = false;
+  private isLazy: boolean = false;
   private pauseTimer: number = 0;
   private pauseDuration: number = 0;
 
@@ -24,7 +24,7 @@ export class Doc extends Enemy {
 
   protected triggerQuirk(): void {
     // Trigger a pause
-    this.isPaused = true;
+    this.isLazy = true;
     this.pauseTimer = 0;
 
     // Random pause duration from config
@@ -34,10 +34,10 @@ export class Doc extends Enemy {
 
   update(time: number, delta: number): void {
     // Handle pause state
-    if (this.isPaused) {
+    if (this.isLazy) {
       this.pauseTimer += delta;
       if (this.pauseTimer >= this.pauseDuration) {
-        this.isPaused = false;
+        this.isLazy = false;
       }
       return; // Don't move while paused
     }

@@ -3,6 +3,7 @@ import { IMapData } from '../interfaces/IMapData';
 import { IPelletData } from '../interfaces/IPelletData';
 import { ICoordinate } from '../interfaces/ICoordinate';
 import { gameConfig } from '../config/gameConfig';
+import { IMapColorPalette } from '../config/mapColorPalettes';
 import { findConnectedWallSections, traceWallOutline, thinWalls, enforceMinimumThickness, roundCorners } from './renderUtils';
 
 export class MapRenderer {
@@ -12,6 +13,7 @@ export class MapRenderer {
   private mapOffsetX: number;
   private mapOffsetY: number;
   private tileSize: number;
+  private colorPalette: IMapColorPalette;
   private mapTexture: Phaser.GameObjects.Image | null = null;
   private static textureCounter: number = 0;
 
@@ -21,7 +23,8 @@ export class MapRenderer {
     graphics: Phaser.GameObjects.Graphics,
     mapOffsetX: number,
     mapOffsetY: number,
-    tileSize: number
+    tileSize: number,
+    colorPalette: IMapColorPalette
   ) {
     this.scene = scene;
     this.mapData = mapData;
@@ -29,6 +32,7 @@ export class MapRenderer {
     this.mapOffsetX = mapOffsetX;
     this.mapOffsetY = mapOffsetY;
     this.tileSize = tileSize;
+    this.colorPalette = colorPalette;
   }
 
   /**
@@ -75,7 +79,7 @@ export class MapRenderer {
       }
 
       // Step 7: Draw the filled polygon
-      this.graphics.fillStyle(gameConfig.colors.wall);
+      this.graphics.fillStyle(this.colorPalette.wall);
       this.graphics.beginPath();
       this.graphics.moveTo(points[0].x, points[0].y);
       for (let i = 1; i < points.length; i++) {
@@ -85,7 +89,7 @@ export class MapRenderer {
       this.graphics.fillPath();
 
       // Step 8: Draw the outline
-      this.graphics.lineStyle(gameConfig.map.wallOutlineThickness, gameConfig.colors.wallOutline);
+      this.graphics.lineStyle(gameConfig.map.wallOutlineThickness, this.colorPalette.wallOutline);
       this.graphics.beginPath();
       this.graphics.moveTo(points[0].x, points[0].y);
       for (let i = 1; i < points.length; i++) {
@@ -120,7 +124,7 @@ export class MapRenderer {
     this.graphics.fillRect(startX, py, totalWidth, barHeight);
 
     // Draw outline
-    this.graphics.lineStyle(outlineThickness, gameConfig.colors.wallOutline);
+    this.graphics.lineStyle(outlineThickness, this.colorPalette.wallOutline);
     this.graphics.beginPath();
     // Top edge
     this.graphics.moveTo(startX, py);
@@ -165,7 +169,7 @@ export class MapRenderer {
             this.mapOffsetY + y * this.tileSize,
             this.tileSize,
             this.tileSize,
-            gameConfig.colors.wall
+            this.colorPalette.wall
           ).setOrigin(0).setAlpha(0.3);
           rectangles.push(rect);
         } else if (tile === 3) {

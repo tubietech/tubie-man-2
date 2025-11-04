@@ -7,7 +7,7 @@ import { MapValue } from '../enums/MapValue';
 import { gameConfig } from '../config/gameConfig';
 
 export class Projectile implements IProjectile {
-  sprite: Phaser.GameObjects.Sprite;
+  sprite!: Phaser.GameObjects.Sprite;
   gridPosition: ICoordinate;
   direction: Direction;
   active: boolean;
@@ -40,18 +40,18 @@ export class Projectile implements IProjectile {
     this.distanceTraveled = 0;
     this.maxDistance = gameConfig.player.projectile.maxDistance * tileSize;
 
-    // Calculate starting position one tile ahead of player
-    let startX = startPos.x;
-    let startY = startPos.y;
-
-    switch (direction) {
-      case Direction.UP: startY--; break;
-      case Direction.DOWN: startY++; break;
-      case Direction.LEFT: startX--; break;
-      case Direction.RIGHT: startX++; break;
-    }
+    // Use the starting position directly (Player already calculated one tile ahead)
+    const startX = startPos.x;
+    const startY = startPos.y;
 
     this.gridPosition = { x: startX, y: startY };
+
+    // Check if starting position is a wall - if so, destroy immediately
+    if (this.hasHitWall()) {
+      console.log(`[PROJECTILE] Cannot spawn at grid (${startX}, ${startY}) - wall collision`);
+      this.active = false;
+      return;
+    }
 
     // Create the sprite at the starting position (one tile ahead)
     const pixelX = mapOffsetX + startX * tileSize + tileSize / 2;

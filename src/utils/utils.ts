@@ -135,3 +135,12 @@ export function calculateBonusAppearances(): number[] {
     getRandomInt(secondMin, secondMax)
   ];
 }
+
+/**
+ * Convert a color number to a CSS color string with '#' prefix
+ * @param colorNumber The color as a hexadecimal number (e.g., 0xffffff)
+ * @returns CSS color string (e.g., '#ffffff')
+ */
+export function colorNumberToString(colorNumber: number): string {
+  return '#' + colorNumber.toString(16).padStart(6, '0');
+}

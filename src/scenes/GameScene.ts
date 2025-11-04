@@ -7,7 +7,7 @@ import { Stingy } from '../entities/enemies/Stingy';
 import { Doc } from '../entities/enemies/Doc';
 import { MapGeneratorV2 } from '../utils/MapGeneratorV2';
 import { MapRenderer } from '../utils/MapRenderer';
-import { UIRenderer } from '../utils/UIRenderer';
+import { UIRenderer } from '../ui/UIRenderer';
 import { PerformanceMonitor } from '../utils/PerformanceMonitor';
 import { canEatPellet, calculateScaledSpeed, calculateBonusAppearances } from '../utils/utils';
 import { IMapData } from '../interfaces/IMapData';
@@ -17,10 +17,14 @@ import { gameConfig } from '../config/gameConfig';
 import { Bonus } from '../entities/Bonus';
 import { BonusSelector } from '../utils/BonusSelector';
 import { IBonusData } from '../interfaces/IBonusData';
+import { PauseMenu } from '../ui/PauseMenu';
+import { mapColorPalettes, getRandomPaletteIndex, IMapColorPalette, defaultPalette } from '../config/mapColorPalettes';
+import { DeveloperMode } from '../utils/DeveloperMode';
+import { Drawable } from '../interfaces/IPelletData';
 
 export class GameScene extends Phaser.Scene {
   mapData!: IMapData;
-  pellets: Phaser.GameObjects.Arc[][] = [];
+  pellets: Drawable[][] = [];
   powerups: Phaser.GameObjects.Sprite[] = [];
   player!: Player;
   enemies: Enemy[] = [];
@@ -45,13 +49,26 @@ export class GameScene extends Phaser.Scene {
   injuryComboCount: number = 0;
   lastInjuryTime: number = 0;
   isGameOver: boolean = false;
+  isPaused: boolean = false;
+  pauseMenu!: PauseMenu;
+  pauseKey!: Phaser.Input.Keyboard.Key;
+  currentPaletteIndex: number = -1;
+  currentPalette!: IMapColorPalette;
+  developerIndicator!: Phaser.GameObjects.Text;
+  devKeys!: {
+    toggleAI: Phaser.Input.Keyboard.Key;
+    clearPellets: Phaser.Input.Keyboard.Key;
+    killPlayer: Phaser.Input.Keyboard.Key;
+    activatePowerup: Phaser.Input.Keyboard.Key;
+  };
+  enemyAIEnabled: boolean = true;
 
   scoreText!: Phaser.GameObjects.Text;
   highScoreText!: Phaser.GameObjects.Text;
   livesText!: Phaser.GameObjects.Text;
   levelText!: Phaser.GameObjects.Text;
   powerText!: Phaser.GameObjects.Text;
-  
+
   cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
   wasd!: any;
   fireKey!: Phaser.Input.Keyboard.Key;
@@ -85,14 +102,52 @@ export class GameScene extends Phaser.Scene {
       this.score = 0;
       this.level = 1;
       this.lives = gameConfig.player.startLives;
+      this.currentPaletteIndex = -1; // Reset palette
     } else {
       // Level transition - preserve game state
       this.score = data.score ?? this.score;
       this.level = data.level ?? this.level;
       this.lives = data.lives ?? this.lives;
+      this.currentPaletteIndex = data.currentPaletteIndex ?? this.currentPaletteIndex;
+    }
+
+    // Select color palette - change every 2 levels
+    this.selectColorPalette();
+  }
+
+  /**
+   * Select a color palette based on the current level
+   * - Levels 1 & 2: Always use the default theme
+   * - Levels 3+: Random palette selection every 2 levels, ensuring variety
+   */
+  private selectColorPalette(): void {
+    // Calculate which palette group this level belongs to (changes every 2 levels)
+    // Group 0: levels 1-2, Group 1: levels 3-4, Group 2: levels 5-6, etc.
+    const currentPaletteGroup = Math.floor((this.level - 1) / 2);
+
+    // Levels 1 & 2 always use the default palette
+    if (this.level <= 2) {
+      this.currentPaletteIndex = 0; // Default palette is at index 0
+      this.currentPalette = defaultPalette;
+      console.log(`[PALETTE] Level ${this.level} (Group ${currentPaletteGroup}): Using DEFAULT palette`);
+      return;
+    }
+
+    // For levels 3+: Check if we need to change palette (only on odd levels: 3, 5, 7, etc.)
+    const shouldChangePalette = (this.level - 1) % 2 === 0;
+
+    if (shouldChangePalette || this.currentPaletteIndex === -1) {
+      // Select a new random palette different from the current one
+      this.currentPaletteIndex = getRandomPaletteIndex(this.currentPaletteIndex);
+      this.currentPalette = mapColorPalettes[this.currentPaletteIndex];
+      console.log(`[PALETTE] Level ${this.level} (Group ${currentPaletteGroup}): Selected NEW palette ${this.currentPaletteIndex}`);
+    } else {
+      // Keep the same palette
+      this.currentPalette = mapColorPalettes[this.currentPaletteIndex];
+      console.log(`[PALETTE] Level ${this.level} (Group ${currentPaletteGroup}): Keeping palette ${this.currentPaletteIndex}`);
     }
   }
-  
+
   private getTileSize(): number {
     // Calculate tile size based on canvas dimensions to fill the screen
     const canvasWidth = this.cameras.main.width;
@@ -133,7 +188,8 @@ export class GameScene extends Phaser.Scene {
       this.graphics!,
       this.mapOffsetX,
       this.mapOffsetY,
-      tileSize
+      tileSize,
+      this.currentPalette
     );
 
     this.mapRectangles = this.mapRenderer.drawMap();
@@ -210,15 +266,8 @@ export class GameScene extends Phaser.Scene {
     stingy.setExitPath([]);
     this.enemies.push(stingy);
 
-    // Create exit path: from pen center -> door -> outside door
-    // This path guides enemies from their starting position to outside the pen
-    const exitPath = [
-      { x: penCenterX, y: penCenterY },     // Start at pen center
-      { x: doorX, y: doorY },                // Move to door
-      { x: doorX, y: doorY - 1 }             // Exit through door to outside
-    ];
-
     // Position other enemies inside the pen based on count
+    // Exit path for pen enemies: from pen center -> door -> outside door
     if (enemyCount === 3) {
       // 3 enemies: Stingy (already placed), Pokey, Pricky
       // Place Pokey and Pricky side by side, centered in pen
@@ -360,18 +409,36 @@ export class GameScene extends Phaser.Scene {
       right: Phaser.Input.Keyboard.KeyCodes.D
     });
     this.fireKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+    this.pauseKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
+
+    // Pause key handler
+    this.pauseKey.on('down', () => {
+      this.togglePause();
+    });
+
+    // Gamepad pause button handler (Select button = button 8)
+    this.input.gamepad?.on('down', (_pad: Phaser.Input.Gamepad.Gamepad, button: Phaser.Input.Gamepad.Button) => {
+      if (button.index === gameConfig.controls.gamepad.pause) {
+        this.togglePause();
+      }
+    });
 
     this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
-      this.player.processPointerInput({ x: pointer.x, y: pointer.y });
+      if (!this.isPaused) {
+        this.player.processPointerInput({ x: pointer.x, y: pointer.y });
+      }
     });
 
     this.input.on('pointermove', (pointer: Phaser.Input.Pointer) => {
-      if (pointer.isDown && pointer.primaryDown) {
+      if (!this.isPaused && pointer.isDown && pointer.primaryDown) {
         // Clear queue and set new direction for drag
         this.player.inputQueue = [];
         this.player.processPointerInput({ x: pointer.x, y: pointer.y });
       }
     });
+
+    // Set up developer mode key bindings
+    this.setupDeveloperKeys();
   }
   
   createUI() {
@@ -387,7 +454,8 @@ export class GameScene extends Phaser.Scene {
       mapHeight,
       this.score,
       this.lives,
-      this.level
+      this.level,
+      () => this.togglePause()  // Pause button callback
     );
 
     this.scoreText = uiElements.scoreText;
@@ -395,20 +463,52 @@ export class GameScene extends Phaser.Scene {
     this.livesText = uiElements.livesText;
     this.levelText = uiElements.levelText;
     this.powerText = uiElements.powerText;
+
+    // Initialize pause menu
+    this.pauseMenu = new PauseMenu(
+      this,
+      this.localization,
+      () => this.resumeGame(),
+      () => this.quitToMenu()
+    );
+
+    // Create developer mode indicator (yellow asterisk in top left, outside map)
+    if (DeveloperMode.getInstance().isEnabled()) {
+      this.developerIndicator = this.add.text(
+        10,
+        10,
+        '*',
+        {
+          fontFamily: 'PressStart2P',
+          fontSize: '48px',
+          color: '#ffff00'
+        }
+      ).setScrollFactor(0).setDepth(10002);
+      console.log('[DEVELOPER MODE] Indicator displayed');
+    }
   }
 
   private isInitialized(): boolean {
     return !!(this.cursors && this.player && this.powerText);
   }
 
-  private getSceneRestartData(reset: boolean): { difficulty: string; orientation: Orientation; reset: boolean; score?: number; level?: number; lives?: number } {
+  private getSceneRestartData(reset: boolean): {
+    difficulty: string;
+    orientation: Orientation;
+    reset: boolean;
+    score?: number;
+    level?: number;
+    lives?: number;
+    currentPaletteIndex?: number;
+  } {
     return {
       difficulty: this.difficulty,
       orientation: this.orientation,
       reset,
       score: reset ? undefined : this.score,
       level: reset ? undefined : this.level,
-      lives: reset ? undefined : this.lives
+      lives: reset ? undefined : this.lives,
+      currentPaletteIndex: reset ? undefined : this.currentPaletteIndex
     };
   }
 
@@ -423,6 +523,11 @@ export class GameScene extends Phaser.Scene {
 
     // Guard: Don't update game logic if game is over
     if (this.isGameOver) {
+      return;
+    }
+
+    // Guard: Don't update game logic if paused
+    if (this.isPaused) {
       return;
     }
 
@@ -447,7 +552,11 @@ export class GameScene extends Phaser.Scene {
     }
 
     this.player.update(time, delta);
-    this.enemies.forEach(enemy => enemy.update(time, delta));
+
+    // Only update enemies if AI is enabled (or developer mode is not active)
+    if (this.enemyAIEnabled) {
+      this.enemies.forEach(enemy => enemy.update(time, delta));
+    }
 
     // Update bonus
     if (this.bonus && this.bonus.isActive()) {
@@ -710,6 +819,48 @@ export class GameScene extends Phaser.Scene {
     this.scene.restart(this.getSceneRestartData(false));
   }
   
+  togglePause(): void {
+    // Don't allow pausing during game over
+    if (this.isGameOver) {
+      return;
+    }
+
+    if (this.isPaused) {
+      this.resumeGame();
+    } else {
+      this.pauseGame();
+    }
+  }
+
+  pauseGame(): void {
+    this.isPaused = true;
+
+    // Pause all Phaser timers
+    this.time.paused = true;
+
+    // Show pause menu
+    this.pauseMenu.show();
+  }
+
+  resumeGame(): void {
+    this.isPaused = false;
+
+    // Resume all Phaser timers
+    this.time.paused = false;
+
+    // Hide pause menu
+    this.pauseMenu.hide();
+  }
+
+  quitToMenu(): void {
+    // Clean up pause state
+    this.isPaused = false;
+    this.time.paused = false;
+
+    // Return to menu scene
+    this.scene.start('MenuScene');
+  }
+
   gameOver() {
     const loc = this.localization;
     this.isGameOver = true;
@@ -746,6 +897,15 @@ export class GameScene extends Phaser.Scene {
   shutdown() {
     // Remove all timed events to prevent them from firing after scene restart
     this.time.removeAllEvents();
+
+    // Clean up pause menu
+    if (this.pauseMenu) {
+      this.pauseMenu.destroy();
+    }
+
+    // Reset pause state
+    this.isPaused = false;
+    this.time.paused = false;
 
     // Clean up map renderer and texture
     if (this.mapRenderer) {
@@ -813,10 +973,105 @@ export class GameScene extends Phaser.Scene {
     if (this.levelText) this.levelText.destroy();
     if (this.powerText) this.powerText.destroy();
 
+    // Clean up developer indicator if it exists
+    if (this.developerIndicator) {
+      this.developerIndicator.destroy();
+    }
+
     // Clean up graphics
     if (this.graphics) {
       this.graphics.destroy();
       this.graphics = null;
     }
+  }
+
+  /**
+   * Set up developer mode key bindings
+   * Only active when developer mode is enabled
+   */
+  private setupDeveloperKeys(): void {
+    if (!this.input.keyboard) return;
+
+    // Create developer key bindings
+    this.devKeys = {
+      toggleAI: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes[gameConfig.developer.keys.toggleEnemyAI as keyof typeof Phaser.Input.Keyboard.KeyCodes]),
+      clearPellets: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes[gameConfig.developer.keys.clearPellets as keyof typeof Phaser.Input.Keyboard.KeyCodes]),
+      killPlayer: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes[gameConfig.developer.keys.killPlayer as keyof typeof Phaser.Input.Keyboard.KeyCodes]),
+      activatePowerup: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes[gameConfig.developer.keys.activatePowerup as keyof typeof Phaser.Input.Keyboard.KeyCodes])
+    };
+
+    // Q - Toggle enemy AI
+    this.devKeys.toggleAI.on('down', () => {
+      if (DeveloperMode.getInstance().isEnabled()) {
+        this.enemyAIEnabled = !this.enemyAIEnabled;
+        console.log(`[DEVELOPER MODE] Enemy AI ${this.enemyAIEnabled ? 'ENABLED' : 'DISABLED'}`);
+      }
+    });
+
+    // Z - Clear all pellets except 3 below pen center (for testing level progression)
+    this.devKeys.clearPellets.on('down', () => {
+      if (DeveloperMode.getInstance().isEnabled()) {
+        const tileSize = this.getTileSize();
+        const penCenterX = this.mapData.penCenter.x;
+        const penCenterY = this.mapData.penCenter.y;
+
+        // Define the 3 pellet positions below pen center
+        // Position them 3 rows below center (safely below the pen walls)
+        const preservedPellets = [
+          { x: penCenterX - 1, y: penCenterY + 3 },
+          { x: penCenterX, y: penCenterY + 3 },
+          { x: penCenterX + 1, y: penCenterY + 3 }
+        ];
+
+        // Clear all pellets except the preserved ones
+        this.pellets.forEach((row, y) => {
+          row.forEach((pellet, x) => {
+            const isPreserved = preservedPellets.some(p => p.x === x && p.y === y);
+            if (pellet && pellet.active && !isPreserved) {
+              pellet.destroy();
+            }
+          });
+        });
+
+        // Spawn preserved pellets if they don't exist or were eaten
+        preservedPellets.forEach(pos => {
+          const existingPellet = this.pellets[pos.y]?.[pos.x];
+          if (!existingPellet || !existingPellet.active) {
+            // Ensure the row exists
+            if (!this.pellets[pos.y]) {
+              this.pellets[pos.y] = [];
+            }
+
+            // Create new pellet
+            const pellet = this.add.circle(
+              this.mapOffsetX + pos.x * tileSize + tileSize / 2,
+              this.mapOffsetY + pos.y * tileSize + tileSize / 2,
+              tileSize * gameConfig.map.pellet.size,
+              gameConfig.colors.pellet
+            );
+            this.pellets[pos.y][pos.x] = pellet;
+          }
+        });
+
+        console.log('[DEVELOPER MODE] Pellets cleared except 3 below pen center for level progression testing');
+      }
+    });
+
+    // K - Kill player
+    this.devKeys.killPlayer.on('down', () => {
+      if (DeveloperMode.getInstance().isEnabled()) {
+        console.log('[DEVELOPER MODE] Killing player');
+        this.player.playDeathAnimation();
+      }
+    });
+
+    // P - Activate powerup
+    this.devKeys.activatePowerup.on('down', () => {
+      if (DeveloperMode.getInstance().isEnabled()) {
+        console.log('[DEVELOPER MODE] Activating powerup');
+        this.player.hasFirePower = true;
+        this.uiRenderer.updatePowerText(this.powerText, this.orientation, this.player.hasFirePower, this.player.fireActive);
+      }
+    });
   }
 }

@@ -23,7 +23,7 @@ export const gameConfig = {
     injuryComboResetTime: 10000, // Time before injury combo resets (ms)
   },
   enemy: {
-    speed: { easy: 70, medium: 82, hard: 95 },
+    speed: { easy: 68, medium: 82, hard: 95 },
     injuredSpeed: { easy: 110, medium: 140, hard: 180 }, // Speed when injured and fleeing to pen
     scaredDuration: 5000,
     types: ['pokey', 'pricky', 'stingy', 'doc'],
@@ -131,7 +131,15 @@ export const gameConfig = {
     stingy: 0x00ffff,
     doc: 0xffb851,
     penDoor: 0xff8800,
-    tunnel: 0x00ff00
+    tunnel: 0x00ff00,
+    pauseButtonNormal: 0x2121ff,
+    pauseButtonHighlight: 0x6262ff,
+    pauseButtonBorder: 0xffa500,
+    pauseButtonIcon: 0xffffff,
+    powerupReady: 0x00ff00,
+    powerupNotReady: 0xff0000,
+    powerupActive: 0xffa500,
+    gameUiText: 0xffffff,
   },
   controls: {
     keyboard: {
@@ -140,14 +148,26 @@ export const gameConfig = {
       left: 'A',
       right: 'D',
       fire: 'SPACE',
-      continue: 'ENTER'
+      continue: 'ENTER',
+      pause: 'ESC'
     },
     gamepad: {
-      fire: 0
+      fire: 0,
+      pause: 8  // Select button
     }
   },
   window: {
     widthModifier: 0.99, // Percentage of viewport width (0-1)
     heightModifier: 0.99, // Percentage of viewport height (0-1)
+  },
+  developer: {
+    // Konami code: Up, Up, Down, Down, Left, Right, Left, Right, B, A
+    konamiCode: ['UP', 'UP', 'DOWN', 'DOWN', 'LEFT', 'RIGHT', 'LEFT', 'RIGHT', 'B', 'A'],
+    keys: {
+      toggleEnemyAI: 'Q',      // Toggle enemy AI on/off
+      clearPellets: 'Z',       // Clear all pellets from screen
+      killPlayer: 'K',         // Kill the player
+      activatePowerup: 'P'     // Activate player powerup
+    }
   }
 };

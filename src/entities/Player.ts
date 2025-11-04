@@ -3,6 +3,7 @@ import { Entity } from './Entity';
 import { Enemy } from './enemies/Enemy';
 import { Projectile } from './Projectile';
 import { Direction } from '../enums/Direction';
+import { MapValue } from '../enums/MapValue';
 import { gameConfig } from '../config/gameConfig';
 import { IMapData } from '../interfaces/IMapData';
 import { ICoordinate } from '../interfaces/ICoordinate';
@@ -252,10 +253,33 @@ export class Player extends Entity {
   }
   
   activateFire(): void {
-    console.log(`[PLAYER] activateFire called - hasFirePower: ${this.hasFirePower}, fireActive: ${this.fireActive}`);
+    console.log(`[PLAYER] activateFire called - hasFirePower: ${this.hasFirePower}, fireActive: ${this.fireActive}, isDying: ${this.isDying}`);
+
+    // Cannot activate fire during death animation
+    if (this.isDying) {
+      console.log(`[PLAYER] Fire activation blocked - player is dying`);
+      return;
+    }
 
     if (!this.hasFirePower || this.fireActive) {
       console.log(`[PLAYER] Fire activation blocked - hasFirePower: ${this.hasFirePower}, fireActive: ${this.fireActive}`);
+      return;
+    }
+
+    // Check if there's a wall directly in front of the player
+    let checkX = this.gridX;
+    let checkY = this.gridY;
+
+    switch (this.direction) {
+      case Direction.UP: checkY--; break;
+      case Direction.DOWN: checkY++; break;
+      case Direction.LEFT: checkX--; break;
+      case Direction.RIGHT: checkX++; break;
+    }
+
+    // Check if the tile in front is a wall
+    if (this.isWall(checkX, checkY)) {
+      console.log(`[PLAYER] Cannot fire - wall directly in front at (${checkX}, ${checkY})`);
       return;
     }
 
@@ -267,8 +291,8 @@ export class Player extends Entity {
     const projectileCount = gameConfig.player.projectile.count;
     console.log(`[PLAYER] Creating ${projectileCount} projectile(s) from player position (${this.gridX}, ${this.gridY}), facing ${Direction[this.direction]}`);
 
-    for (let i = 0; i < projectileCount; i++) {
-      // Calculate starting position for this projectile (player position + i tiles ahead)
+    for (let i = 1; i <= projectileCount; i++) {
+      // Calculate starting position for this projectile (one tile ahead + i-1 additional tiles)
       let startX = this.gridX;
       let startY = this.gridY;
 
@@ -293,10 +317,23 @@ export class Player extends Entity {
         gameConfig.player.projectile.speed
       );
 
-      this.projectiles.push(projectile);
+      // Only add projectile if it was successfully created (not blocked by wall)
+      if (projectile.active) {
+        this.projectiles.push(projectile);
+      }
     }
 
-    console.log(`[PLAYER] ${projectileCount} projectile(s) created successfully`);
+    console.log(`[PLAYER] ${this.projectiles.length} projectile(s) created successfully`);
+  }
+
+  private isWall(x: number, y: number): boolean {
+    // Check if out of bounds
+    if (x < 0 || y < 0 || y >= this.mapData.map.length || x >= this.mapData.map[0].length) {
+      return true;
+    }
+
+    const tile = this.mapData.map[y][x];
+    return tile === MapValue.WALL || tile === MapValue.PEN_DOOR;
   }
 
   deactivateFire(): void {
@@ -393,6 +430,9 @@ export class Player extends Entity {
 
       // Clear input queue
       this.inputQueue = [];
+
+      // Deactivate fire and destroy all projectiles immediately
+      this.deactivateFire();
 
       // Stop any current animations
       if (this.animatedSprite && this.animatedSprite.anims && this.animatedSprite.anims.isPlaying) {
