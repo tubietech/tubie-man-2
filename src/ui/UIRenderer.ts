@@ -155,7 +155,7 @@ export class UIRenderer {
     // Create pause button above the score text in the right panel
     const pauseButton = this.createPauseButton(
       uiX + 70,
-      mapOffsetY + 20,
+      mapOffsetY + 35,
       onPauseClick
     );
 
