@@ -14,7 +14,7 @@ export const languageFiles = {
     highScore: ' High\nScore',
     lives: 'Lives',
     level: 'Level',
-    power: 'Power',
+    power: 'Power-Up',
     powerReady: 'Ready',
     powerNone: 'None',
     powerActive: 'Active',

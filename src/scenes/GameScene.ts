@@ -45,6 +45,8 @@ export class GameScene extends Phaser.Scene {
   tunnelCooldown: number = 0;
   mapOffsetX: number = 0;
   mapOffsetY: number = 0;
+  mapWidth: number = 0;
+  mapHeight: number = 0;
   enemiesReleased: number = 0;
   injuryComboCount: number = 0;
   lastInjuryTime: number = 0;
@@ -68,6 +70,9 @@ export class GameScene extends Phaser.Scene {
   livesText!: Phaser.GameObjects.Text;
   levelText!: Phaser.GameObjects.Text;
   powerText!: Phaser.GameObjects.Text;
+  durationPieChart?: Phaser.GameObjects.Graphics;
+  cooldownBar?: Phaser.GameObjects.Graphics;
+  cooldownBarBg?: Phaser.GameObjects.Graphics;
 
   cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
   wasd!: any;
@@ -443,15 +448,15 @@ export class GameScene extends Phaser.Scene {
   
   createUI() {
     const tileSize = this.getTileSize();
-    const mapWidth = gameConfig.map.width * tileSize;
-    const mapHeight = gameConfig.map.height * tileSize;
+    this.mapWidth = gameConfig.map.width * tileSize;
+    this.mapHeight = gameConfig.map.height * tileSize;
 
     const uiElements = this.uiRenderer.createUI(
       this.orientation,
       this.mapOffsetX,
       this.mapOffsetY,
-      mapWidth,
-      mapHeight,
+      this.mapWidth,
+      this.mapHeight,
       this.score,
       this.lives,
       this.level,
@@ -463,6 +468,9 @@ export class GameScene extends Phaser.Scene {
     this.livesText = uiElements.livesText;
     this.levelText = uiElements.levelText;
     this.powerText = uiElements.powerText;
+    this.durationPieChart = uiElements.durationPieChart;
+    this.cooldownBar = uiElements.cooldownBar;
+    this.cooldownBarBg = uiElements.cooldownBarBg;
 
     // Initialize pause menu
     this.pauseMenu = new PauseMenu(
@@ -599,7 +607,22 @@ export class GameScene extends Phaser.Scene {
         if (isPower) {
           this.score += gameConfig.map.powerup.score;
           this.player.giveFirePower();
-          this.uiRenderer.updatePowerText(this.powerText, this.orientation, true, false);
+          this.uiRenderer.updatePowerText(
+            this.powerText,
+            this.orientation,
+            true,
+            false,
+            0,
+            0,
+            this.durationPieChart,
+            this.cooldownBar,
+            this.cooldownBarBg,
+            this.mapOffsetX,
+            this.mapOffsetY,
+            this.mapWidth,
+            this.mapHeight,
+            this.player.getDifficulty()
+          );
         } else {
           this.score += gameConfig.map.pellet.score;
           this.pelletsEaten++;
@@ -619,7 +642,22 @@ export class GameScene extends Phaser.Scene {
 
     this.checkEnemyCollision();
 
-    this.uiRenderer.updatePowerText(this.powerText, this.orientation, this.player.hasFirePower, this.player.fireActive);
+    this.uiRenderer.updatePowerText(
+      this.powerText,
+      this.orientation,
+      this.player.hasFirePower,
+      this.player.fireActive,
+      this.player.getRemainingPowerDuration(),
+      this.player.getFireCooldown(),
+      this.durationPieChart,
+      this.cooldownBar,
+      this.cooldownBarBg,
+      this.mapOffsetX,
+      this.mapOffsetY,
+      this.mapWidth,
+      this.mapHeight,
+      this.player.getDifficulty()
+    );
   }
   
   checkTunnels() {
@@ -1070,7 +1108,22 @@ export class GameScene extends Phaser.Scene {
       if (DeveloperMode.getInstance().isEnabled()) {
         console.log('[DEVELOPER MODE] Activating powerup');
         this.player.giveFirePower();
-        this.uiRenderer.updatePowerText(this.powerText, this.orientation, this.player.hasFirePower, this.player.fireActive);
+        this.uiRenderer.updatePowerText(
+          this.powerText,
+          this.orientation,
+          this.player.hasFirePower,
+          this.player.fireActive,
+          0,
+          0,
+          this.durationPieChart,
+          this.cooldownBar,
+          this.cooldownBarBg,
+          this.mapOffsetX,
+          this.mapOffsetY,
+          this.mapWidth,
+          this.mapHeight,
+          this.player.getDifficulty()
+        );
       }
     });
   }

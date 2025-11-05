@@ -210,6 +210,16 @@ export class PowerActivationV2 implements IPowerActivationStrategy {
     return this.projectiles.filter(p => p.active);
   }
 
+  getRemainingDuration(): number {
+    return this.fireActive ? this.fireDuration : 0;
+  }
+
+  getFireCooldown(): number {
+    if (!this.fireActive || this.canFireAgain) return 0;
+    const fireRateDelay = gameConfig.player.powerup.v2.fireRateDelay[this.difficulty as keyof typeof gameConfig.player.powerup.v2.fireRateDelay];
+    return Math.max(0, fireRateDelay - (Date.now() - this.lastFireTime));
+  }
+
   private isWall(x: number, y: number): boolean {
     // Check if out of bounds
     if (x < 0 || y < 0 || y >= this.mapData.map.length || x >= this.mapData.map[0].length) {

@@ -25,9 +25,12 @@ export class Player extends Entity {
 
   // Power activation strategy (V2 by default, can switch to V1)
   private powerActivationStrategy: IPowerActivationStrategy;
+  private difficulty: string;
 
   constructor(scene: Phaser.Scene, x: number, y: number, color: number, speed: number, mapData: IMapData, tileSize: number, mapOffsetX: number, mapOffsetY: number, difficulty: string = 'medium') {
     super(scene, x, y, color, speed, mapData, tileSize, mapOffsetX, mapOffsetY);
+
+    this.difficulty = difficulty;
 
     // Initialize power activation strategy (V2 by default)
     this.powerActivationStrategy = new PowerActivationV2(scene, mapData, tileSize, mapOffsetX, mapOffsetY, difficulty);
@@ -283,6 +286,18 @@ export class Player extends Entity {
 
   getFirePositions(): ICoordinate[] {
     return this.powerActivationStrategy.getFirePositions();
+  }
+
+  getRemainingPowerDuration(): number {
+    return this.powerActivationStrategy.getRemainingDuration();
+  }
+
+  getFireCooldown(): number {
+    return this.powerActivationStrategy.getFireCooldown();
+  }
+
+  getDifficulty(): string {
+    return this.difficulty;
   }
 
   /**

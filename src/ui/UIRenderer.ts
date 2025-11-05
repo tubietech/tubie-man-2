@@ -11,6 +11,9 @@ export interface IUIElements {
   levelText: Phaser.GameObjects.Text;
   powerText: Phaser.GameObjects.Text;
   pauseButton: Phaser.GameObjects.Container;
+  durationPieChart?: Phaser.GameObjects.Graphics;
+  cooldownBar?: Phaser.GameObjects.Graphics;
+  cooldownBarBg?: Phaser.GameObjects.Graphics;
 }
 
 export class UIRenderer {
@@ -85,6 +88,21 @@ export class UIRenderer {
       color: colorNumberToString(gameConfig.colors.powerupReady)
     }).setOrigin(0.5, 0).setScrollFactor(0);
 
+    // Create pie chart for duration indicator (hidden initially)
+    const durationPieChart = this.scene.add.graphics();
+    durationPieChart.setScrollFactor(0);
+    durationPieChart.setVisible(false);
+
+    // Create cooldown bar background (hidden initially)
+    const cooldownBarBg = this.scene.add.graphics();
+    cooldownBarBg.setScrollFactor(0);
+    cooldownBarBg.setVisible(false);
+
+    // Create cooldown bar (hidden initially)
+    const cooldownBar = this.scene.add.graphics();
+    cooldownBar.setScrollFactor(0);
+    cooldownBar.setVisible(false);
+
     // Create pause button - positioned off the map, on the right side (vertical layout doesn't have right panel)
     // So we position it at the far right edge of the screen
     const pauseButton = this.createPauseButton(
@@ -99,7 +117,10 @@ export class UIRenderer {
       livesText,
       levelText,
       powerText,
-      pauseButton
+      pauseButton,
+      durationPieChart,
+      cooldownBar,
+      cooldownBarBg
     };
   }
 
@@ -152,9 +173,24 @@ export class UIRenderer {
       align: 'left'
     }).setScrollFactor(0);
 
-    // Create pause button above the score text in the right panel
+    // Create pie chart for duration indicator (hidden initially)
+    const durationPieChart = this.scene.add.graphics();
+    durationPieChart.setScrollFactor(0);
+    durationPieChart.setVisible(false);
+
+    // Create cooldown bar background (hidden initially)
+    const cooldownBarBg = this.scene.add.graphics();
+    cooldownBarBg.setScrollFactor(0);
+    cooldownBarBg.setVisible(false);
+
+    // Create cooldown bar (hidden initially)
+    const cooldownBar = this.scene.add.graphics();
+    cooldownBar.setScrollFactor(0);
+    cooldownBar.setVisible(false);
+
+    // Create pause button above the score text in the right panel, centered with the text
     const pauseButton = this.createPauseButton(
-      uiX + 70,
+      scoreText.x + scoreText.width / 2,
       mapOffsetY + 35,
       onPauseClick
     );
@@ -165,7 +201,10 @@ export class UIRenderer {
       livesText,
       levelText,
       powerText,
-      pauseButton
+      pauseButton,
+      durationPieChart,
+      cooldownBar,
+      cooldownBarBg
     };
   }
 
@@ -223,7 +262,22 @@ export class UIRenderer {
     );
   }
 
-  updatePowerText(powerText: Phaser.GameObjects.Text, orientation: Orientation, hasFirePower: boolean, fireActive: boolean): void {
+  updatePowerText(
+    powerText: Phaser.GameObjects.Text,
+    orientation: Orientation,
+    hasFirePower: boolean,
+    fireActive: boolean,
+    remainingDuration: number = 0,
+    fireCooldown: number = 0,
+    durationPieChart?: Phaser.GameObjects.Graphics,
+    cooldownBar?: Phaser.GameObjects.Graphics,
+    cooldownBarBg?: Phaser.GameObjects.Graphics,
+    mapOffsetX?: number,
+    mapOffsetY?: number,
+    mapWidth?: number,
+    mapHeight?: number,
+    difficulty: string = 'medium'
+  ): void {
     // Safety check: ensure text object is still active and not destroyed
     if (!powerText || !powerText.active || !powerText.scene) {
       return;
@@ -232,26 +286,108 @@ export class UIRenderer {
     const loc = this.localization;
 
     if (!hasFirePower && !fireActive) {
-      powerText.setColor(colorNumberToString(gameConfig.colors.powerupNotReady));
-      powerText.setText(
-        orientation === Orientation.VERTICAL
-          ? `${loc.getText('power')}: ${loc.getText('powerNone')}`
-          : `${loc.getText('power')}:\n${loc.getText('powerNone')}`
-      );
+      // Hide power text when no powerup is available
+      powerText.setVisible(false);
+
+      // Hide visual indicators
+      if (durationPieChart) durationPieChart.setVisible(false);
+      if (cooldownBar) cooldownBar.setVisible(false);
+      if (cooldownBarBg) cooldownBarBg.setVisible(false);
     } else if (fireActive) {
+      powerText.setVisible(true);
       powerText.setColor(colorNumberToString(gameConfig.colors.powerupActive));
       powerText.setText(
         orientation === Orientation.VERTICAL
           ? `${loc.getText('power')}: ${loc.getText('powerActive')}`
           : `${loc.getText('power')}:\n${loc.getText('powerActive')}`
       );
+
+      // Show and update pie chart for remaining duration
+      if (durationPieChart && mapOffsetX !== undefined && mapOffsetY !== undefined && mapWidth !== undefined && mapHeight !== undefined) {
+        durationPieChart.setVisible(true);
+        durationPieChart.clear();
+
+        const radius = 15; // Pie chart radius
+        let centerX: number;
+        let centerY: number;
+
+        if (orientation === Orientation.VERTICAL) {
+          centerX = mapOffsetX + mapWidth / 2;
+          centerY = mapOffsetY + mapHeight + 40;
+        } else {
+          // Center horizontally based on text position and width
+          const textWidth = powerText.width;
+          centerX = powerText.x + textWidth / 2;
+          centerY = powerText.y + powerText.height + 25;
+        }
+
+        // Calculate the percentage of duration remaining
+        const totalDuration = gameConfig.player.powerup.v2.duration;
+        const percentage = remainingDuration / totalDuration;
+
+        // Draw background circle (outline)
+        durationPieChart.lineStyle(2, gameConfig.colors.powerupActive, 1);
+        durationPieChart.strokeCircle(centerX, centerY, radius);
+
+        // Draw filled pie chart (starts at top, goes clockwise)
+        if (percentage > 0) {
+          durationPieChart.fillStyle(gameConfig.colors.powerupActive, 0.7);
+          durationPieChart.beginPath();
+          durationPieChart.moveTo(centerX, centerY);
+          durationPieChart.arc(centerX, centerY, radius, -Math.PI / 2, -Math.PI / 2 + (percentage * Math.PI * 2), false);
+          durationPieChart.closePath();
+          durationPieChart.fillPath();
+        }
+      }
+
+      // Update cooldown bar
+      if (cooldownBar && cooldownBarBg && mapOffsetX !== undefined && mapOffsetY !== undefined && mapWidth !== undefined && mapHeight !== undefined) {
+        const barWidth = 100;
+        const barHeight = 8;
+        let barX: number;
+        let barY: number;
+
+        if (orientation === Orientation.VERTICAL) {
+          barX = mapOffsetX + mapWidth / 2 - barWidth / 2;
+          barY = mapOffsetY + mapHeight + 60;
+        } else {
+          // Center horizontally based on text position and width
+          const textWidth = powerText.width;
+          barX = powerText.x + textWidth / 2 - barWidth / 2;
+          barY = powerText.y + powerText.height + 58;
+        }
+
+        // Show bars
+        cooldownBarBg.setVisible(true);
+        cooldownBar.setVisible(true);
+
+        // Draw background
+        cooldownBarBg.clear();
+        cooldownBarBg.fillStyle(0x333333, 0.5);
+        cooldownBarBg.fillRect(barX, barY, barWidth, barHeight);
+
+        // Draw cooldown fill (fills from left to right as cooldown decreases)
+        const fireRateDelay = gameConfig.player.powerup.v2.fireRateDelay[difficulty as keyof typeof gameConfig.player.powerup.v2.fireRateDelay];
+        const cooldownProgress = fireCooldown > 0 ? 1 - (fireCooldown / fireRateDelay) : 1;
+        const fillWidth = barWidth * cooldownProgress;
+
+        cooldownBar.clear();
+        cooldownBar.fillStyle(gameConfig.colors.powerupActive, 1);
+        cooldownBar.fillRect(barX, barY, fillWidth, barHeight);
+      }
     } else {
+      powerText.setVisible(true);
       powerText.setColor(colorNumberToString(gameConfig.colors.powerupReady));
       powerText.setText(
         orientation === Orientation.VERTICAL
           ? `${loc.getText('power')}: ${loc.getText('powerReady')}`
           : `${loc.getText('power')}:\n${loc.getText('powerReady')}`
       );
+
+      // Hide visual indicators
+      if (durationPieChart) durationPieChart.setVisible(false);
+      if (cooldownBar) cooldownBar.setVisible(false);
+      if (cooldownBarBg) cooldownBarBg.setVisible(false);
     }
   }
 }

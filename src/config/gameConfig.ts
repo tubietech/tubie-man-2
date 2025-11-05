@@ -7,14 +7,14 @@ export const gameConfig = {
         projectileCount: 3, // Number of projectiles fired in a row
       },
       v2: {
-        duration: 5000, // Duration window for firing multiple projectiles (ms)
+        duration: 3000, // Duration window for firing multiple projectiles (ms)
         fireRateDelay: { easy: 300, medium: 1000, hard: 2500 }, // Minimum time between projectile fires (ms) by difficulty
       },
       projectile: {
-        speed: 300, // Pixels per second
+        speed: 400, // Pixels per second
         maxDistance: 10, // Maximum distance in tiles
         spriteScale: 15.0, // Scale for projectile sprite (make it much more visible)
-        animationFrameRate: 20, // Frame rate for projectile animation
+        animationFrameRate: 22, // Frame rate for projectile animation
       }
     },
     startLives: 3,

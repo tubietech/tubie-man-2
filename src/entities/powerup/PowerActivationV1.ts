@@ -166,6 +166,15 @@ export class PowerActivationV1 implements IPowerActivationStrategy {
     return this.projectiles.filter(p => p.active);
   }
 
+  getRemainingDuration(): number {
+    return this.fireActive ? this.fireDuration : 0;
+  }
+
+  getFireCooldown(): number {
+    // V1 fires all projectiles at once, so no cooldown between fires
+    return 0;
+  }
+
   private isWall(x: number, y: number): boolean {
     // Check if out of bounds
     if (x < 0 || y < 0 || y >= this.mapData.map.length || x >= this.mapData.map[0].length) {

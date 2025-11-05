@@ -50,4 +50,16 @@ export interface IPowerActivationStrategy {
    * Get all active projectile instances
    */
   getProjectiles(): Projectile[];
+
+  /**
+   * Get the remaining duration of the powerup (in ms)
+   * Returns 0 if powerup is not active
+   */
+  getRemainingDuration(): number;
+
+  /**
+   * Get the time until next fire is available (in ms)
+   * Returns 0 if fire is ready
+   */
+  getFireCooldown(): number;
 }
