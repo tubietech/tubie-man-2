@@ -10,7 +10,7 @@ import { MapRenderer } from '../utils/MapRenderer';
 import { UIRenderer } from '../ui/UIRenderer';
 import { PerformanceMonitor } from '../utils/PerformanceMonitor';
 import { HighScoreManager } from '../utils/HighScoreManager';
-import { canEatPellet, calculateScaledSpeed, calculateBonusAppearances } from '../utils/utils';
+import { canEatPellet, calculateScaledSpeed, calculateBonusAppearances, colorNumberToString } from '../utils/utils';
 import { IMapData } from '../interfaces/IMapData';
 import { Orientation } from '../enums/Orientation';
 import { LocalizationManager } from '../config/localization/LocalizationManager';
@@ -22,6 +22,7 @@ import { PauseMenu } from '../ui/PauseMenu';
 import { mapColorPalettes, getRandomPaletteIndex, IMapColorPalette, defaultPalette } from '../config/mapColorPalettes';
 import { DeveloperMode } from '../utils/DeveloperMode';
 import { Drawable } from '../interfaces/IPelletData';
+import { Difficulty } from '../enums/Difficulty';
 
 export class GameScene extends Phaser.Scene {
   mapData!: IMapData;
@@ -38,7 +39,7 @@ export class GameScene extends Phaser.Scene {
   highScore: number = 0;
   level: number = 1;
   lives: number = 3;
-  difficulty: string = 'medium';
+  difficulty: Difficulty = Difficulty.MEDIUM;
   orientation: Orientation = Orientation.HORIZONTAL;
   localization!: LocalizationManager;
   uiRenderer!: UIRenderer;
@@ -502,7 +503,7 @@ export class GameScene extends Phaser.Scene {
         {
           fontFamily: 'PressStart2P',
           fontSize: '48px',
-          color: '#ffff00'
+          color: colorNumberToString(gameConfig.colors.developerIndicator),
         }
       ).setScrollFactor(0).setDepth(10002);
       console.log('[DEVELOPER MODE] Indicator displayed');

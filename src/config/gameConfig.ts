@@ -148,6 +148,7 @@ export const gameConfig = {
     powerupActive: 0xffa500,
     gameUiText: 0xffffff,
     gameUiValue: 0xffff00, // Color for score/lives/level values (yellow)
+    developerIndicator: 0xffff00 // Yellow asterisk for developer mode indicator
   },
   controls: {
     keyboard: {
