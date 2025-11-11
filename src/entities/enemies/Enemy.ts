@@ -8,6 +8,8 @@ import { ICoordinate } from '../../interfaces/ICoordinate';
 import { getRandomFloat } from '../../utils/utils';
 import { Difficulty } from '../../enums/Difficulty';
 import { Pathfinder } from '../../utils/Pathfinder';
+import { Logger } from '../../utils/Logger';
+import { LogGroup } from '../../enums/LogGroup';
 
 export class Enemy extends Entity {
   type: string;
@@ -301,7 +303,7 @@ export class Enemy extends Entity {
     // Calculate A* path to pen center via door
     this.calculateInjuredPath();
 
-    console.log(`[ENEMY] ${this.type} injured! Fleeing to pen at speed ${this.speed}`);
+    Logger.logStatic(LogGroup.ENEMY, `${this.type} injured! Fleeing to pen at speed ${this.speed}`);
   }
 
   /**
@@ -316,9 +318,9 @@ export class Enemy extends Entity {
     this.injuredPathIndex = 0;
 
     if (this.injuredPath.length > 0) {
-      console.log(`[ENEMY] ${this.type} calculated injured path with ${this.injuredPath.length} waypoints`);
+      Logger.logStatic(LogGroup.PATHFINDING, `${this.type} calculated injured path with ${this.injuredPath.length} waypoints`);
     } else {
-      console.warn(`[ENEMY] ${this.type} could not find path to pen!`);
+      Logger.warnStatic(LogGroup.PATHFINDING, `${this.type} could not find path to pen!`);
     }
   }
 
@@ -345,7 +347,7 @@ export class Enemy extends Entity {
     ];
     this.exitPathIndex = 0;
 
-    console.log(`[ENEMY] ${this.type} starting respawn in pen at (${this.gridX}, ${this.gridY}), exit path set with ${this.exitPath.length} waypoints`);
+    Logger.logStatic(LogGroup.ENEMY, `${this.type} starting respawn in pen at (${this.gridX}, ${this.gridY}), exit path set with ${this.exitPath.length} waypoints`);
   }
 
   /**
@@ -368,12 +370,12 @@ export class Enemy extends Entity {
     if (this.exitPath.length > 0) {
       this.isFollowingExitPath = true;
       this.exitPathIndex = 0;
-      console.log(`[ENEMY] ${this.type} starting exit path with ${this.exitPath.length} waypoints`);
+      Logger.logStatic(LogGroup.ENEMY, `${this.type} starting exit path with ${this.exitPath.length} waypoints`);
     } else {
-      console.log(`[ENEMY] ${this.type} WARNING: No exit path available!`);
+      Logger.warnStatic(LogGroup.ENEMY, `${this.type} WARNING: No exit path available!`);
     }
 
-    console.log(`[ENEMY] ${this.type} respawn complete, leaving pen. isFollowingExitPath=${this.isFollowingExitPath}, isReleased=${this.isReleased}`);
+    Logger.logStatic(LogGroup.ENEMY, `${this.type} respawn complete, leaving pen. isFollowingExitPath=${this.isFollowingExitPath}, isReleased=${this.isReleased}`);
   }
 
   /**

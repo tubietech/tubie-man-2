@@ -10,6 +10,8 @@ import { MapValue } from '../enums/MapValue';
 import { getRandomInt, shuffleArray, getRandomArrayElement, generateMapHash } from './utils';
 import { getRandomPreloadedMap } from './preloadedMaps';
 import { BonusPathGenerator } from './BonusPathGenerator';
+import { Logger } from './Logger';
+import { LogGroup } from '../enums/LogGroup';
 
 export class MapGeneratorV2 {
   private static cells: ICell[] = [];
@@ -23,11 +25,12 @@ export class MapGeneratorV2 {
    * Note: Preloaded maps should be loaded during MenuScene for best performance
    */
   static async generate(width: number, height: number): Promise<IMapData> {
+    const logger = new Logger(LogGroup.MAP);
     let attempts = 0;
 
     while (attempts < gameConfig.map.generation.maxGenerationAttempts) {
       try {
-        console.log(`Map generation attempt ${attempts + 1}/${gameConfig.map.generation.maxGenerationAttempts}`);
+        logger.log(`Map generation attempt ${attempts + 1}/${gameConfig.map.generation.maxGenerationAttempts}`);
 
         const mapData = this.attemptGeneration(width, height);
 
@@ -36,7 +39,7 @@ export class MapGeneratorV2 {
 
         // Check if this map is identical to the previous one
         if (hash === this.previousHash) {
-          console.log('Generated map is identical to previous map, regenerating...');
+          logger.log('Generated map is identical to previous map, regenerating...');
           attempts++;
           continue;
         }
@@ -45,20 +48,20 @@ export class MapGeneratorV2 {
         this.previousHash = hash;
         mapData.hash = hash;
 
-        console.log('Map generation successful!');
+        logger.log('Map generation successful!');
         return mapData;
 
       } catch (error) {
         attempts++;
         if (attempts >= gameConfig.map.generation.maxGenerationAttempts) {
-          console.error(`Map generation failed after ${gameConfig.map.generation.maxGenerationAttempts} attempts: ${error}`);
+          logger.error(`Map generation failed after ${gameConfig.map.generation.maxGenerationAttempts} attempts: ${error}`);
 
           // Try to use a preloaded map as fallback
-          console.log('Attempting to use preloaded map as fallback...');
+          logger.log('Attempting to use preloaded map as fallback...');
           const preloadedMap = getRandomPreloadedMap();
 
           if (preloadedMap) {
-            console.log(`✓ Using preloaded map (hash: ${preloadedMap.hash}) as fallback`);
+            logger.log(`✓ Using preloaded map (hash: ${preloadedMap.hash}) as fallback`);
             this.previousHash = preloadedMap.hash;
             return preloadedMap;
           }
@@ -66,7 +69,7 @@ export class MapGeneratorV2 {
           // No preloaded maps available, throw error
           throw new Error(`Map generation failed after ${gameConfig.map.generation.maxGenerationAttempts} attempts and no preloaded maps available: ${error}`);
         }
-        console.log(`Map generation failed, retrying... (${error})`);
+        logger.log(`Map generation failed, retrying... (${error})`);
       }
     }
 
@@ -1055,7 +1058,7 @@ export class MapGeneratorV2 {
     const penDoorX = gameConfig.map.enemyPen.location.x + Math.floor(gameConfig.map.enemyPen.width / 2) - Math.floor(gameConfig.map.enemyPen.doorWidth / 2);
     const penDoorY = gameConfig.map.enemyPen.location.y - 8;
 
-    console.log(`PenDoorX: ${penDoorX}, PenDoorY: ${penDoorY}`);
+    Logger.logStatic(LogGroup.MAP, `PenDoorX: ${penDoorX}, PenDoorY: ${penDoorY}`);
 
     // Create enemy pen door
     setTile({ x: 2, y: 11 }, MapTile.PEN_DOOR);

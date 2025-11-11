@@ -5,6 +5,8 @@ import { ICoordinate } from '../interfaces/ICoordinate';
 import { gameConfig } from '../config/gameConfig';
 import { IMapColorPalette } from '../config/mapColorPalettes';
 import { findConnectedWallSections, traceWallOutline, thinWalls, enforceMinimumThickness, roundCorners } from './renderUtils';
+import { LogGroup } from '../enums/LogGroup';
+import { Logger } from './Logger';
 
 export class MapRenderer {
   private scene: Phaser.Scene;
@@ -16,6 +18,8 @@ export class MapRenderer {
   private colorPalette: IMapColorPalette;
   private mapTexture: Phaser.GameObjects.Image | null = null;
   private static textureCounter: number = 0;
+  private logger: Logger;
+  
 
   constructor(
     scene: Phaser.Scene,
@@ -33,6 +37,8 @@ export class MapRenderer {
     this.mapOffsetY = mapOffsetY;
     this.tileSize = tileSize;
     this.colorPalette = colorPalette;
+    
+    this.logger = new Logger(LogGroup.RENDERER);
   }
 
   /**
@@ -41,18 +47,20 @@ export class MapRenderer {
    * This provides better performance and visual quality than tile-based rendering.
    */
   private drawWallRegion(region: ICoordinate[]): void {
+
+
     if (region.length === 0) return;
 
     const radius = gameConfig.map.wallRadius;
     const arcSegments = 8; // Number of segments per rounded corner
 
-    console.log(`[RENDERER] Drawing wall region with ${region.length} tiles using polygon approach`);
+    this.logger.log(`Drawing wall region with ${region.length} tiles using polygon approach`);
 
     // Step 1: Trace the outline of the wall region
     const outlines = traceWallOutline(region);
 
     if (outlines.length === 0) {
-      console.warn('[RENDERER] No outlines traced for wall region');
+      this.logger.warn('No outlines traced for wall region');
       return;
     }
 
@@ -142,11 +150,11 @@ export class MapRenderer {
   }
 
   drawMap(): Phaser.GameObjects.Rectangle[] {
-    console.log('[RENDERER] Starting optimized wall rendering');
+    this.logger.log('Starting optimized wall rendering');
 
     // Step 1: Find all connected wall sections in the map
     const wallSections = findConnectedWallSections(this.mapData.map);
-    console.log(`[RENDERER] Found ${wallSections.length} wall sections`);
+    this.logger.log(`Found ${wallSections.length} wall sections`);
 
     // Step 2: Draw each wall section using the polygon approach
     for (const section of wallSections) {
@@ -224,7 +232,7 @@ export class MapRenderer {
     // Clear the graphics object now that we have the texture
     this.graphics.clear();
 
-    console.log(`[RENDERER] Generated map texture: ${textureKey} (${canvasWidth}x${canvasHeight})`);
+    this.logger.log(`Generated map texture: ${textureKey} (${canvasWidth}x${canvasHeight})`);
   }
 
   /**

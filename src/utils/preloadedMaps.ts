@@ -1,4 +1,6 @@
+import { LogGroup } from '../enums/LogGroup';
 import { IMapData } from '../interfaces/IMapData';
+import { Logger } from './Logger';
 import { getRandomInt } from './utils';
 
 /**
@@ -14,6 +16,8 @@ let loadAttempted = false;
  * @returns Array of preloaded maps, or empty array if none could be loaded
  */
 export async function loadPreloadedMaps(): Promise<IMapData[]> {
+  const logger = new Logger(LogGroup.PRELOAD);
+
   // Return cached maps if already loaded
   if (preloadedMaps !== null) {
     return preloadedMaps;
@@ -27,7 +31,7 @@ export async function loadPreloadedMaps(): Promise<IMapData[]> {
   loadAttempted = true;
   const maps: IMapData[] = [];
 
-  console.log('Loading preloaded maps...');
+  logger.log('Loading preloaded maps...');
 
   // Try to load each map file (map0.json through map9.json)
   for (let i = 0; i < 10; i++) {
@@ -46,20 +50,20 @@ export async function loadPreloadedMaps(): Promise<IMapData[]> {
         mapData.playerStart
       ) {
         maps.push(mapData);
-        console.log(`✓ Loaded preloaded map ${i} (hash: ${mapData.hash})`);
+        logger.log(`✓ Loaded preloaded map ${i} (hash: ${mapData.hash})`);
       } else {
-        console.warn(`⚠ Map ${i} is invalid or incomplete`);
+        logger.warn(`⚠ Map ${i} is invalid or incomplete`);
       }
     } catch (error) {
       // Map file doesn't exist or failed to load - this is expected if maps haven't been generated yet
-      console.log(`Map ${i} not found (this is normal if maps haven't been pre-generated yet)`);
+      logger.log(`Map ${i} not found (this is normal if maps haven't been pre-generated yet)`);
     }
   }
 
   if (maps.length > 0) {
-    console.log(`✓ Successfully loaded ${maps.length} preloaded maps`);
+    logger.log(`✓ Successfully loaded ${maps.length} preloaded maps`);
   } else {
-    console.warn('⚠ No preloaded maps available. Consider generating them using MapPreGenerator component.');
+    logger.warn('⚠ No preloaded maps available. Consider generating them using MapPreGenerator component.');
   }
 
   preloadedMaps = maps;

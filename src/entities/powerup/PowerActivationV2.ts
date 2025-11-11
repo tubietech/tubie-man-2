@@ -6,6 +6,8 @@ import { ICoordinate } from '../../interfaces/ICoordinate';
 import { IMapData } from '../../interfaces/IMapData';
 import { Projectile } from '../Projectile';
 import { gameConfig } from '../../config/gameConfig';
+import { Logger } from '../../utils/Logger';
+import { LogGroup } from '../../enums/LogGroup';
 
 /**
  * V2 Power Activation Strategy
@@ -28,6 +30,8 @@ export class PowerActivationV2 implements IPowerActivationStrategy {
   // V2 specific properties
   private lastFireTime: number = 0;
   private canFireAgain: boolean = true;
+  
+  private logger: Logger;
 
   constructor(
     scene: Phaser.Scene,
@@ -43,20 +47,22 @@ export class PowerActivationV2 implements IPowerActivationStrategy {
     this.mapOffsetX = mapOffsetX;
     this.mapOffsetY = mapOffsetY;
     this.difficulty = difficulty;
+
+    this.logger = new Logger(LogGroup.POWERUP)
   }
 
   activate(playerPos: ICoordinate, direction: Direction): boolean {
-    console.log(`[FIRE V2] activate called - hasFirePower: ${this.hasFirePower}, fireActive: ${this.fireActive}, canFireAgain: ${this.canFireAgain}`);
+    this.logger.log(`activate called - hasFirePower: ${this.hasFirePower}, fireActive: ${this.fireActive}, canFireAgain: ${this.canFireAgain}`);
 
     // If fire is not active yet, check if we have fire power to activate it
     if (!this.fireActive) {
       // Need fire power to start the activation window
       if (!this.hasFirePower) {
-        console.log(`[FIRE V2] Activation blocked - no fire power available`);
+        this.logger.log(`Activation blocked - no fire power available`);
         return false;
       }
 
-      console.log(`[FIRE V2] Activating fire powerup for ${gameConfig.player.powerup.v2.duration}ms`);
+      this.logger.log(`Activating fire powerup for ${gameConfig.player.powerup.v2.duration}ms`);
       this.fireActive = true;
       this.fireDuration = gameConfig.player.powerup.v2.duration;
       this.hasFirePower = false;
@@ -72,7 +78,7 @@ export class PowerActivationV2 implements IPowerActivationStrategy {
     if (!this.canFireAgain) {
       const timeSinceLastFire = Date.now() - this.lastFireTime;
       const fireRateDelay = gameConfig.player.powerup.v2.fireRateDelay[this.difficulty as keyof typeof gameConfig.player.powerup.v2.fireRateDelay];
-      console.log(`[FIRE V2] Firing blocked - cooldown (${timeSinceLastFire}ms / ${fireRateDelay}ms)`);
+      this.logger.log(`Firing blocked - cooldown (${timeSinceLastFire}ms / ${fireRateDelay}ms)`);
       return false;
     }
 
@@ -94,7 +100,7 @@ export class PowerActivationV2 implements IPowerActivationStrategy {
 
     // Check if the tile in front is a wall
     if (this.isWall(checkX, checkY)) {
-      console.log(`[FIRE V2] Cannot fire - wall directly in front at (${checkX}, ${checkY})`);
+      this.logger.log(`Cannot fire - wall directly in front at (${checkX}, ${checkY})`);
       return false;
     }
 
@@ -125,7 +131,7 @@ export class PowerActivationV2 implements IPowerActivationStrategy {
     // Only add projectile if it was successfully created (not blocked by wall)
     if (projectile.active) {
       this.projectiles.push(projectile);
-      console.log(`[FIRE V2] Projectile created successfully at (${startX}, ${startY}), total projectiles: ${this.projectiles.length}`);
+      this.logger.log(`Projectile created successfully at (${startX}, ${startY}), total projectiles: ${this.projectiles.length}`);
 
       // Set cooldown
       this.canFireAgain = false;
@@ -134,7 +140,7 @@ export class PowerActivationV2 implements IPowerActivationStrategy {
       return true;
     }
 
-    console.log(`[FIRE V2] Projectile creation failed - blocked by wall`);
+    this.logger.log(`Projectile creation failed - blocked by wall`);
     return false;
   }
 
@@ -146,7 +152,7 @@ export class PowerActivationV2 implements IPowerActivationStrategy {
 
       // Clean up inactive projectiles
       if (!projectile.active) {
-        console.log(`[FIRE V2] Projectile ${i} became inactive, cleaning up`);
+        this.logger.log(`Projectile ${i} became inactive, cleaning up`);
         this.projectiles.splice(i, 1);
       }
     }
@@ -155,7 +161,7 @@ export class PowerActivationV2 implements IPowerActivationStrategy {
     if (this.fireActive) {
       this.fireDuration -= delta;
       if (this.fireDuration <= 0) {
-        console.log(`[FIRE V2] Fire duration expired, deactivating`);
+        this.logger.log(`Fire duration expired, deactivating`);
         this.deactivate();
         return;
       }
@@ -165,7 +171,7 @@ export class PowerActivationV2 implements IPowerActivationStrategy {
         const timeSinceLastFire = Date.now() - this.lastFireTime;
         const fireRateDelay = gameConfig.player.powerup.v2.fireRateDelay[this.difficulty as keyof typeof gameConfig.player.powerup.v2.fireRateDelay];
         if (timeSinceLastFire >= fireRateDelay) {
-          console.log(`[FIRE V2] Fire cooldown complete, can fire again`);
+          this.logger.log(`Fire cooldown complete, can fire again`);
           this.canFireAgain = true;
         }
       }

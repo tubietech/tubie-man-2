@@ -1,3 +1,6 @@
+import { LogGroup } from "../enums/LogGroup";
+import { Logger } from "./Logger";
+
 /**
  * Singleton class to manage developer mode state
  * Developer mode can only be activated from the menu screen using the Konami code
@@ -20,7 +23,7 @@ export class DeveloperMode {
    */
   enable(): void {
     this.enabled = true;
-    console.log('[DEVELOPER MODE] Enabled');
+    Logger.logStatic(LogGroup.DEVELOPER, 'Enabled');
   }
 
   /**
@@ -35,6 +38,6 @@ export class DeveloperMode {
    */
   reset(): void {
     this.enabled = false;
-    console.log('[DEVELOPER MODE] Disabled');
+    Logger.logStatic(LogGroup.DEVELOPER, 'Disabled');
   }
 }

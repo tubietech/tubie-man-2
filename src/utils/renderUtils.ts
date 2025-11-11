@@ -1,4 +1,6 @@
 import { ICoordinate } from '../interfaces/ICoordinate';
+import { Logger } from './Logger';
+import { LogGroup } from '../enums/LogGroup';
 
 export type Point = [number, number];
 export type Polygon = Point[];
@@ -66,10 +68,12 @@ export function findConnectedWallSections(map: number[][]): ICoordinate[][] {
     }
   }
 
-  console.log(`[WALL SECTIONS] Found ${wallSections.length} connected wall sections`);
+  const wallSectionsLog = [];
+  wallSectionsLog.push(`Found ${wallSections.length} connected wall sections`);
   wallSections.forEach((section, index) => {
-    console.log(`  Section ${index + 1}: ${section.length} tiles`);
+    wallSectionsLog.push(`Section ${index + 1}: ${section.length} tiles`);
   });
+  Logger.logMultiLineStatic(LogGroup.MAP, wallSectionsLog);
 
   return wallSections;
 }

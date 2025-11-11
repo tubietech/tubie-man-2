@@ -5,6 +5,8 @@ import { LocalizationManager } from '../config/localization/LocalizationManager'
 import { loadPreloadedMaps } from '../utils/preloadedMaps';
 import { DeveloperMode } from '../utils/DeveloperMode';
 import { gameConfig } from '../config/gameConfig';
+import { Logger } from '../utils/Logger';
+import { LogGroup } from '../enums/LogGroup';
 
 export class MenuScene extends Phaser.Scene {
   selectedDifficulty: string = 'medium';
@@ -20,12 +22,16 @@ export class MenuScene extends Phaser.Scene {
   }
 
   async create() {
+    const gameLogger = new Logger(LogGroup.GAME);
+    const preloadLogger = new Logger(LogGroup.PRELOAD);
+    const menuLogger = new Logger(LogGroup.MENU);
+    
     if (this.renderer instanceof Phaser.Renderer.WebGL.WebGLRenderer) {
-        console.log("Phaser is using WebGL.");
+        gameLogger.log("Phaser is using WebGL.");
     } else if (this.renderer instanceof Phaser.Renderer.Canvas.CanvasRenderer) {
-        console.log("Phaser is using Canvas.");
+        gameLogger.log("Phaser is using Canvas.");
     } else {
-        console.log("Unknown renderer type.");
+        gameLogger.log("Unknown renderer type.");
     }
 
     this.localization = LocalizationManager.getInstance();
@@ -49,16 +55,16 @@ export class MenuScene extends Phaser.Scene {
     ).setOrigin(0.5).setScrollFactor(0);
 
     // Load preloaded maps in the background during menu
-    console.log('Preloading maps during menu...');
+    preloadLogger.log('Preloading maps during menu...');
     loadPreloadedMaps()
       .then(() => {
         this.mapsLoaded = true;
-        console.log('✓ Preloaded maps ready');
+        preloadLogger.log('✓ Preloaded maps ready');
         this.loadingText.setText('✓ Maps ready');
         this.loadingText.setColor('#00ff00');
       })
       .catch((error) => {
-        console.warn('Failed to preload maps:', error);
+        preloadLogger.warnMultiLine(['Failed to preload maps:', error]);
         this.mapsLoaded = true; // Continue anyway
         this.loadingText.setText('Maps will generate on-the-fly');
         this.loadingText.setColor('#ffaa00');
@@ -201,7 +207,7 @@ export class MenuScene extends Phaser.Scene {
           const konamiString = gameConfig.developer.konamiCode.join(',');
 
           if (inputString === konamiString) {
-            console.log('[KONAMI CODE] Developer mode activated!');
+            Logger.logStatic(LogGroup.DEVELOPER, 'Developer mode activated!');
             DeveloperMode.getInstance().enable();
             this.konamiCodeInput = []; // Reset input
           }
@@ -212,6 +218,6 @@ export class MenuScene extends Phaser.Scene {
 
   setOrientation(orientation: Orientation) {
     this.orientation = orientation;
-    console.log(`[MenuScene] Orientation set to: ${Orientation[orientation]}`);
+    Logger.logStatic(LogGroup.GAME, `Orientation set to: ${Orientation[orientation]}`);
   }
 }

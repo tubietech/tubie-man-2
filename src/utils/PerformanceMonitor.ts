@@ -1,3 +1,6 @@
+import { LogGroup } from "../enums/LogGroup";
+import { Logger } from "./Logger";
+
 /**
  * Performance monitoring utility for tracking FPS and frame time statistics
  */
@@ -14,9 +17,11 @@ export class PerformanceMonitor {
   private lastLogTime: number = 0;
   private logInterval: number = 5000; // 5 seconds in milliseconds
   private enabled: boolean = true;
+  private logger: Logger;
 
   private constructor() {
     this.lastLogTime = Date.now();
+    this.logger = new Logger(LogGroup.PERFORMANCE);
   }
 
   public static getInstance(): PerformanceMonitor {
@@ -32,9 +37,9 @@ export class PerformanceMonitor {
   public setEnabled(enabled: boolean): void {
     this.enabled = enabled;
     if (!enabled) {
-      console.log('[PERFORMANCE] Monitoring disabled');
+      this.logger.log('Monitoring disabled');
     } else {
-      console.log('[PERFORMANCE] Monitoring enabled');
+      this.logger.log('Monitoring enabled');
     }
   }
 
@@ -88,10 +93,12 @@ export class PerformanceMonitor {
     const avgFrameTime = this.totalFrameTime / this.frameCount;
     const avgFPS = this.totalFPS / this.frameCount;
 
-    console.log('[PERFORMANCE] 5-second statistics:');
-    console.log(`  FPS:        Avg: ${avgFPS.toFixed(2)} | Min: ${this.minFPS.toFixed(2)} | Max: ${this.maxFPS.toFixed(2)}`);
-    console.log(`  Frame Time: Avg: ${avgFrameTime.toFixed(2)}ms | Min: ${this.minFrameTime.toFixed(2)}ms | Max: ${this.maxFrameTime.toFixed(2)}ms`);
-    console.log(`  Total Frames: ${this.frameCount}`);
+    const perfLogs = [];
+    perfLogs.push('5-second performance statistics:');
+    perfLogs.push(`  FPS:        Avg: ${avgFPS.toFixed(2)} | Min: ${this.minFPS.toFixed(2)} | Max: ${this.maxFPS.toFixed(2)}`);
+    perfLogs.push(`  Frame Time: Avg: ${avgFrameTime.toFixed(2)}ms | Min: ${this.minFrameTime.toFixed(2)}ms | Max: ${this.maxFrameTime.toFixed(2)}ms`);
+    perfLogs.push(`  Total Frames: ${this.frameCount}`);
+    this.logger.logMultiLine(perfLogs);
   }
 
   /**

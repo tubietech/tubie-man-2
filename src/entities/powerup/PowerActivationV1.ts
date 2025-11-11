@@ -6,6 +6,8 @@ import { ICoordinate } from '../../interfaces/ICoordinate';
 import { IMapData } from '../../interfaces/IMapData';
 import { Projectile } from '../Projectile';
 import { gameConfig } from '../../config/gameConfig';
+import { Logger } from '../../utils/Logger';
+import { LogGroup } from '../../enums/LogGroup';
 
 /**
  * V1 Power Activation Strategy
@@ -23,6 +25,8 @@ export class PowerActivationV1 implements IPowerActivationStrategy {
   private fireDuration: number = 0;
   private projectiles: Projectile[] = [];
 
+  private logger: Logger;
+
   constructor(
     scene: Phaser.Scene,
     mapData: IMapData,
@@ -36,13 +40,15 @@ export class PowerActivationV1 implements IPowerActivationStrategy {
     this.tileSize = tileSize;
     this.mapOffsetX = mapOffsetX;
     this.mapOffsetY = mapOffsetY;
+
+    this.logger = new Logger(LogGroup.POWERUP)
   }
 
   activate(playerPos: ICoordinate, direction: Direction): boolean {
-    console.log(`[FIRE V1] activate called - hasFirePower: ${this.hasFirePower}, fireActive: ${this.fireActive}`);
+    this.logger.log(`Activate called - hasFirePower: ${this.hasFirePower}, fireActive: ${this.fireActive}`);
 
     if (!this.hasFirePower || this.fireActive) {
-      console.log(`[FIRE V1] Activation blocked - hasFirePower: ${this.hasFirePower}, fireActive: ${this.fireActive}`);
+      this.logger.log(`Activation blocked - hasFirePower: ${this.hasFirePower}, fireActive: ${this.fireActive}`);
       return false;
     }
 
@@ -59,7 +65,7 @@ export class PowerActivationV1 implements IPowerActivationStrategy {
 
     // Check if the tile in front is a wall
     if (this.isWall(checkX, checkY)) {
-      console.log(`[FIRE V1] Cannot fire - wall directly in front at (${checkX}, ${checkY})`);
+      this.logger.log(`Cannot fire - wall directly in front at (${checkX}, ${checkY})`);
       return false;
     }
 
@@ -69,7 +75,7 @@ export class PowerActivationV1 implements IPowerActivationStrategy {
 
     // Create multiple projectiles in a row based on config
     const projectileCount = gameConfig.player.powerup.v1.projectileCount;
-    console.log(`[FIRE V1] Creating ${projectileCount} projectile(s) from player position (${playerPos.x}, ${playerPos.y}), facing ${Direction[direction]}`);
+    this.logger.log(`Creating ${projectileCount} projectile(s) from player position (${playerPos.x}, ${playerPos.y}), facing ${Direction[direction]}`);
 
     for (let i = 1; i <= projectileCount; i++) {
       // Calculate starting position for this projectile (one tile ahead + i-1 additional tiles)
@@ -103,7 +109,7 @@ export class PowerActivationV1 implements IPowerActivationStrategy {
       }
     }
 
-    console.log(`[FIRE V1] ${this.projectiles.length} projectile(s) created successfully`);
+    this.logger.log(`${this.projectiles.length} projectile(s) created successfully`);
     return true;
   }
 
@@ -115,7 +121,7 @@ export class PowerActivationV1 implements IPowerActivationStrategy {
 
       // Clean up inactive projectiles
       if (!projectile.active) {
-        console.log(`[FIRE V1] Projectile ${i} became inactive, cleaning up`);
+        this.logger.log(`Projectile ${i} became inactive, cleaning up`);
         this.projectiles.splice(i, 1);
       }
     }
@@ -124,7 +130,7 @@ export class PowerActivationV1 implements IPowerActivationStrategy {
     if (this.fireActive) {
       this.fireDuration -= delta;
       if (this.fireDuration <= 0) {
-        console.log(`[FIRE V1] Fire duration expired, deactivating`);
+        this.logger.log(`Fire duration expired, deactivating`);
         this.deactivate();
       }
     }

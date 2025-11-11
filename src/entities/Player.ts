@@ -9,6 +9,8 @@ import { IMovementInput } from '../interfaces/IMovementInput';
 import { ICollisionResult } from '../interfaces/ICollisionResult';
 import { IPowerActivationStrategy } from '../interfaces/IPowerActivationStrategy';
 import { PowerActivationV2 } from './powerup/PowerActivationV2';
+import { Logger } from '../utils/Logger';
+import { LogGroup } from '../enums/LogGroup';
 // import { PowerActivationV1 } from './powerup/PowerActivationV1'; // Uncomment to switch back to V1
 
 export class Player extends Entity {
@@ -248,11 +250,13 @@ export class Player extends Entity {
   }
   
   activateFire(): void {
-    console.log(`[PLAYER] activateFire called - isDying: ${this.isDying}`);
+    const playerLogger = new Logger(LogGroup.PLAYER);
+
+    playerLogger.log(`ActivateFire called - isDying: ${this.isDying}`);
 
     // Cannot activate fire during death animation
     if (this.isDying) {
-      console.log(`[PLAYER] Fire activation blocked - player is dying`);
+      playerLogger.log(`Fire activation blocked - player is dying`);
       return;
     }
 
@@ -265,7 +269,7 @@ export class Player extends Entity {
     this.hasFirePower = this.powerActivationStrategy.hasPower();
 
     if (success) {
-      console.log(`[PLAYER] Fire activated successfully`);
+      playerLogger.log(`Fire activated successfully`);
     }
   }
 

@@ -1,4 +1,6 @@
 import { gameConfig } from "../config/gameConfig";
+import { Logger } from "./Logger";
+import { LogGroup } from "../enums/LogGroup";
 
 /**
  * Manages high score persistence using browser localStorage
@@ -29,7 +31,7 @@ export class HighScoreManager {
       }
       return 0;
     } catch (error) {
-      console.error('Failed to read high score from localStorage:', error);
+      Logger.errorStatic(LogGroup.GAME, `Failed to read high score from localStorage: ${error}`);
       return 0;
     }
   }
@@ -45,7 +47,7 @@ export class HighScoreManager {
         localStorage.setItem(this.STORAGE_KEY, score.toString());
         return true;
       } catch (error) {
-        console.error('Failed to save high score to localStorage:', error);
+        Logger.errorStatic(LogGroup.GAME, `Failed to save high score to localStorage: ${error}`);
         return false;
       }
     return true;
@@ -75,7 +77,7 @@ export class HighScoreManager {
     try {
       localStorage.removeItem(this.STORAGE_KEY);
     } catch (error) {
-      console.error('Failed to clear high score from localStorage:', error);
+      Logger.errorStatic(LogGroup.GAME, `Failed to clear high score from localStorage: ${error}`);
     }
   }
 }

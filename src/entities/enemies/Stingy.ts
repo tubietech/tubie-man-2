@@ -4,6 +4,8 @@ import { GameScene } from '../../scenes/GameScene';
 import { IMapData } from '../../interfaces/IMapData';
 import { gameConfig } from '../../config/gameConfig';
 import { Difficulty } from '../../enums/Difficulty';
+import { LogGroup } from '../../enums/LogGroup';
+import { Logger } from '../../utils/Logger';
 
 /**
  * Stingy - The relentless veteran, calm, focused, and efficient.
@@ -77,7 +79,7 @@ export class Stingy extends Enemy {
     // Update to sterilization mode animation
     this.updateAnimation();
 
-    console.log(`[STINGY] Sterile Mode activated! Speed: ${this.speed}, Fire Resistant: ${this.isFireResistant}`);
+    Logger.logStatic(LogGroup.QUIRK, `Sterile Mode activated! Speed: ${this.speed}, Fire Resistant: ${this.isFireResistant}`);
   }
 
   /**
@@ -91,7 +93,7 @@ export class Stingy extends Enemy {
     // Return to normal animation
     this.updateAnimation();
 
-    console.log(`[STINGY] Sterile Mode deactivated. Returning to normal.`);
+    Logger.logStatic(LogGroup.QUIRK, `Sterile Mode deactivated. Returning to normal.`);
   }
 
   /**

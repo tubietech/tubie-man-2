@@ -2,6 +2,8 @@ import Phaser from 'phaser';
 import { ICoordinate } from '../interfaces/ICoordinate';
 import { IBonusData } from '../interfaces/IBonusData';
 import { gameConfig } from '../config/gameConfig';
+import { Logger } from '../utils/Logger';
+import { LogGroup } from '../enums/LogGroup';
 
 /**
  * Bonus entity that follows a predetermined path through the map
@@ -21,6 +23,7 @@ export class Bonus {
   private mapOffsetX: number;
   private mapOffsetY: number;
   private targetPixelPosition: ICoordinate | null;
+  private logger: Logger;
 
   constructor(
     scene: Phaser.Scene,
@@ -54,8 +57,9 @@ export class Bonus {
     const targetSize = tileSize * gameConfig.map.bonus.scale;
     const spriteScale = targetSize / this.sprite.width;
     this.sprite.setScale(spriteScale);
+    this.logger = new Logger(LogGroup.BONUS);
 
-    console.log(`[BONUS] Created bonus at (${startPos.x}, ${startPos.y}) with sprite ${bonusData.sprite}, score: ${bonusData.score}`);
+    this.logger.log(`Created bonus at (${startPos.x}, ${startPos.y}) with sprite ${bonusData.sprite}, score: ${bonusData.score}`);
   }
 
   update(delta: number): void {
@@ -69,7 +73,7 @@ export class Bonus {
 
       // Check if we've reached the end of the path
       if (this.currentPathIndex >= this.path.length) {
-        console.log('[BONUS] Reached end of path, deactivating');
+        this.logger.log('Reached end of path, deactivating');
         this.deactivate();
         return;
       }
@@ -120,7 +124,7 @@ export class Bonus {
       return;
     }
 
-    console.log(`[BONUS] Collected! Score: ${this.score}`);
+    this.logger.log(`Collected! Score: ${this.score}`);
     this.collected = true;
     this.deactivate();
   }

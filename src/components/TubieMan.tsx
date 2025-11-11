@@ -5,6 +5,8 @@ import { PreloadScene } from '../scenes/PreloadScene';
 import { GameScene } from '../scenes/GameScene';
 import { MenuScene } from '../scenes/MenuScene';
 import { gameConfig } from '../config/gameConfig';
+import { Logger } from '../utils/Logger';
+import { LogGroup } from '../enums/LogGroup';
 
 export default function FireBreatherGame() {
   const gameRef = useRef<HTMLDivElement>(null);
@@ -14,7 +16,7 @@ export default function FireBreatherGame() {
   useEffect(() => {
     const updateOrientation = () => {
       const isVertical = window.innerWidth < window.innerHeight;
-      console.log(`[TubieMan.tsx] Orientation change detected. Screen Dimensions: width: ${window.innerWidth}, height: ${window.innerHeight}.\n\t\t New orientation: ${isVertical ? 'VERTICAL' : 'HORIZONTAL'}`);
+      Logger.logStatic(LogGroup.GAME, `Orientation change detected. Screen Dimensions: width: ${window.innerWidth}, height: ${window.innerHeight}.\n\t\t New orientation: ${isVertical ? 'VERTICAL' : 'HORIZONTAL'}`);
       setOrientation(isVertical ? Orientation.VERTICAL : Orientation.HORIZONTAL);
     };
 
@@ -66,7 +68,7 @@ export default function FireBreatherGame() {
     game.events.once('ready', () => {
       const menuScene = game.scene.getScene('MenuScene') as MenuScene;
       if (menuScene) {
-        console.log(`[TubieMan.tsx] Setting initial orientation for MenuScene: ${orientation}`);
+        Logger.logStatic(LogGroup.GAME, `Setting initial orientation for MenuScene: ${orientation}`);
         menuScene.setOrientation(orientation);
       }
     });

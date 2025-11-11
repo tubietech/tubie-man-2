@@ -23,6 +23,8 @@ import { mapColorPalettes, getRandomPaletteIndex, IMapColorPalette, defaultPalet
 import { DeveloperMode } from '../utils/DeveloperMode';
 import { Drawable } from '../interfaces/IPelletData';
 import { Difficulty } from '../enums/Difficulty';
+import { Logger } from '../utils/Logger';
+import { LogGroup } from '../enums/LogGroup';
 
 export class GameScene extends Phaser.Scene {
   mapData!: IMapData;
@@ -98,7 +100,7 @@ export class GameScene extends Phaser.Scene {
     this.uiRenderer = new UIRenderer(this, this.localization);
     this.performanceMonitor = PerformanceMonitor.getInstance();
 
-    console.log(`[GAME SCENE] Init - Orientation: ${this.orientation}, Difficulty: ${this.difficulty}`);
+    Logger.logStatic(LogGroup.GAME, `Init - Orientation: ${this.orientation}, Difficulty: ${this.difficulty}`);
 
     // Always create a fresh graphics object
     this.graphics = this.add.graphics();
@@ -130,6 +132,7 @@ export class GameScene extends Phaser.Scene {
    * - Levels 3+: Random palette selection every 2 levels, ensuring variety
    */
   private selectColorPalette(): void {
+    const paletteLogger = new Logger(LogGroup.PALETTE);
     // Calculate which palette group this level belongs to (changes every 2 levels)
     // Group 0: levels 1-2, Group 1: levels 3-4, Group 2: levels 5-6, etc.
     const currentPaletteGroup = Math.floor((this.level - 1) / 2);
@@ -138,7 +141,7 @@ export class GameScene extends Phaser.Scene {
     if (this.level <= 2) {
       this.currentPaletteIndex = 0; // Default palette is at index 0
       this.currentPalette = defaultPalette;
-      console.log(`[PALETTE] Level ${this.level} (Group ${currentPaletteGroup}): Using DEFAULT palette`);
+      paletteLogger.log(`Level ${this.level} (Group ${currentPaletteGroup}): Using DEFAULT palette`);
       return;
     }
 
@@ -149,11 +152,11 @@ export class GameScene extends Phaser.Scene {
       // Select a new random palette different from the current one
       this.currentPaletteIndex = getRandomPaletteIndex(this.currentPaletteIndex);
       this.currentPalette = mapColorPalettes[this.currentPaletteIndex];
-      console.log(`[PALETTE] Level ${this.level} (Group ${currentPaletteGroup}): Selected NEW palette ${this.currentPaletteIndex}`);
+      paletteLogger.log(`Level ${this.level} (Group ${currentPaletteGroup}): Selected NEW palette ${this.currentPaletteIndex}`);
     } else {
       // Keep the same palette
       this.currentPalette = mapColorPalettes[this.currentPaletteIndex];
-      console.log(`[PALETTE] Level ${this.level} (Group ${currentPaletteGroup}): Keeping palette ${this.currentPaletteIndex}`);
+      paletteLogger.log(`Level ${this.level} (Group ${currentPaletteGroup}): Keeping palette ${this.currentPaletteIndex}`);
     }
   }
 
@@ -225,6 +228,8 @@ export class GameScene extends Phaser.Scene {
   }
 
   initializeBonus() {
+    const bonusLogger = new Logger(LogGroup.BONUS);
+
     // Select bonus for this level
     const bonusSelection = BonusSelector.selectBonus(this.level);
 
@@ -241,8 +246,8 @@ export class GameScene extends Phaser.Scene {
     this.currentBonusAppearance = 0;
     this.pelletsEaten = 0;
 
-    console.log(`[BONUS] Initialized for level ${this.level}: ${bonusSelection.sprite}, score: ${bonusSelection.score}`);
-    console.log(`[BONUS] Will appear at ${this.bonusAppearances[0]} and ${this.bonusAppearances[1]} pellets eaten`);
+    bonusLogger.log(`Initialized for level ${this.level}: ${bonusSelection.sprite}, score: ${bonusSelection.score}`);
+    bonusLogger.log(`Will appear at ${this.bonusAppearances[0]} and ${this.bonusAppearances[1]} pellets eaten`);
   }
   
   createEnemies() {
@@ -390,12 +395,14 @@ export class GameScene extends Phaser.Scene {
    * Schedule the release of the next enemy from the pen
    */
   scheduleNextEnemyRelease() {
+    const enemyLogger = new Logger(LogGroup.ENEMY);
+
     if (this.enemiesReleased < this.enemies.length) {
       if (this.enemiesReleased === 0) {
         // Release first enemy immediately
         this.enemies[0].release();
         this.enemiesReleased++;
-        console.log(`[ENEMY RELEASE] Released enemy ${this.enemiesReleased} of ${this.enemies.length}`);
+        enemyLogger.log(`Released enemy ${this.enemiesReleased} of ${this.enemies.length}`);
         this.scheduleNextEnemyRelease();
       } else {
         // Schedule next enemy release after delay
@@ -404,7 +411,7 @@ export class GameScene extends Phaser.Scene {
           if (this.enemiesReleased < this.enemies.length) {
             this.enemies[this.enemiesReleased].release();
             this.enemiesReleased++;
-            console.log(`[ENEMY RELEASE] Released enemy ${this.enemiesReleased} of ${this.enemies.length}`);
+            enemyLogger.log(`Released enemy ${this.enemiesReleased} of ${this.enemies.length}`);
             this.scheduleNextEnemyRelease();
           }
         });
@@ -454,6 +461,8 @@ export class GameScene extends Phaser.Scene {
   }
   
   createUI() {
+    const devLogger = new Logger(LogGroup.DEVELOPER);
+
     const tileSize = this.getTileSize();
     this.mapWidth = gameConfig.map.width * tileSize;
     this.mapHeight = gameConfig.map.height * tileSize;
@@ -490,7 +499,7 @@ export class GameScene extends Phaser.Scene {
     );
 
     const isDeveloperMode = DeveloperMode.getInstance().isEnabled();
-    console.log(`[DEVELOPER MODE] isEnabled: ${isDeveloperMode}`);
+    devLogger.log(`isEnabled: ${isDeveloperMode}`);
     HighScoreManager.setDeveloperMode(isDeveloperMode);
 
     
@@ -506,7 +515,7 @@ export class GameScene extends Phaser.Scene {
           color: colorNumberToString(gameConfig.colors.developerIndicator),
         }
       ).setScrollFactor(0).setDepth(10002);
-      console.log('[DEVELOPER MODE] Indicator displayed');
+      devLogger.log('Indicator displayed');
     }
   }
 
@@ -708,6 +717,7 @@ export class GameScene extends Phaser.Scene {
   }
   
   checkEnemyCollision() {
+    const gameLogger = new Logger(LogGroup.GAME);
     // Skip collision detection if player is dying or invulnerable
     if (this.player.isDying || this.player.isInvulnerable) {
       return;
@@ -720,7 +730,7 @@ export class GameScene extends Phaser.Scene {
         // Check if enemy is fire-resistant (Stingy in Sterile Mode)
         const enemy = collisionResult.enemy as any;
         if (enemy.isFireResistant) {
-          console.log('[GAME] Enemy is fire-resistant! Fire has no effect.');
+          gameLogger.log('Enemy is fire-resistant! Fire has no effect.');
           return; // Fire has no effect
         }
 
@@ -748,7 +758,7 @@ export class GameScene extends Phaser.Scene {
         // Update last injury time
         this.lastInjuryTime = currentTime;
 
-        console.log(`[GAME] Enemy injured! Score +${injuryScore}, Combo: ${this.injuryComboCount}`);
+        gameLogger.log(`Enemy injured! Score +${injuryScore}, Combo: ${this.injuryComboCount}`);
 
         // Injure the enemy (changes to gray, pathfinds to pen)
         collisionResult.enemy.injure();
@@ -796,10 +806,12 @@ export class GameScene extends Phaser.Scene {
 
     this.bonus = new Bonus(this, this.bonusData, tileSize, this.mapOffsetX, this.mapOffsetY, bonusSpeed);
 
-    console.log(`[BONUS] Spawned bonus #${this.currentBonusAppearance + 1}`);
+    Logger.logStatic(LogGroup.BONUS, `Spawned bonus #${this.currentBonusAppearance + 1}`);
   }
 
   checkBonusCollection() {
+    const bonusLogger = new Logger(LogGroup.BONUS);
+
     if (!this.bonus || !this.bonus.isActive()) {
       return;
     }
@@ -811,7 +823,7 @@ export class GameScene extends Phaser.Scene {
 
     // Debug logging for first few frames
     if (this.bonus && Math.random() < 0.01) {
-      console.log(`[BONUS] Player: (${playerPos.x}, ${playerPos.y}), Bonus: (${bonusPos.x}, ${bonusPos.y}), Distance: ${distance}`);
+      bonusLogger.log(`Player: (${playerPos.x}, ${playerPos.y}), Bonus: (${bonusPos.x}, ${bonusPos.y}), Distance: ${distance}`);
     }
 
     if (distance < 1) {
@@ -819,7 +831,7 @@ export class GameScene extends Phaser.Scene {
       this.bonus.collect();
       this.addScore(this.bonus.score);
 
-      console.log(`[BONUS] Collected! Score +${this.bonus.score}, New total: ${this.score}`);
+      bonusLogger.log(`Collected! Score +${this.bonus.score}, New total: ${this.score}`);
 
       // Clean up bonus
       this.bonus = null;
@@ -840,7 +852,7 @@ export class GameScene extends Phaser.Scene {
     // Remove bonus if it's currently on screen
     if (this.bonus && this.bonus.isActive()) {
       this.bonus.deactivate();
-      console.log('[BONUS] Removed due to player death');
+      Logger.logStatic(LogGroup.BONUS, 'Removed due to player death');
     }
 
     // Immediately reset enemies to starting positions and hide them
@@ -1050,6 +1062,8 @@ export class GameScene extends Phaser.Scene {
    * Only active when developer mode is enabled
    */
   private setupDeveloperKeys(): void {
+    const devLogger = new Logger(LogGroup.DEVELOPER);
+
     if (!this.input.keyboard) return;
 
     // Create developer key bindings
@@ -1064,7 +1078,7 @@ export class GameScene extends Phaser.Scene {
     this.devKeys.toggleAI.on('down', () => {
       if (DeveloperMode.getInstance().isEnabled()) {
         this.enemyAIEnabled = !this.enemyAIEnabled;
-        console.log(`[DEVELOPER MODE] Enemy AI ${this.enemyAIEnabled ? 'ENABLED' : 'DISABLED'}`);
+        devLogger.log(`Enemy AI ${this.enemyAIEnabled ? 'ENABLED' : 'DISABLED'}`);
       }
     });
 
@@ -1113,14 +1127,14 @@ export class GameScene extends Phaser.Scene {
           }
         });
 
-        console.log('[DEVELOPER MODE] Pellets cleared except 3 below pen center for level progression testing');
+        devLogger.log('Pellets cleared except 3 below pen center for level progression testing');
       }
     });
 
     // K - Kill player
     this.devKeys.killPlayer.on('down', () => {
       if (DeveloperMode.getInstance().isEnabled()) {
-        console.log('[DEVELOPER MODE] Killing player');
+        devLogger.log('Killing player');
         this.player.playDeathAnimation();
       }
     });
@@ -1128,7 +1142,7 @@ export class GameScene extends Phaser.Scene {
     // P - Activate powerup
     this.devKeys.activatePowerup.on('down', () => {
       if (DeveloperMode.getInstance().isEnabled()) {
-        console.log('[DEVELOPER MODE] Activating powerup');
+        devLogger.log('Activating powerup');
         this.player.giveFirePower();
         this.uiRenderer.updatePowerText(
           this.powerText,

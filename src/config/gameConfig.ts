@@ -181,5 +181,8 @@ export const gameConfig = {
   },
   scores: {
     highScoreKey: 'tubie-man-high-score'
+  },
+  logging: {
+    enabled: true // Global flag to enable/disable all logging
   }
 };
