@@ -488,8 +488,13 @@ export class GameScene extends Phaser.Scene {
       () => this.quitToMenu()
     );
 
+    const isDeveloperMode = DeveloperMode.getInstance().isEnabled();
+    console.log(`[DEVELOPER MODE] isEnabled: ${isDeveloperMode}`);
+    HighScoreManager.setDeveloperMode(isDeveloperMode);
+
+    
     // Create developer mode indicator (yellow asterisk in top left, outside map)
-    if (DeveloperMode.getInstance().isEnabled()) {
+    if (isDeveloperMode) {
       this.developerIndicator = this.add.text(
         10,
         10,

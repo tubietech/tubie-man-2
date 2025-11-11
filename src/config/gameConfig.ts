@@ -177,5 +177,8 @@ export const gameConfig = {
       killPlayer: 'K',         // Kill the player
       activatePowerup: 'P'     // Activate player powerup
     }
+  },
+  scores: {
+    highScoreKey: 'tubie-man-high-score'
   }
 };
