@@ -4,6 +4,7 @@ import { GameScene } from '../../scenes/GameScene';
 import { IMapData } from '../../interfaces/IMapData';
 import { gameConfig } from '../../config/gameConfig';
 import { getRandomInt, getRandomFloat } from '../../utils/utils';
+import { Difficulty } from '../../enums/Difficulty';
 
 /**
  * Doc - The laid-back supervisor who pretends to be above the chase.
@@ -14,32 +15,34 @@ import { getRandomInt, getRandomFloat } from '../../utils/utils';
 export class Doc extends Enemy {
   private wanderTarget: { x: number; y: number } | null = null;
   private readonly closeDistance: number = 8; // Distance threshold to start chasing
-  private isLazy: boolean = false;
-  private pauseTimer: number = 0;
-  private pauseDuration: number = 0;
+  private isThinking: boolean = false;
+  private thinkingTimer: number = 0;
+  private thinkingDuration: number = 0;
 
-  constructor(scene: Phaser.Scene, x: number, y: number, speed: number, mapData: IMapData, tileSize: number, mapOffsetX: number, mapOffsetY: number, difficulty: string = 'medium') {
+  constructor(scene: Phaser.Scene, x: number, y: number, speed: number, mapData: IMapData, tileSize: number, mapOffsetX: number, mapOffsetY: number, difficulty: Difficulty = Difficulty.MEDIUM) {
     super(scene, x, y, 'doc', 4, speed, mapData, tileSize, mapOffsetX, mapOffsetY, difficulty); // Enemy number 4
   }
 
   protected triggerQuirk(): void {
-    // Trigger a pause
-    this.isLazy = true;
-    this.pauseTimer = 0;
+    // Trigger a slowdown
+    this.isThinking = true;
+    this.thinkingTimer = 0;
 
     // Random pause duration from config
-    const { min, max } = gameConfig.enemy.quirks.doc.pauseTime;
-    this.pauseDuration = getRandomFloat(min, max);
+    const { min, max } = gameConfig.enemy.quirks.doc.thinkingDuration;
+    this.thinkingDuration = getRandomFloat(min, max);
+    this.speed = gameConfig.enemy.quirks.doc.thinkingSpeed[this.difficulty];
   }
 
   update(time: number, delta: number): void {
     // Handle pause state
-    if (this.isLazy) {
-      this.pauseTimer += delta;
-      if (this.pauseTimer >= this.pauseDuration) {
-        this.isLazy = false;
+    if (this.isThinking) {
+      this.thinkingTimer += delta;
+      if (this.thinkingTimer >= this.thinkingDuration) {
+        this.isThinking = false;
+        this.speed = gameConfig.enemy.speed[this.difficulty];
       }
-      return; // Don't move while paused
+      //return; // Don't move while paused
     }
 
     super.update(time, delta);

@@ -3,6 +3,7 @@ import { Enemy } from './Enemy';
 import { GameScene } from '../../scenes/GameScene';
 import { IMapData } from '../../interfaces/IMapData';
 import { gameConfig } from '../../config/gameConfig';
+import { Difficulty } from '../../enums/Difficulty';
 
 /**
  * Pokey - The eager rookie who always lunges first and thinks later.
@@ -16,7 +17,7 @@ export class Pokey extends Enemy {
   private loopCenter: { x: number; y: number } | null = null;
   private loopPhase: number = 0;
 
-  constructor(scene: Phaser.Scene, x: number, y: number, speed: number, mapData: IMapData, tileSize: number, mapOffsetX: number, mapOffsetY: number, difficulty: string = 'medium') {
+  constructor(scene: Phaser.Scene, x: number, y: number, speed: number, mapData: IMapData, tileSize: number, mapOffsetX: number, mapOffsetY: number, difficulty: Difficulty = Difficulty.MEDIUM) {
     super(scene, x, y, 'pokey', 2, speed, mapData, tileSize, mapOffsetX, mapOffsetY, difficulty); // Enemy number 2
   }
 

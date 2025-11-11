@@ -5,10 +5,12 @@ import { gameConfig } from '../config/gameConfig';
 import { colorNumberToString } from '../utils/utils';
 
 export interface IUIElements {
-  scoreText: Phaser.GameObjects.Text;
-  highScoreText: Phaser.GameObjects.Text;
-  livesText: Phaser.GameObjects.Text;
-  levelText: Phaser.GameObjects.Text;
+  scoreText: Phaser.GameObjects.Container;
+  highScoreText: Phaser.GameObjects.Container;
+  livesText: Phaser.GameObjects.Container;
+  livesSprites: Phaser.GameObjects.Sprite[];
+  levelText: Phaser.GameObjects.Container;
+  levelSprites: Phaser.GameObjects.Sprite[];
   powerText: Phaser.GameObjects.Text;
   pauseButton: Phaser.GameObjects.Container;
   durationPieChart?: Phaser.GameObjects.Graphics;
@@ -25,6 +27,183 @@ export class UIRenderer {
     this.localization = localization;
   }
 
+  private createLabelValueText(
+    x: number,
+    y: number,
+    label: string,
+    value: string | number,
+    fontSize: string,
+    originX: number = 0,
+    originY: number = 0,
+    separator: string = ': '
+  ): Phaser.GameObjects.Container {
+    const uiTextColor = colorNumberToString(gameConfig.colors.gameUiText);
+    const uiValueColor = colorNumberToString(gameConfig.colors.gameUiValue);
+
+    // Create label text
+    const labelText = this.scene.add.text(0, 0, label + separator, {
+      fontFamily: 'PressStart2P',
+      fontSize: fontSize,
+      color: uiTextColor
+    });
+
+    // Create value text positioned after label
+    const valueText = this.scene.add.text(labelText.width, 0, String(value), {
+      fontFamily: 'PressStart2P',
+      fontSize: fontSize,
+      color: uiValueColor
+    });
+
+    // Create container
+    const container = this.scene.add.container(x, y, [labelText, valueText]);
+    container.setScrollFactor(0);
+
+    // Calculate total width and height for origin
+    const totalWidth = labelText.width + valueText.width;
+    const totalHeight = Math.max(labelText.height, valueText.height);
+
+    // Adjust position based on origin
+    if (originX !== 0 || originY !== 0) {
+      container.x -= totalWidth * originX;
+      container.y -= totalHeight * originY;
+    }
+
+    // Add custom methods to update text
+    (container as any).updateValue = (newValue: string | number) => {
+      valueText.setText(String(newValue));
+    };
+
+    (container as any).updateLabelAndValue = (newLabel: string, newValue: string | number, newSeparator: string = separator) => {
+      labelText.setText(newLabel + newSeparator);
+      valueText.setText(String(newValue));
+      valueText.x = labelText.width;
+    };
+
+    // Store reference to label text for external access
+    (container as any).labelText = labelText;
+    (container as any).valueText = valueText;
+
+    return container;
+  }
+
+  private createLabelValueTextVertical(
+    x: number,
+    y: number,
+    label: string,
+    value: string | number,
+    fontSize: string,
+    originX: number = 0,
+    originY: number = 0
+  ): Phaser.GameObjects.Container {
+    const uiTextColor = colorNumberToString(gameConfig.colors.gameUiText);
+    const uiValueColor = colorNumberToString(gameConfig.colors.gameUiValue);
+
+    // Create label text
+    const labelText = this.scene.add.text(0, 0, label + ':', {
+      fontFamily: 'PressStart2P',
+      fontSize: fontSize,
+      color: uiTextColor,
+      align: 'left'
+    });
+
+    // Create value text positioned below label
+    const valueText = this.scene.add.text(0, labelText.height, String(value), {
+      fontFamily: 'PressStart2P',
+      fontSize: fontSize,
+      color: uiValueColor,
+      align: 'left'
+    });
+
+    // Create container
+    const container = this.scene.add.container(x, y, [labelText, valueText]);
+    container.setScrollFactor(0);
+
+    // Calculate total width and height for origin
+    const totalWidth = Math.max(labelText.width, valueText.width);
+    const totalHeight = labelText.height + valueText.height;
+
+    // Adjust position based on origin
+    if (originX !== 0 || originY !== 0) {
+      container.x -= totalWidth * originX;
+      container.y -= totalHeight * originY;
+    }
+
+    // Add custom methods to update text
+    (container as any).updateValue = (newValue: string | number) => {
+      valueText.setText(String(newValue));
+    };
+
+    (container as any).updateLabelAndValue = (newLabel: string, newValue: string | number) => {
+      labelText.setText(newLabel + ':');
+      valueText.setText(String(newValue));
+      valueText.y = labelText.height;
+    };
+
+    // Store reference to label text for external access
+    (container as any).labelText = labelText;
+    (container as any).valueText = valueText;
+
+    return container;
+  }
+
+  private createLivesSprites(
+    x: number,
+    y: number,
+    maxLives: number,
+    spriteScale: number = 1.5,
+    spacing: number = 5
+  ): Phaser.GameObjects.Sprite[] {
+    const sprites: Phaser.GameObjects.Sprite[] = [];
+
+    for (let i = 0; i < maxLives; i++) {
+      const sprite = this.scene.add.sprite(
+        x + (i * (16 * spriteScale + spacing)),
+        y,
+        'atlas',
+        'player_right_frame_2.png'
+      );
+      sprite.setScale(spriteScale * 0.15);
+      sprite.setScrollFactor(0);
+      sprite.setOrigin(0, 0);
+      sprites.push(sprite);
+    }
+
+    return sprites;
+  }
+
+  private createLevelSprites(
+    x: number,
+    y: number,
+    level: number,
+    spritesPerRow: number,
+    spriteScale: number = 1.5,
+    spacing: number = 5
+  ): Phaser.GameObjects.Sprite[] {
+
+    const sprites = gameConfig.map.bonus.sprites;
+
+    const levelSprites: Phaser.GameObjects.Sprite[] = [];
+
+    for (let i = 0; i < sprites.length; i++) {
+      const row = Math.floor(i / spritesPerRow);
+      const col = i % spritesPerRow;
+      const sprite = this.scene.add.sprite(
+        x + (col * (16 * spriteScale + spacing)),
+        y + (row * (16 * spriteScale + spacing * 1.5)), // Increased vertical spacing as most sprites have padding on the sides, but not top and bottom
+        'atlas',
+        sprites[i]
+      );
+
+      sprite.setScale(spriteScale * 0.15);
+      sprite.setScrollFactor(0);
+      sprite.setOrigin(0, 0);
+      sprite.setVisible(i < level); // Show only the first level sprite initially
+      levelSprites.push(sprite);
+    }
+
+    return levelSprites;
+  }
+
   createUI(
     orientation: Orientation,
     mapOffsetX: number,
@@ -32,16 +211,16 @@ export class UIRenderer {
     mapWidth: number,
     mapHeight: number,
     score: number,
-    lives: number,
     level: number,
+    highScore: number,
     onPauseClick?: () => void
   ): IUIElements {
     const loc = this.localization;
 
     if (orientation === Orientation.VERTICAL) {
-      return this.createVerticalUI(mapOffsetX, mapOffsetY, mapWidth, mapHeight, score, lives, level, loc, onPauseClick);
+      return this.createVerticalUI(mapOffsetX, mapOffsetY, mapWidth, mapHeight, score, level, highScore, loc, onPauseClick);
     } else {
-      return this.createHorizontalUI(mapOffsetX, mapOffsetY, mapWidth, mapHeight, score, lives, level, loc, onPauseClick);
+      return this.createHorizontalUI(mapOffsetX, mapOffsetY, mapWidth, mapHeight, score, level, highScore, loc, onPauseClick);
     }
   }
 
@@ -51,42 +230,72 @@ export class UIRenderer {
     mapWidth: number,
     mapHeight: number,
     score: number,
-    lives: number,
     level: number,
+    highScore: number,
     loc: LocalizationManager,
     onPauseClick?: () => void
   ): IUIElements {
-    const uiTextColor = colorNumberToString(gameConfig.colors.gameUiText);
+    const scoreText = this.createLabelValueTextVertical(
+      mapOffsetX + 40,
+      mapOffsetY - 40,
+      loc.getText('score'),
+      score,
+      '16px',
+      0,
+      0
+    );
+  
+    const highScoreText = this.createLabelValueTextVertical(
+      mapOffsetX + mapWidth / 2 - 20,
+      mapOffsetY - 40,
+      loc.getText('highScore'),
+      highScore,
+      '16px',
+      0.5,
+      0
+    );
 
-    const scoreText = this.scene.add.text(mapOffsetX + 10, mapOffsetY + 10, `${loc.getText('score')}: ${score}`, {
-      fontFamily: 'PressStart2P',
-      fontSize: '16px',
-      color: uiTextColor
-    }).setScrollFactor(0);
+    const livesSprites = this.createLivesSprites(
+      mapOffsetX + mapWidth * 2 / 3 - 20,
+      mapOffsetY - 50,
+      gameConfig.player.startLives,
+      1,
+      15
+    );
 
-    const highScoreText = this.scene.add.text(mapOffsetX + mapWidth / 2, mapOffsetY + 10, `${loc.getText('highScore')}: 0`, {
-      fontFamily: 'PressStart2P',
-      fontSize: '16px',
-      color: uiTextColor
-    }).setOrigin(0.5, 0).setScrollFactor(0);
+    const levelText = this.createLabelValueText(
+      mapOffsetX + mapWidth / 4 + 25,
+      mapOffsetY + mapHeight + 5,
+      loc.getText('level'),
+      level,
+      '16px',
+      1,
+      0
+    );
 
-    const levelText = this.scene.add.text(mapOffsetX + mapWidth - 10, mapOffsetY + 10, `${loc.getText('level')}: ${level}`, {
-      fontFamily: 'PressStart2P',
-      fontSize: '16px',
-      color: uiTextColor
-    }).setOrigin(1, 0).setScrollFactor(0);
+    const levelSprites = this.createLevelSprites(
+      mapOffsetX + 5,
+      mapOffsetY + mapHeight + 30,
+      level,
+      12,
+      0.8,
+      15
+    );
 
-    const livesText = this.scene.add.text(mapOffsetX + 10, mapOffsetY + mapHeight + 10, `${loc.getText('lives')}: ${lives}`, {
-      fontFamily: 'PressStart2P',
-      fontSize: '16px',
-      color: uiTextColor
-    }).setScrollFactor(0);
+    // Create container for lives label (for compatibility with existing code)
+    const livesText = this.scene.add.container(mapOffsetX + 10, mapOffsetY + mapHeight + 10, []);
+    livesText.setScrollFactor(0);
 
-    const powerText = this.scene.add.text(mapOffsetX + mapWidth / 2, mapOffsetY + mapHeight + 10, `${loc.getText('power')}: ${loc.getText('powerReady')}`, {
-      fontFamily: 'PressStart2P',
-      fontSize: '16px',
-      color: colorNumberToString(gameConfig.colors.powerupReady)
-    }).setOrigin(0.5, 0).setScrollFactor(0);
+    const powerText = this.scene.add.text(
+      mapOffsetX + mapWidth * 2 / 3 + 35,
+      mapOffsetY + mapHeight + 5,
+      `${loc.getText('power')}: ${loc.getText('powerReady')}`,
+      {
+        fontFamily: 'PressStart2P',
+        fontSize: '16px',
+        color: colorNumberToString(gameConfig.colors.powerupReady)
+      }
+    ).setOrigin(0.5, 0).setScrollFactor(0);
 
     // Create pie chart for duration indicator (hidden initially)
     const durationPieChart = this.scene.add.graphics();
@@ -115,7 +324,9 @@ export class UIRenderer {
       scoreText,
       highScoreText,
       livesText,
+      livesSprites,
       levelText,
+      levelSprites,
       powerText,
       pauseButton,
       durationPieChart,
@@ -130,43 +341,71 @@ export class UIRenderer {
     mapWidth: number,
     _mapHeight: number,
     score: number,
-    lives: number,
     level: number,
+    highScore: number,
     loc: LocalizationManager,
     onPauseClick?: () => void
   ): IUIElements {
     const uiX = mapOffsetX + mapWidth + 20;
-    const uiTextColor = colorNumberToString(gameConfig.colors.gameUiText);
 
-    const scoreText = this.scene.add.text(uiX, 70, `${loc.getText('score')}:\n${score}`, {
-      fontFamily: 'PressStart2P',
-      fontSize: '18px',
-      color: uiTextColor,
-      align: 'left'
-    }).setScrollFactor(0);
+    const scoreText = this.createLabelValueTextVertical(
+      uiX,
+      70,
+      loc.getText('score'),
+      score,
+      '18px',
+      0,
+      0
+    );
 
-    const highScoreText = this.scene.add.text(uiX, 140, `${loc.getText('highScore')}:\n0`, {
-      fontFamily: 'PressStart2P',
-      fontSize: '18px',
-      color: uiTextColor,
-      align: 'left'
-    }).setScrollFactor(0);
+    const highScoreText = this.createLabelValueTextVertical(
+      uiX,
+      140,
+      loc.getText('highScore'),
+      highScore,
+      '18px',
+      0,
+      0
+    );
 
-    const livesText = this.scene.add.text(uiX, 210, `${loc.getText('lives')}:\n${lives}`, {
-      fontFamily: 'PressStart2P',
-      fontSize: '18px',
-      color: uiTextColor,
-      align: 'left'
-    }).setScrollFactor(0);
+    const livesText = this.createLabelValueTextVertical(
+      uiX,
+      210,
+      loc.getText('lives'),
+      '',
+      '18px',
+      0,
+      0
+    );
 
-    const levelText = this.scene.add.text(uiX, 280, `${loc.getText('level')}:\n${level}`, {
-      fontFamily: 'PressStart2P',
-      fontSize: '18px',
-      color: uiTextColor,
-      align: 'left'
-    }).setScrollFactor(0);
+    const livesSprites = this.createLivesSprites(
+      uiX - 10,
+      230,
+      gameConfig.player.startLives,
+      1,
+      15
+    );
 
-    const powerText = this.scene.add.text(uiX, 350, `${loc.getText('power')}:\n${loc.getText('powerReady')}`, {
+    const levelText = this.createLabelValueTextVertical(
+      uiX,
+      280,
+      loc.getText('level'),
+      level,
+      '18px',
+      0,
+      0
+    );
+
+    const levelSprites = this.createLevelSprites(
+      uiX - 10,
+      330,
+      level,
+      4,
+      0.8,
+      15
+    );
+
+    const powerText = this.scene.add.text(uiX, 450, `${loc.getText('power')}:\n${loc.getText('powerReady')}`, {
       fontFamily: 'PressStart2P',
       fontSize: '18px',
       color: colorNumberToString(gameConfig.colors.powerupReady),
@@ -188,9 +427,10 @@ export class UIRenderer {
     cooldownBar.setScrollFactor(0);
     cooldownBar.setVisible(false);
 
-    // Create pause button above the score text in the right panel, centered with the text
+    // Create pause button above the score text in the right panel, centered with the label text
+    const scoreLabelText = (scoreText as any).labelText;
     const pauseButton = this.createPauseButton(
-      scoreText.x + scoreText.width / 2,
+      scoreText.x + scoreLabelText.width / 2,
       mapOffsetY + 35,
       onPauseClick
     );
@@ -199,7 +439,9 @@ export class UIRenderer {
       scoreText,
       highScoreText,
       livesText,
+      livesSprites,
       levelText,
+      levelSprites,
       powerText,
       pauseButton,
       durationPieChart,
@@ -244,22 +486,20 @@ export class UIRenderer {
     return container;
   }
 
-  updateScoreText(scoreText: Phaser.GameObjects.Text, orientation: Orientation, score: number): void {
-    const loc = this.localization;
-    scoreText.setText(
-      orientation === Orientation.VERTICAL
-        ? `${loc.getText('score')}: ${score}`
-        : `${loc.getText('score')}:\n${score}`
-    );
+  updateScoreText(scoreText: Phaser.GameObjects.Container, _orientation: Orientation, score: number): void {
+    (scoreText as any).updateValue(score);
   }
 
-  updateLivesText(livesText: Phaser.GameObjects.Text, orientation: Orientation, lives: number): void {
-    const loc = this.localization;
-    livesText.setText(
-      orientation === Orientation.VERTICAL
-        ? `${loc.getText('lives')}: ${lives}`
-        : `${loc.getText('lives')}:\n${lives}`
-    );
+  updateLivesText(livesText: Phaser.GameObjects.Container, _orientation: Orientation, lives: number): void {
+    (livesText as any).updateValue(lives);
+  }
+  
+  updateLivesSprites(livesSprites: Phaser.GameObjects.Sprite[], _orientation: Orientation, lives: number): void {
+      if(!!livesSprites[lives]) livesSprites[lives].setVisible(false);
+  }
+
+  updateHighScoreText(highScoreText: Phaser.GameObjects.Container, _orientation: Orientation, highScore: number): void {
+    (highScoreText as any).updateValue(highScore);
   }
 
   updatePowerText(
@@ -312,12 +552,12 @@ export class UIRenderer {
         let centerY: number;
 
         if (orientation === Orientation.VERTICAL) {
-          centerX = mapOffsetX + mapWidth / 2;
+          centerX = mapOffsetX + mapWidth * 7 / 8;
           centerY = mapOffsetY + mapHeight + 40;
         } else {
           // Center horizontally based on text position and width
           const textWidth = powerText.width;
-          centerX = powerText.x + textWidth / 2;
+          centerX = powerText.x + textWidth / 2 - 20;
           centerY = powerText.y + powerText.height + 25;
         }
 
@@ -348,12 +588,12 @@ export class UIRenderer {
         let barY: number;
 
         if (orientation === Orientation.VERTICAL) {
-          barX = mapOffsetX + mapWidth / 2 - barWidth / 2;
+          barX = mapOffsetX + mapWidth * 7 / 8 - barWidth / 2;
           barY = mapOffsetY + mapHeight + 60;
         } else {
           // Center horizontally based on text position and width
           const textWidth = powerText.width;
-          barX = powerText.x + textWidth / 2 - barWidth / 2;
+          barX = powerText.x + textWidth / 2 - barWidth / 2 - 20;
           barY = powerText.y + powerText.height + 58;
         }
 

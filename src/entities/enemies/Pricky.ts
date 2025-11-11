@@ -5,6 +5,7 @@ import { IMapData } from '../../interfaces/IMapData';
 import { Direction } from '../../enums/Direction';
 import { gameConfig } from '../../config/gameConfig';
 import { getRandomInt } from '../../utils/utils';
+import { Difficulty } from '../../enums/Difficulty';
 
 /**
  * Pricky - The twitchy one with nervous energy and unpredictable moves.
@@ -20,7 +21,7 @@ export class Pricky extends Enemy {
   private panicDirection: Direction | null = null;
   private lastPlayerFireState: boolean = false;
 
-  constructor(scene: Phaser.Scene, x: number, y: number, speed: number, mapData: IMapData, tileSize: number, mapOffsetX: number, mapOffsetY: number, difficulty: string = 'medium') {
+  constructor(scene: Phaser.Scene, x: number, y: number, speed: number, mapData: IMapData, tileSize: number, mapOffsetX: number, mapOffsetY: number, difficulty: Difficulty = Difficulty.MEDIUM) {
     super(scene, x, y, 'pricky', 3, speed, mapData, tileSize, mapOffsetX, mapOffsetY, difficulty); // Enemy number 3
   }
 

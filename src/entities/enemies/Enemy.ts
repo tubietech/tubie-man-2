@@ -4,7 +4,10 @@ import { Direction } from '../../enums/Direction';
 import { MapValue } from '../../enums/MapValue';
 import { gameConfig } from '../../config/gameConfig';
 import { IMapData } from '../../interfaces/IMapData';
+import { ICoordinate } from '../../interfaces/ICoordinate';
 import { getRandomFloat } from '../../utils/utils';
+import { Difficulty } from '../../enums/Difficulty';
+import { Pathfinder } from '../../utils/Pathfinder';
 
 export class Enemy extends Entity {
   type: string;
@@ -12,7 +15,7 @@ export class Enemy extends Entity {
   pathfindTimer: number = 0;
   targetX: number;
   targetY: number;
-  difficulty: string;
+  difficulty: Difficulty;
   quirkTimer: number = 0;
   nextQuirkTime: number = 0;
   isReleased: boolean = false;
@@ -30,8 +33,10 @@ export class Enemy extends Entity {
   isPaused: boolean = false;
   startX: number;
   startY: number;
+  injuredPath: ICoordinate[] = [];
+  injuredPathIndex: number = 0;
 
-  constructor(scene: Phaser.Scene, x: number, y: number, type: string, enemyNumber: number, speed: number, mapData: IMapData, tileSize: number, mapOffsetX: number, mapOffsetY: number, difficulty: string = 'medium') {
+  constructor(scene: Phaser.Scene, x: number, y: number, type: string, enemyNumber: number, speed: number, mapData: IMapData, tileSize: number, mapOffsetX: number, mapOffsetY: number, difficulty: Difficulty = Difficulty.MEDIUM) {
     const color = gameConfig.colors[type as keyof typeof gameConfig.colors] as number;
     super(scene, x, y, color, speed, mapData, tileSize, mapOffsetX, mapOffsetY);
     this.type = type;
@@ -293,7 +298,28 @@ export class Enemy extends Entity {
       this.sprite.setFillStyle(0x808080);
     }
 
+    // Calculate A* path to pen center via door
+    this.calculateInjuredPath();
+
     console.log(`[ENEMY] ${this.type} injured! Fleeing to pen at speed ${this.speed}`);
+  }
+
+  /**
+   * Calculate A* path from current position to pen center
+   */
+  private calculateInjuredPath(): void {
+    const start = { x: this.gridX, y: this.gridY };
+    const goal = { x: this.mapData.penCenter.x, y: this.mapData.penCenter.y };
+
+    // Use A* pathfinding with pen entry allowed
+    this.injuredPath = Pathfinder.findPath(this.mapData, start, goal, true);
+    this.injuredPathIndex = 0;
+
+    if (this.injuredPath.length > 0) {
+      console.log(`[ENEMY] ${this.type} calculated injured path with ${this.injuredPath.length} waypoints`);
+    } else {
+      console.warn(`[ENEMY] ${this.type} could not find path to pen!`);
+    }
   }
 
   /**
@@ -396,16 +422,17 @@ export class Enemy extends Entity {
       return;
     }
 
-    // If injured, pathfind to pen
+    // If injured, follow A* path to pen
     if (this.isInjured) {
-      this.targetX = this.mapData.penCenter.x;
-      this.targetY = this.mapData.penCenter.y;
-
-      // Check if reached pen
+      // Check if reached pen center
       if (this.gridX === this.mapData.penCenter.x && this.gridY === this.mapData.penCenter.y) {
         this.startRespawn();
         return;
       }
+
+      // Follow the precalculated A* path
+      this.followInjuredPath(moveSpeed);
+      return;
     } else {
       // Normal behavior - update quirk timer
       this.quirkTimer += delta;
@@ -471,6 +498,63 @@ export class Enemy extends Entity {
     }
   }
 
+  /**
+   * Follow the A* calculated path when injured
+   */
+  followInjuredPath(speed: number): void {
+    // If no path or path is completed, recalculate
+    if (this.injuredPath.length === 0 || this.injuredPathIndex >= this.injuredPath.length) {
+      this.calculateInjuredPath();
+      if (this.injuredPath.length === 0) {
+        // Still no path - stay put
+        return;
+      }
+    }
+
+    const nextWaypoint = this.injuredPath[this.injuredPathIndex];
+    const targetX = this.mapOffsetX + nextWaypoint.x * this.tileSize + this.tileSize / 2;
+    const targetY = this.mapOffsetY + nextWaypoint.y * this.tileSize + this.tileSize / 2;
+
+    const dx = targetX - this.sprite.x;
+    const dy = targetY - this.sprite.y;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+
+    // If we're close enough to the current waypoint, move to the next one
+    if (dist < 2) {
+      this.gridX = nextWaypoint.x;
+      this.gridY = nextWaypoint.y;
+      this.injuredPathIndex++;
+
+      // Update direction based on movement
+      if (this.injuredPathIndex < this.injuredPath.length) {
+        const next = this.injuredPath[this.injuredPathIndex];
+        const prevX = nextWaypoint.x;
+        const prevY = nextWaypoint.y;
+
+        if (next.x > prevX) this.direction = Direction.RIGHT;
+        else if (next.x < prevX) this.direction = Direction.LEFT;
+        else if (next.y > prevY) this.direction = Direction.DOWN;
+        else if (next.y < prevY) this.direction = Direction.UP;
+
+        this.updateAnimation();
+      }
+      return;
+    }
+
+    // Move towards the current waypoint
+    if (dist > 0) {
+      const actualSpeed = Math.min(speed, dist);
+      this.sprite.x += (dx / dist) * actualSpeed;
+      this.sprite.y += (dy / dist) * actualSpeed;
+
+      // Sync animated sprite position
+      if (this.animatedSprite) {
+        this.animatedSprite.x = this.sprite.x;
+        this.animatedSprite.y = this.sprite.y;
+      }
+    }
+  }
+
   moveTowardsTarget(speed: number): void {
     const targetX = this.mapOffsetX + this.gridX * this.tileSize + this.tileSize / 2;
     const targetY = this.mapOffsetY + this.gridY * this.tileSize + this.tileSize / 2;
@@ -518,19 +602,19 @@ export class Enemy extends Entity {
   chooseDirection(): Direction {
     const directions = [Direction.UP, Direction.DOWN, Direction.LEFT, Direction.RIGHT];
     const validDirs: Direction[] = [];
-    
+
     for (const dir of directions) {
       const next = this.getNextPosition(dir);
       if (this.canMove(next.x, next.y) && dir !== this.getOppositeDirection()) {
         validDirs.push(dir);
       }
     }
-    
+
     if (validDirs.length === 0) return this.direction;
-    
+
     let bestDir = validDirs[0];
     let bestDist = Infinity;
-    
+
     for (const dir of validDirs) {
       const next = this.getNextPosition(dir);
       const dist = Math.abs(next.x - this.targetX) + Math.abs(next.y - this.targetY);
@@ -539,7 +623,7 @@ export class Enemy extends Entity {
         bestDir = dir;
       }
     }
-    
+
     return bestDir;
   }
 

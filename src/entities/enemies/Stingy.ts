@@ -3,6 +3,7 @@ import { Enemy } from './Enemy';
 import { GameScene } from '../../scenes/GameScene';
 import { IMapData } from '../../interfaces/IMapData';
 import { gameConfig } from '../../config/gameConfig';
+import { Difficulty } from '../../enums/Difficulty';
 
 /**
  * Stingy - The relentless veteran, calm, focused, and efficient.
@@ -14,7 +15,7 @@ export class Stingy extends Enemy {
   private baseSpeed: number;
   public isFireResistant: boolean = false;
 
-  constructor(scene: Phaser.Scene, x: number, y: number, speed: number, mapData: IMapData, tileSize: number, mapOffsetX: number, mapOffsetY: number, difficulty: string = 'medium') {
+  constructor(scene: Phaser.Scene, x: number, y: number, speed: number, mapData: IMapData, tileSize: number, mapOffsetX: number, mapOffsetY: number, difficulty: Difficulty = Difficulty.MEDIUM) {
     super(scene, x, y, 'stingy', 1, speed, mapData, tileSize, mapOffsetX, mapOffsetY, difficulty); // Enemy number 1
     this.baseSpeed = speed;
     this.createSterilizationModeAnimation();

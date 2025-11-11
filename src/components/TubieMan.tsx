@@ -14,6 +14,7 @@ export default function FireBreatherGame() {
   useEffect(() => {
     const updateOrientation = () => {
       const isVertical = window.innerWidth < window.innerHeight;
+      console.log(`[TubieMan.tsx] Orientation change detected. Screen Dimensions: width: ${window.innerWidth}, height: ${window.innerHeight}.\n\t\t New orientation: ${isVertical ? 'VERTICAL' : 'HORIZONTAL'}`);
       setOrientation(isVertical ? Orientation.VERTICAL : Orientation.HORIZONTAL);
     };
 
@@ -21,7 +22,7 @@ export default function FireBreatherGame() {
     window.addEventListener('resize', updateOrientation);
 
     return () => window.removeEventListener('resize', updateOrientation);
-  }, []);
+  }, [orientation]);
 
   useEffect(() => {
     if (!gameRef.current || phaserGameRef.current) return;
@@ -65,7 +66,8 @@ export default function FireBreatherGame() {
     game.events.once('ready', () => {
       const menuScene = game.scene.getScene('MenuScene') as MenuScene;
       if (menuScene) {
-        menuScene.orientation = orientation;
+        console.log(`[TubieMan.tsx] Setting initial orientation for MenuScene: ${orientation}`);
+        menuScene.setOrientation(orientation);
       }
     });
 
@@ -75,7 +77,7 @@ export default function FireBreatherGame() {
         phaserGameRef.current = null;
       }
     };
-  }, []);
+  }, [orientation]);
 
   // Handle orientation changes
   useEffect(() => {

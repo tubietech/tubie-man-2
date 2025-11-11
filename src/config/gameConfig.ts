@@ -11,15 +11,15 @@ export const gameConfig = {
         fireRateDelay: { easy: 300, medium: 1000, hard: 2500 }, // Minimum time between projectile fires (ms) by difficulty
       },
       projectile: {
-        speed: 400, // Pixels per second
+        speed: 450, // Pixels per second
         maxDistance: 10, // Maximum distance in tiles
         spriteScale: 15.0, // Scale for projectile sprite (make it much more visible)
-        animationFrameRate: 22, // Frame rate for projectile animation
+        animationFrameRate: 25, // Frame rate for projectile animation
       }
     },
     startLives: 3,
     playerStartingHeight: 7, // Player starts 7 rows above bottom of map
-    animationFrameRate: 15,
+    animationFrameRate: 18,
     spriteScale: 2,
     deathAnimation: {
       spinCount: 3, // Number of 360-degree spins
@@ -30,7 +30,7 @@ export const gameConfig = {
   },
   enemy: {
     speed: { easy: 68, medium: 82, hard: 95 },
-    injuredSpeed: { easy: 110, medium: 140, hard: 180 }, // Speed when injured and fleeing to pen
+    injuredSpeed: { easy: 200, medium: 200, hard: 200 }, // Speed when injured and fleeing to pen
     scaredDuration: 5000,
     types: ['pokey', 'pricky', 'stingy', 'doc'],
     countPerLevel: {
@@ -70,7 +70,8 @@ export const gameConfig = {
         sterileModeSpeedMultiplier: { easy: 1, medium: 1.2, hard: 1.5 }  // Speed multiplier in Sterile Mode by difficulty
       },
       doc: {
-        pauseTime: { min: 1000, max: 3000 } // Random pause duration range (ms)
+        thinkingSpeed: { easy: 15, medium: 20, hard: 30 }, // Doc's slow speed when thinking during a chase
+        thinkingDuration: { min: 2000, max: 5000 } // Random pause duration range (ms)
       }
     }
   },
@@ -146,6 +147,7 @@ export const gameConfig = {
     powerupNotReady: 0xff0000,
     powerupActive: 0xffa500,
     gameUiText: 0xffffff,
+    gameUiValue: 0xffff00, // Color for score/lives/level values (yellow)
   },
   controls: {
     keyboard: {

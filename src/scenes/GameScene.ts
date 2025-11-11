@@ -9,6 +9,7 @@ import { MapGeneratorV2 } from '../utils/MapGeneratorV2';
 import { MapRenderer } from '../utils/MapRenderer';
 import { UIRenderer } from '../ui/UIRenderer';
 import { PerformanceMonitor } from '../utils/PerformanceMonitor';
+import { HighScoreManager } from '../utils/HighScoreManager';
 import { canEatPellet, calculateScaledSpeed, calculateBonusAppearances } from '../utils/utils';
 import { IMapData } from '../interfaces/IMapData';
 import { Orientation } from '../enums/Orientation';
@@ -34,6 +35,7 @@ export class GameScene extends Phaser.Scene {
   currentBonusAppearance: number = 0;
   pelletsEaten: number = 0;
   score: number = 0;
+  highScore: number = 0;
   level: number = 1;
   lives: number = 3;
   difficulty: string = 'medium';
@@ -65,10 +67,12 @@ export class GameScene extends Phaser.Scene {
   };
   enemyAIEnabled: boolean = true;
 
-  scoreText!: Phaser.GameObjects.Text;
-  highScoreText!: Phaser.GameObjects.Text;
-  livesText!: Phaser.GameObjects.Text;
-  levelText!: Phaser.GameObjects.Text;
+  scoreText!: Phaser.GameObjects.Container;
+  highScoreText!: Phaser.GameObjects.Container;
+  livesText!: Phaser.GameObjects.Container;
+  livesSprites!: Phaser.GameObjects.Sprite[];
+  levelText!: Phaser.GameObjects.Container;
+  levelSprites!: Phaser.GameObjects.Sprite[];
   powerText!: Phaser.GameObjects.Text;
   durationPieChart?: Phaser.GameObjects.Graphics;
   cooldownBar?: Phaser.GameObjects.Graphics;
@@ -93,8 +97,7 @@ export class GameScene extends Phaser.Scene {
     this.uiRenderer = new UIRenderer(this, this.localization);
     this.performanceMonitor = PerformanceMonitor.getInstance();
 
-    // Ensure black background
-    this.cameras.main.setBackgroundColor('#000000');
+    console.log(`[GAME SCENE] Init - Orientation: ${this.orientation}, Difficulty: ${this.difficulty}`);
 
     // Always create a fresh graphics object
     this.graphics = this.add.graphics();
@@ -182,6 +185,9 @@ export class GameScene extends Phaser.Scene {
     if (this.game.canvas) {
       this.game.canvas.style.backgroundColor = '#000000';
     }
+
+    // Load high score from localStorage
+    this.highScore = HighScoreManager.getHighScore();
 
     this.mapData = await MapGeneratorV2.generate(gameConfig.map.width, gameConfig.map.height);
     this.calculateMapOffset();
@@ -458,15 +464,17 @@ export class GameScene extends Phaser.Scene {
       this.mapWidth,
       this.mapHeight,
       this.score,
-      this.lives,
       this.level,
+      this.highScore,
       () => this.togglePause()  // Pause button callback
     );
 
     this.scoreText = uiElements.scoreText;
     this.highScoreText = uiElements.highScoreText;
     this.livesText = uiElements.livesText;
+    this.livesSprites = uiElements.livesSprites;
     this.levelText = uiElements.levelText;
+    this.levelSprites = uiElements.levelSprites;
     this.powerText = uiElements.powerText;
     this.durationPieChart = uiElements.durationPieChart;
     this.cooldownBar = uiElements.cooldownBar;
@@ -498,6 +506,18 @@ export class GameScene extends Phaser.Scene {
 
   private isInitialized(): boolean {
     return !!(this.cursors && this.player && this.powerText);
+  }
+
+  private addScore(points: number): void {
+    this.score += points;
+    this.uiRenderer.updateScoreText(this.scoreText, this.orientation, this.score);
+
+    // Check if we have a new high score
+    if (this.score > this.highScore) {
+      this.highScore = this.score;
+      HighScoreManager.saveHighScore(this.highScore);
+      this.uiRenderer.updateHighScoreText(this.highScoreText, this.orientation, this.highScore);
+    }
   }
 
   private getSceneRestartData(reset: boolean): {
@@ -605,7 +625,7 @@ export class GameScene extends Phaser.Scene {
         this.pellets[py][px] = null as any;
 
         if (isPower) {
-          this.score += gameConfig.map.powerup.score;
+          this.addScore(gameConfig.map.powerup.score);
           this.player.giveFirePower();
           this.uiRenderer.updatePowerText(
             this.powerText,
@@ -624,14 +644,12 @@ export class GameScene extends Phaser.Scene {
             this.player.getDifficulty()
           );
         } else {
-          this.score += gameConfig.map.pellet.score;
+          this.addScore(gameConfig.map.pellet.score);
           this.pelletsEaten++;
 
           // Check if bonus should spawn
           this.checkBonusSpawn();
         }
-
-        this.uiRenderer.updateScoreText(this.scoreText, this.orientation, this.score);
 
         this.checkWinCondition();
       }
@@ -714,8 +732,7 @@ export class GameScene extends Phaser.Scene {
         const maxScore = gameConfig.enemy.injuryScore.max;
 
         const injuryScore = Math.min(baseScore + (increment * this.injuryComboCount), maxScore);
-        this.score += injuryScore;
-        this.uiRenderer.updateScoreText(this.scoreText, this.orientation, this.score);
+        this.addScore(injuryScore);
 
         // Increment combo count (0-indexed, so max combo count is 3 for 400 points)
         if (this.injuryComboCount < 3) {
@@ -794,9 +811,7 @@ export class GameScene extends Phaser.Scene {
     if (distance < 1) {
       // Collect bonus
       this.bonus.collect();
-      this.score += this.bonus.score;
-
-      this.uiRenderer.updateScoreText(this.scoreText, this.orientation, this.score);
+      this.addScore(this.bonus.score);
 
       console.log(`[BONUS] Collected! Score +${this.bonus.score}, New total: ${this.score}`);
 
@@ -813,7 +828,8 @@ export class GameScene extends Phaser.Scene {
   
   async loseLife() {
     this.lives--;
-    this.uiRenderer.updateLivesText(this.livesText, this.orientation, this.lives);
+    //this.uiRenderer.updateLivesText(this.livesText, this.orientation, this.lives);
+    this.uiRenderer.updateLivesSprites(this.livesSprites, this.orientation, this.lives);
 
     // Remove bonus if it's currently on screen
     if (this.bonus && this.bonus.isActive()) {

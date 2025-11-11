@@ -209,4 +209,9 @@ export class MenuScene extends Phaser.Scene {
       }
     });
   }
+
+  setOrientation(orientation: Orientation) {
+    this.orientation = orientation;
+    console.log(`[MenuScene] Orientation set to: ${Orientation[orientation]}`);
+  }
 }
