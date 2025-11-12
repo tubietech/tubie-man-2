@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { Entity } from './Entity';
 import { IProjectile } from '../interfaces/IProjectile';
 import { ICoordinate } from '../interfaces/ICoordinate';
 import { IMapData } from '../interfaces/IMapData';
@@ -8,20 +9,20 @@ import { gameConfig } from '../config/gameConfig';
 import { Logger } from '../utils/Logger';
 import { LogGroup } from '../enums/LogGroup';
 
-export class Projectile implements IProjectile {
-  sprite!: Phaser.GameObjects.Sprite;
-  gridPosition: ICoordinate;
-  direction: Direction;
-  active: boolean;
+export class Projectile extends Entity implements IProjectile {
+  // IProjectile compatibility: gridPosition returns Entity's gridX/gridY as ICoordinate
+  get gridPosition(): ICoordinate {
+    return { x: this.gridX, y: this.gridY };
+  }
 
-  private mapData: IMapData;
-  private tileSize: number;
-  private mapOffsetX: number;
-  private mapOffsetY: number;
-  private speed: number;
+  set gridPosition(pos: ICoordinate) {
+    this.gridX = pos.x;
+    this.gridY = pos.y;
+  }
+
+  active: boolean;
   private distanceTraveled: number;
   private maxDistance: number;
-
   private logger: Logger;
 
   constructor(
@@ -34,23 +35,18 @@ export class Projectile implements IProjectile {
     mapOffsetY: number,
     speed: number
   ) {
+    // Initialize Entity with dummy color (will be replaced by sprite)
+    super(scene, startPos.x, startPos.y, 0x000000, speed, mapData, tileSize, mapOffsetX, mapOffsetY);
+
     this.direction = direction;
-    this.mapData = mapData;
-    this.tileSize = tileSize;
-    this.mapOffsetX = mapOffsetX;
-    this.mapOffsetY = mapOffsetY;
-    this.speed = speed;
     this.active = true;
     this.distanceTraveled = 0;
     this.maxDistance = gameConfig.player.powerup.projectile.maxDistance * tileSize;
-
     this.logger = new Logger(LogGroup.PROJECTILE);
 
     // Use the starting position directly (Player already calculated one tile ahead)
     const startX = startPos.x;
     const startY = startPos.y;
-
-    this.gridPosition = { x: startX, y: startY };
 
     // Check if starting position is a wall - if so, destroy immediately
     if (this.hasHitWall()) {
@@ -58,6 +54,9 @@ export class Projectile implements IProjectile {
       this.active = false;
       return;
     }
+
+    // Destroy the circle sprite created by Entity
+    this.sprite.destroy();
 
     // Create the sprite at the starting position (one tile ahead)
     const pixelX = mapOffsetX + startX * tileSize + tileSize / 2;
@@ -135,16 +134,16 @@ export class Projectile implements IProjectile {
 
       // Check for wall collision
       if (this.hasHitWall()) {
-        this.logger.log(`Hit wall at grid (${newGridX}, ${newGridY}), destroying`);
-        this.destroy();
+        this.logger.log(`Hit wall at grid (${newGridX}, ${newGridY}), cleaning up`);
+        this.cleanup();
         return;
       }
     }
 
     // Check if max distance reached
     if (this.distanceTraveled >= this.maxDistance) {
-      this.logger.log(`Max distance reached (${this.distanceTraveled.toFixed(2)} >= ${this.maxDistance}), destroying`);
-      this.destroy();
+      this.logger.log(`Max distance reached (${this.distanceTraveled.toFixed(2)} >= ${this.maxDistance}), cleaning up`);
+      this.cleanup();
     }
   }
 
@@ -194,12 +193,15 @@ export class Projectile implements IProjectile {
     return tile === MapValue.WALL || tile === MapValue.PEN_DOOR;
   }
 
-  destroy(): void {
+  /**
+   * Clean up projectile resources
+   */
+  cleanup(): void {
     if (!this.active) {
-      return; // Already destroyed
+      return; // Already cleaned up
     }
 
-    this.logger.log(`Destroying projectile at grid (${this.gridPosition.x}, ${this.gridPosition.y})`);
+    this.logger.log(`Cleaning up projectile at grid (${this.gridPosition.x}, ${this.gridPosition.y})`);
     this.active = false;
 
     if (this.sprite && this.sprite.scene) {
@@ -211,7 +213,10 @@ export class Projectile implements IProjectile {
     }
   }
 
-  getGridPosition(): ICoordinate {
-    return { x: this.gridPosition.x, y: this.gridPosition.y };
+  /**
+   * Destroy the projectile (calls cleanup for consistency with IProjectile interface)
+   */
+  destroy(): void {
+    this.cleanup();
   }
 }

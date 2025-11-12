@@ -309,18 +309,17 @@ export class Player extends Entity {
    * Returns collision result with details about what was hit
    */
   checkEnemyCollisions(enemies: Enemy[]): ICollisionResult {
-    const firePositions = this.getFirePositions();
-    const playerPos = this.getGridPosition();
+    const projectiles = this.powerActivationStrategy.getProjectiles();
 
     for (const enemy of enemies) {
-      const enemyPos = enemy.getGridPosition();
-
-      // Check if enemy is hit by fire
-      const hitByFire = firePositions.some(pos =>
-        pos.x === enemyPos.x && pos.y === enemyPos.y
+      // Check if enemy is hit by projectile
+      // Projectiles are scaled to 1.5x tile size (radius = 0.75 tiles)
+      // Using threshold of 1.0 means projectile must be within 1 tile of enemy center
+      const hitByProjectile = projectiles.some(projectile =>
+        projectile.checkCollision(enemy, 1.0)
       );
 
-      if (hitByFire) {
+      if (hitByProjectile) {
         return {
           hasCollision: true,
           enemy: enemy,
@@ -329,8 +328,13 @@ export class Player extends Entity {
       }
 
       // Check if player collides with enemy
-      const dist = this.getGridDistance(playerPos, enemyPos);
-      if (dist < 1) {
+      // Collision occurs when the edge of the enemy sprite reaches the center of the player's tile
+      // Normal enemy sprites are scaled to 2x tile size (radius = 1 tile)
+      // Injured enemy sprites are scaled to 1.5x tile size (radius = 0.75 tiles)
+      // Player sprites are scaled to 2x tile size (radius = 1 tile)
+      // Using 1.0 threshold means normal enemy edge must reach player center
+      // Injured enemies will need to get slightly closer (within 0.75 tiles) to collide
+      if (this.checkCollision(enemy, 1.0)) {
         return {
           hasCollision: true,
           enemy: enemy,
@@ -439,5 +443,16 @@ export class Player extends Entity {
       default:
         return 'player_right_frame_2.png';
     }
+  }
+
+  /**
+   * Clean up player resources
+   */
+  cleanup(): void {
+    this.deactivateFire();
+    if (this.animatedSprite && this.animatedSprite.scene) {
+      this.animatedSprite.destroy();
+    }
+    super.cleanup();
   }
 }

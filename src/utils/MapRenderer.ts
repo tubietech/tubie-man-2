@@ -220,6 +220,12 @@ export class MapRenderer {
     const canvasWidth = this.scene.cameras.main.width;
     const canvasHeight = this.scene.cameras.main.height;
 
+    // Pre-create the texture to avoid lazy initialization warning
+    // This tells WebGL the exact format and size upfront
+    if (!this.scene.textures.exists(textureKey)) {
+      this.scene.textures.createCanvas(textureKey, canvasWidth, canvasHeight);
+    }
+
     // Generate texture from graphics capturing the entire canvas including offsets
     this.graphics.generateTexture(textureKey, canvasWidth, canvasHeight);
 

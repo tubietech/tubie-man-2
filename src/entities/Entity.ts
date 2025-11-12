@@ -106,13 +106,37 @@ export class Entity implements IEntity {
   getGridDistance(pos1: ICoordinate, pos2: ICoordinate): number {
     return Math.abs(pos1.x - pos2.x) + Math.abs(pos1.y - pos2.y);
   }
-  
+
+  /**
+   * Check if this entity collides with another entity
+   * Collision occurs when the distance between entities is less than the threshold
+   * @param other The other entity to check collision with
+   * @param threshold The distance threshold for collision (in tiles)
+   * @returns true if collision detected, false otherwise
+   */
+  checkCollision(other: Entity, threshold: number): boolean {
+    const thisPos = this.getGridPosition();
+    const otherPos = other.getGridPosition();
+    const distance = this.getGridDistance(thisPos, otherPos);
+    return distance < threshold;
+  }
+
   getOppositeDirection(): Direction {
     switch (this.direction) {
       case Direction.UP: return Direction.DOWN;
       case Direction.DOWN: return Direction.UP;
       case Direction.LEFT: return Direction.RIGHT;
       case Direction.RIGHT: return Direction.LEFT;
+    }
+  }
+
+  /**
+   * Clean up entity resources (sprites, animations, etc.)
+   * Override in subclasses to add specific cleanup logic
+   */
+  cleanup(): void {
+    if (this.sprite && this.sprite.scene) {
+      this.sprite.destroy();
     }
   }
 }

@@ -69,6 +69,8 @@ export class GameScene extends Phaser.Scene {
     activatePowerup: Phaser.Input.Keyboard.Key;
   };
   enemyAIEnabled: boolean = true;
+  respawnQueue: Enemy[] = [];
+  lastRespawnTime: number = 0;
 
   scoreText!: Phaser.GameObjects.Container;
   highScoreText!: Phaser.GameObjects.Container;
@@ -190,8 +192,8 @@ export class GameScene extends Phaser.Scene {
       this.game.canvas.style.backgroundColor = '#000000';
     }
 
-    // Load high score from localStorage
-    this.highScore = HighScoreManager.getHighScore();
+    // Load high score from localStorage for the current difficulty
+    this.highScore = HighScoreManager.getHighScore(this.difficulty);
 
     this.mapData = await MapGeneratorV2.generate(gameConfig.map.width, gameConfig.map.height);
     this.calculateMapOffset();
@@ -386,6 +388,11 @@ export class GameScene extends Phaser.Scene {
     }
 
     // All enemies are now visible from the start and properly positioned
+    // Attach respawn callback to all enemies for staggered release
+    this.enemies.forEach(enemy => {
+      enemy.onReachedPen = (reachedEnemy) => this.handleEnemyReachedPen(reachedEnemy);
+    });
+
     // Release Stingy immediately since he's already outside
     this.enemiesReleased = 0;
     this.scheduleNextEnemyRelease();
@@ -418,7 +425,31 @@ export class GameScene extends Phaser.Scene {
       }
     }
   }
-  
+
+  /**
+   * Handle when an injured enemy reaches the pen
+   * Stagger releases if multiple enemies are in the pen
+   */
+  handleEnemyReachedPen(enemy: Enemy) {
+    const gameLogger = new Logger(LogGroup.GAME);
+
+    // Count how many enemies are currently in the pen (respawning)
+    const enemiesInPen = this.enemies.filter(e => e.isRespawning).length;
+
+    // Calculate stagger delay: 1 second (1000ms) per enemy already in pen
+    const staggerDelay = enemiesInPen * 1000;
+
+    if (staggerDelay > 0) {
+      gameLogger.log(`${enemy.type} reached pen. ${enemiesInPen} enemies already respawning. Adding ${staggerDelay}ms delay.`);
+    }
+
+    // Start respawn with calculated delay
+    enemy.startRespawn(staggerDelay);
+
+    // Update last respawn time
+    this.lastRespawnTime = this.time.now;
+  }
+
   setupInput() {
     this.cursors = this.input.keyboard!.createCursorKeys();
     this.wasd = this.input.keyboard!.addKeys({
@@ -527,10 +558,10 @@ export class GameScene extends Phaser.Scene {
     this.score += points;
     this.uiRenderer.updateScoreText(this.scoreText, this.orientation, this.score);
 
-    // Check if we have a new high score
+    // Check if we have a new high score for this difficulty
     if (this.score > this.highScore) {
       this.highScore = this.score;
-      HighScoreManager.saveHighScore(this.highScore);
+      HighScoreManager.saveHighScore(this.highScore, this.difficulty);
       this.uiRenderer.updateHighScoreText(this.highScoreText, this.orientation, this.highScore);
     }
   }
@@ -804,7 +835,7 @@ export class GameScene extends Phaser.Scene {
     const tileSize = this.getTileSize();
     const bonusSpeed = calculateScaledSpeed(gameConfig.map.bonus.speed, this.difficulty, tileSize);
 
-    this.bonus = new Bonus(this, this.bonusData, tileSize, this.mapOffsetX, this.mapOffsetY, bonusSpeed);
+    this.bonus = new Bonus(this, this.bonusData, tileSize, this.mapOffsetX, this.mapOffsetY, this.mapData, bonusSpeed);
 
     Logger.logStatic(LogGroup.BONUS, `Spawned bonus #${this.currentBonusAppearance + 1}`);
   }
@@ -816,17 +847,10 @@ export class GameScene extends Phaser.Scene {
       return;
     }
 
-    // Check distance from player to bonus
-    const bonusPos = this.bonus.getGridPosition();
-    const playerPos = this.player.getGridPosition();
-    const distance = this.player.getGridDistance(playerPos, bonusPos);
-
-    // Debug logging for first few frames
-    if (this.bonus && Math.random() < 0.01) {
-      bonusLogger.log(`Player: (${playerPos.x}, ${playerPos.y}), Bonus: (${bonusPos.x}, ${bonusPos.y}), Distance: ${distance}`);
-    }
-
-    if (distance < 1) {
+    // Collision occurs when the edge of the bonus sprite reaches the center of the player's tile
+    // Bonus sprites are scaled to 2.2x tile size (from gameConfig.map.bonus.scale)
+    // Using threshold of 1.0 for consistent gameplay feel with other collision types
+    if (this.player.checkCollision(this.bonus, 1.0)) {
       // Collect bonus
       this.bonus.collect();
       this.addScore(this.bonus.score);
@@ -851,7 +875,7 @@ export class GameScene extends Phaser.Scene {
 
     // Remove bonus if it's currently on screen
     if (this.bonus && this.bonus.isActive()) {
-      this.bonus.deactivate();
+      this.bonus.cleanup();
       Logger.logStatic(LogGroup.BONUS, 'Removed due to player death');
     }
 
@@ -985,21 +1009,15 @@ export class GameScene extends Phaser.Scene {
       this.mapRenderer = null;
     }
 
-    // Clean up player sprite
-    if (this.player && this.player.animatedSprite) {
-      this.player.deactivateFire();
-      this.player.animatedSprite.destroy();
+    // Clean up player
+    if (this.player) {
+      this.player.cleanup();
     }
 
-    // Clean up enemy sprites
+    // Clean up enemies
     if (this.enemies) {
       this.enemies.forEach(enemy => {
-        if (enemy.sprite) {
-          enemy.sprite.destroy();
-        }
-        if (enemy.animatedSprite) {
-          enemy.animatedSprite.destroy();
-        }
+        enemy.cleanup();
       });
     }
 
@@ -1025,7 +1043,7 @@ export class GameScene extends Phaser.Scene {
 
     // Clean up bonus
     if (this.bonus) {
-      this.bonus.deactivate();
+      this.bonus.cleanup();
       this.bonus = null;
     }
 

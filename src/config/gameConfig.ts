@@ -1,6 +1,6 @@
 export const gameConfig = {
   player: {
-    speed: { easy: 70, medium: 80, hard: 90 },
+    speed: { easy: 60, medium: 75, hard: 90 },
     powerup: {
       v1: {
         duration: 1500, // Duration of fire breath effect (ms)
@@ -29,7 +29,7 @@ export const gameConfig = {
     injuryComboResetTime: 10000, // Time before injury combo resets (ms)
   },
   enemy: {
-    speed: { easy: 68, medium: 82, hard: 95 },
+    speed: { easy: 55, medium: 82, hard: 95 },
     injuredSpeed: { easy: 200, medium: 200, hard: 200 }, // Speed when injured and fleeing to pen
     scaredDuration: 5000,
     types: ['pokey', 'pricky', 'stingy', 'doc'],
@@ -40,7 +40,8 @@ export const gameConfig = {
     },
     respawnDelay: 5000, // Time to pause in pen before respawning (ms)
     releaseDelay: { easy: 4000, medium: 3000, hard: 1500 }, // Delay between enemy releases (ms)
-    spriteScale: 2, // Scale multiplier for enemy sprites
+    spriteScale: 2.1, // Scale multiplier for enemy sprites
+    injuredSpriteScale: 2.75, // Scale multiplier for injured enemy sprites
     injuryScore: {
       base: 100,        // Base points for injuring enemy
       increment: 100,   // Points increase per combo
@@ -55,7 +56,7 @@ export const gameConfig = {
         hard: { min: 12000, max: 20000 }     // 12-20 seconds
       },
       pokey: {
-        loopDuration: 2000, // How long Pokey stays stuck in loop (ms)
+        loopDuration: 10000, // How long Pokey stays stuck in loop (ms)
         loopRadius: 2       // Radius of the loop pattern
       },
       pricky: {

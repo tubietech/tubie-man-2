@@ -26,6 +26,7 @@ export class Enemy extends Entity {
   normalSpeed: number;
   originalColor: number;
   respawnTimer: number = 0;
+  respawnDelay: number = 0;
   isRespawning: boolean = false;
   exitPath: { x: number; y: number }[] = [];
   exitPathIndex: number = 0;
@@ -37,6 +38,7 @@ export class Enemy extends Entity {
   startY: number;
   injuredPath: ICoordinate[] = [];
   injuredPathIndex: number = 0;
+  onReachedPen?: (enemy: Enemy) => void;
 
   constructor(scene: Phaser.Scene, x: number, y: number, type: string, enemyNumber: number, speed: number, mapData: IMapData, tileSize: number, mapOffsetX: number, mapOffsetY: number, difficulty: Difficulty = Difficulty.MEDIUM) {
     const color = gameConfig.colors[type as keyof typeof gameConfig.colors] as number;
@@ -295,9 +297,10 @@ export class Enemy extends Entity {
     // Update to injured animation
     this.updateAnimation();
 
-    // Change color to gray (Arc uses setFillStyle, not setTint)
-    if (this.sprite instanceof Phaser.GameObjects.Arc) {
-      this.sprite.setFillStyle(0x808080);
+    // Scale down injured sprite
+    if (this.animatedSprite) {
+      const injuredScale = (this.tileSize * gameConfig.enemy.injuredSpriteScale) / this.animatedSprite.width;
+      this.animatedSprite.setScale(injuredScale);
     }
 
     // Calculate A* path to pen center via door
@@ -326,14 +329,16 @@ export class Enemy extends Entity {
 
   /**
    * Start respawning process - waits in pen before returning to normal
+   * @param additionalDelay Additional delay in milliseconds before respawning (for staggering)
    */
-  startRespawn(): void {
+  startRespawn(additionalDelay: number = 0): void {
     if (this.isRespawning) return;
 
     this.isInjured = false;
     this.isRespawning = true;
     this.isReleased = false;
     this.respawnTimer = 0;
+    this.respawnDelay = gameConfig.enemy.respawnDelay + additionalDelay;
 
     // Ensure enemy is exactly at pen center
     this.moveTo(this.mapData.penCenter.x, this.mapData.penCenter.y);
@@ -347,7 +352,11 @@ export class Enemy extends Entity {
     ];
     this.exitPathIndex = 0;
 
-    Logger.logStatic(LogGroup.ENEMY, `${this.type} starting respawn in pen at (${this.gridX}, ${this.gridY}), exit path set with ${this.exitPath.length} waypoints`);
+    if (additionalDelay > 0) {
+      Logger.logStatic(LogGroup.ENEMY, `${this.type} starting respawn in pen with ${additionalDelay}ms stagger delay (total: ${this.respawnDelay}ms)`);
+    } else {
+      Logger.logStatic(LogGroup.ENEMY, `${this.type} starting respawn in pen at (${this.gridX}, ${this.gridY}), exit path set with ${this.exitPath.length} waypoints`);
+    }
   }
 
   /**
@@ -361,8 +370,12 @@ export class Enemy extends Entity {
     // Update animation back to normal
     this.updateAnimation();
 
-    // Restore original color (Arc uses setFillStyle, not setTint)
-    if (this.sprite instanceof Phaser.GameObjects.Arc) {
+    // Restore original scale and color
+    if (this.animatedSprite) {
+      const normalScale = (this.tileSize * gameConfig.enemy.spriteScale) / this.animatedSprite.width;
+      this.animatedSprite.setScale(normalScale);
+      this.animatedSprite.clearTint();
+    } else if (this.sprite instanceof Phaser.GameObjects.Arc) {
       this.sprite.setFillStyle(this.originalColor);
     }
 
@@ -405,7 +418,7 @@ export class Enemy extends Entity {
     // Handle respawning state - pause in pen
     if (this.isRespawning) {
       this.respawnTimer += delta;
-      if (this.respawnTimer >= gameConfig.enemy.respawnDelay) {
+      if (this.respawnTimer >= this.respawnDelay) {
         this.completeRespawn();
       }
       return;
@@ -428,7 +441,13 @@ export class Enemy extends Entity {
     if (this.isInjured) {
       // Check if reached pen center
       if (this.gridX === this.mapData.penCenter.x && this.gridY === this.mapData.penCenter.y) {
-        this.startRespawn();
+        // Notify GameScene that we reached the pen (for staggering)
+        if (this.onReachedPen) {
+          this.onReachedPen(this);
+        } else {
+          // Fallback if no callback is set
+          this.startRespawn();
+        }
         return;
       }
 
@@ -662,5 +681,17 @@ export class Enemy extends Entity {
     }
 
     return true;
+  }
+
+  /**
+   * Clean up enemy resources
+   */
+  cleanup(): void {
+    if (this.sprite && this.sprite.scene) {
+      this.sprite.destroy();
+    }
+    if (this.animatedSprite && this.animatedSprite.scene) {
+      this.animatedSprite.destroy();
+    }
   }
 }

@@ -1,6 +1,8 @@
 import Phaser from 'phaser';
+import { Entity } from './Entity';
 import { ICoordinate } from '../interfaces/ICoordinate';
 import { IBonusData } from '../interfaces/IBonusData';
+import { IMapData } from '../interfaces/IMapData';
 import { gameConfig } from '../config/gameConfig';
 import { Logger } from '../utils/Logger';
 import { LogGroup } from '../enums/LogGroup';
@@ -8,20 +10,13 @@ import { LogGroup } from '../enums/LogGroup';
 /**
  * Bonus entity that follows a predetermined path through the map
  */
-export class Bonus {
-  sprite: Phaser.GameObjects.Sprite;
+export class Bonus extends Entity {
   active: boolean;
   collected: boolean;
   score: number;
-  gridX: number;
-  gridY: number;
 
   private path: ICoordinate[];
   private currentPathIndex: number;
-  private speed: number;
-  private tileSize: number;
-  private mapOffsetX: number;
-  private mapOffsetY: number;
   private targetPixelPosition: ICoordinate | null;
   private logger: Logger;
 
@@ -31,26 +26,26 @@ export class Bonus {
     tileSize: number,
     mapOffsetX: number,
     mapOffsetY: number,
+    mapData: IMapData,
     speed: number
   ) {
+    // Initialize Entity with dummy color (will be replaced by sprite)
+    const startPos = bonusData.path[0];
+    super(scene, startPos.x, startPos.y, 0x000000, speed, mapData, tileSize, mapOffsetX, mapOffsetY);
+
     this.path = bonusData.path;
     this.score = bonusData.score;
-    this.tileSize = tileSize;
-    this.mapOffsetX = mapOffsetX;
-    this.mapOffsetY = mapOffsetY;
-    this.speed = speed;
     this.active = true;
     this.collected = false;
     this.currentPathIndex = 0;
     this.targetPixelPosition = null;
 
-    // Create sprite at first path position
-    const startPos = this.path[0];
-    this.gridX = startPos.x;
-    this.gridY = startPos.y;
+    // Destroy the circle sprite created by Entity
+    this.sprite.destroy();
+
+    // Create custom sprite at first path position
     const pixelX = mapOffsetX + startPos.x * tileSize + tileSize / 2;
     const pixelY = mapOffsetY + startPos.y * tileSize + tileSize / 2;
-
     this.sprite = scene.add.sprite(pixelX, pixelY, 'atlas', bonusData.sprite);
 
     // Scale sprite based on config
@@ -73,8 +68,8 @@ export class Bonus {
 
       // Check if we've reached the end of the path
       if (this.currentPathIndex >= this.path.length) {
-        this.logger.log('Reached end of path, deactivating');
-        this.deactivate();
+        this.logger.log('Reached end of path, cleaning up');
+        this.cleanup();
         return;
       }
 
@@ -110,13 +105,6 @@ export class Bonus {
   }
 
   /**
-   * Get current grid position
-   */
-  getGridPosition(): ICoordinate {
-    return { x: this.gridX, y: this.gridY };
-  }
-
-  /**
    * Collect the bonus
    */
   collect(): void {
@@ -126,17 +114,7 @@ export class Bonus {
 
     this.logger.log(`Collected! Score: ${this.score}`);
     this.collected = true;
-    this.deactivate();
-  }
-
-  /**
-   * Deactivate and destroy the bonus
-   */
-  deactivate(): void {
-    this.active = false;
-    if (this.sprite && this.sprite.scene) {
-      this.sprite.destroy();
-    }
+    this.cleanup();
   }
 
   /**
@@ -144,5 +122,15 @@ export class Bonus {
    */
   isActive(): boolean {
     return this.active && !this.collected;
+  }
+
+  /**
+   * Clean up bonus resources
+   */
+  cleanup(): void {
+    this.active = false;
+    if (this.sprite && this.sprite.scene) {
+      this.sprite.destroy();
+    }
   }
 }

@@ -7,7 +7,7 @@ import { ICoordinate } from './ICoordinate';
  */
 export interface IProjectile {
   /** The sprite representing the projectile */
-  sprite: Phaser.GameObjects.Sprite;
+  sprite: Phaser.GameObjects.Sprite | Phaser.GameObjects.Arc;
 
   /** Current grid position */
   gridPosition: ICoordinate;
