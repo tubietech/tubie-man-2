@@ -7,8 +7,8 @@ export const gameConfig = {
         projectileCount: 3, // Number of projectiles fired in a row
       },
       v2: {
-        duration: 3000, // Duration window for firing multiple projectiles (ms)
-        fireRateDelay: { easy: 300, medium: 1000, hard: 2500 }, // Minimum time between projectile fires (ms) by difficulty
+        duration: { easy: 10000, medium: 7000, hard: 3000 }, // Duration window for firing multiple projectiles (ms)
+        fireRateDelay: { easy: 300, medium: 700, hard: 1200 }, // Minimum time between projectile fires (ms) by difficulty
       },
       projectile: {
         speed: 450, // Pixels per second
@@ -29,7 +29,7 @@ export const gameConfig = {
     injuryComboResetTime: 10000, // Time before injury combo resets (ms)
   },
   enemy: {
-    speed: { easy: 55, medium: 82, hard: 95 },
+    speed: { easy: 55, medium: 70, hard: 92 },
     injuredSpeed: { easy: 200, medium: 200, hard: 200 }, // Speed when injured and fleeing to pen
     scaredDuration: 5000,
     types: ['pokey', 'pricky', 'stingy', 'doc'],

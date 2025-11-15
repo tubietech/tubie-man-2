@@ -8,5 +8,6 @@ export enum MapValue {
   PEN_INTERIOR = 2,
   PEN_DOOR = 3,
   TUNNEL = 4,
-  POWERUP = 5
+  POWERUP = 5,
+  EMPTY = 6  // Walkable tile without pellets (e.g., cleared areas near pen)
 }

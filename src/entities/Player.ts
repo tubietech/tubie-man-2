@@ -17,7 +17,6 @@ export class Player extends Entity {
   hasFirePower: boolean = false;
   fireActive: boolean = false;
   inputQueue: Direction[] = [];
-  animatedSprite!: Phaser.GameObjects.Sprite;
   isMoving: boolean = false;
   lastDirection: Direction = Direction.RIGHT;
   isDying: boolean = false;
@@ -38,24 +37,22 @@ export class Player extends Entity {
     this.powerActivationStrategy = new PowerActivationV2(scene, mapData, tileSize, mapOffsetX, mapOffsetY, difficulty);
     // To use V1: this.powerActivationStrategy = new PowerActivationV1(scene, mapData, tileSize, mapOffsetX, mapOffsetY, difficulty);
 
-    // Destroy the circle sprite created by parent
-    this.sprite.destroy();
-
     // Create animated sprite
+    const pixelPos = this.getTargetPixelPosition({ x, y });
     this.animatedSprite = scene.add.sprite(
-      mapOffsetX + x * tileSize + tileSize / 2,
-      mapOffsetY + y * tileSize + tileSize / 2,
+      pixelPos.x,
+      pixelPos.y,
       'atlas',
       'player_right_frame_1.png'
     );
 
-    // Scale sprite to fit tile size, then scale up by 50%
+    // Scale sprite to fit tile size, then scale up by config multiplier
     const spriteScale = tileSize / Math.max(this.animatedSprite.width, this.animatedSprite.height);
     this.originalScale = spriteScale * gameConfig.player.spriteScale;
     this.animatedSprite.setScale(this.originalScale);
 
-    // Update sprite reference to point to animated sprite
-    this.sprite = this.animatedSprite;
+    // Replace the default circle sprite with the animated sprite
+    this.replaceWithCustomSprite(this.animatedSprite);
 
     // Start with idle frame for right direction
     this.lastDirection = Direction.RIGHT;
@@ -450,9 +447,6 @@ export class Player extends Entity {
    */
   cleanup(): void {
     this.deactivateFire();
-    if (this.animatedSprite && this.animatedSprite.scene) {
-      this.animatedSprite.destroy();
-    }
     super.cleanup();
   }
 }

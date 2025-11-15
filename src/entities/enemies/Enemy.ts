@@ -31,7 +31,7 @@ export class Enemy extends Entity {
   exitPath: { x: number; y: number }[] = [];
   exitPathIndex: number = 0;
   isFollowingExitPath: boolean = false;
-  animatedSprite: Phaser.GameObjects.Sprite | null = null;
+  // animatedSprite is now inherited from Entity base class
   currentAnimKey: string = '';
   isPaused: boolean = false;
   startX: number;
@@ -687,11 +687,6 @@ export class Enemy extends Entity {
    * Clean up enemy resources
    */
   cleanup(): void {
-    if (this.sprite && this.sprite.scene) {
-      this.sprite.destroy();
-    }
-    if (this.animatedSprite && this.animatedSprite.scene) {
-      this.animatedSprite.destroy();
-    }
+    super.cleanup();
   }
 }

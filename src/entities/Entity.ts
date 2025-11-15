@@ -17,6 +17,9 @@ export class Entity implements IEntity {
   mapOffsetX: number;
   mapOffsetY: number;
 
+  // Optional animated sprite (used by Player, Enemy)
+  protected animatedSprite?: Phaser.GameObjects.Sprite;
+
   constructor(scene: Phaser.Scene, x: number, y: number, color: number, speed: number, mapData: IMapData, tileSize: number, mapOffsetX: number, mapOffsetY: number) {
     this.scene = scene;
     this.gridX = x;
@@ -54,12 +57,13 @@ export class Entity implements IEntity {
       return false;
     }
     const tile = this.mapData.map[y][x];
-    // Can move on paths, pen interior, door, tunnels, and powerups
+    // Can move on paths, pen interior, door, tunnels, powerups, and empty tiles
     return tile === MapValue.PATH ||
            tile === MapValue.PEN_INTERIOR ||
            tile === MapValue.PEN_DOOR ||
            tile === MapValue.TUNNEL ||
-           tile === MapValue.POWERUP;
+           tile === MapValue.POWERUP ||
+           tile === MapValue.EMPTY;
   }
   
   getNextPosition(dir: Direction): ICoordinate {
@@ -131,10 +135,59 @@ export class Entity implements IEntity {
   }
 
   /**
+   * Get the string representation of a direction (for animation keys, etc.)
+   * @param dir The direction to convert
+   * @returns String representation ('up', 'down', 'left', 'right')
+   */
+  protected getDirectionString(dir: Direction): string {
+    const dirMap: Record<Direction, string> = {
+      [Direction.UP]: 'up',
+      [Direction.DOWN]: 'down',
+      [Direction.LEFT]: 'left',
+      [Direction.RIGHT]: 'right'
+    };
+    return dirMap[dir];
+  }
+
+  /**
+   * Synchronize animated sprite position with the main sprite
+   * Useful for entities that maintain both a collision sprite and visual sprite
+   */
+  protected syncAnimatedSpritePosition(): void {
+    if (this.animatedSprite) {
+      this.animatedSprite.x = this.sprite.x;
+      this.animatedSprite.y = this.sprite.y;
+    }
+  }
+
+  /**
+   * Destroy the animated sprite if it exists
+   * Helper for cleanup methods
+   */
+  protected destroyAnimatedSprite(): void {
+    if (this.animatedSprite && this.animatedSprite.scene) {
+      this.animatedSprite.destroy();
+    }
+  }
+
+  /**
+   * Replace the default circle sprite with a custom sprite
+   * Helper for entity constructors that want custom sprites
+   * @param newSprite The new sprite to use
+   */
+  protected replaceWithCustomSprite(newSprite: Phaser.GameObjects.Sprite | Phaser.GameObjects.Arc): void {
+    if (this.sprite && this.sprite.scene) {
+      this.sprite.destroy();
+    }
+    this.sprite = newSprite;
+  }
+
+  /**
    * Clean up entity resources (sprites, animations, etc.)
    * Override in subclasses to add specific cleanup logic
    */
   cleanup(): void {
+    this.destroyAnimatedSprite();
     if (this.sprite && this.sprite.scene) {
       this.sprite.destroy();
     }

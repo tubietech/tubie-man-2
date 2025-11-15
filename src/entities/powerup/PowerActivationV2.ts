@@ -8,6 +8,7 @@ import { Projectile } from '../Projectile';
 import { gameConfig } from '../../config/gameConfig';
 import { Logger } from '../../utils/Logger';
 import { LogGroup } from '../../enums/LogGroup';
+import { Difficulty } from '../../enums/Difficulty';
 
 /**
  * V2 Power Activation Strategy
@@ -20,7 +21,7 @@ export class PowerActivationV2 implements IPowerActivationStrategy {
   private tileSize: number;
   private mapOffsetX: number;
   private mapOffsetY: number;
-  private difficulty: string;
+  private difficulty: Difficulty;
 
   private hasFirePower: boolean = false;
   private fireActive: boolean = false;
@@ -39,7 +40,7 @@ export class PowerActivationV2 implements IPowerActivationStrategy {
     tileSize: number,
     mapOffsetX: number,
     mapOffsetY: number,
-    difficulty: string = 'medium'
+    difficulty: Difficulty = Difficulty.MEDIUM
   ) {
     this.scene = scene;
     this.mapData = mapData;
@@ -62,9 +63,9 @@ export class PowerActivationV2 implements IPowerActivationStrategy {
         return false;
       }
 
-      this.logger.log(`Activating fire powerup for ${gameConfig.player.powerup.v2.duration}ms`);
+      this.logger.log(`Activating fire powerup for ${gameConfig.player.powerup.v2.duration[this.difficulty]}ms`);
       this.fireActive = true;
-      this.fireDuration = gameConfig.player.powerup.v2.duration;
+      this.fireDuration = gameConfig.player.powerup.v2.duration[this.difficulty];
       this.hasFirePower = false;
       this.canFireAgain = true;
       this.lastFireTime = 0;
@@ -77,7 +78,7 @@ export class PowerActivationV2 implements IPowerActivationStrategy {
     // Check if we're in cooldown
     if (!this.canFireAgain) {
       const timeSinceLastFire = Date.now() - this.lastFireTime;
-      const fireRateDelay = gameConfig.player.powerup.v2.fireRateDelay[this.difficulty as keyof typeof gameConfig.player.powerup.v2.fireRateDelay];
+      const fireRateDelay = gameConfig.player.powerup.v2.fireRateDelay[this.difficulty];
       this.logger.log(`Firing blocked - cooldown (${timeSinceLastFire}ms / ${fireRateDelay}ms)`);
       return false;
     }
@@ -169,7 +170,7 @@ export class PowerActivationV2 implements IPowerActivationStrategy {
       // Check if we can fire again based on fire rate delay
       if (!this.canFireAgain) {
         const timeSinceLastFire = Date.now() - this.lastFireTime;
-        const fireRateDelay = gameConfig.player.powerup.v2.fireRateDelay[this.difficulty as keyof typeof gameConfig.player.powerup.v2.fireRateDelay];
+        const fireRateDelay = gameConfig.player.powerup.v2.fireRateDelay[this.difficulty];
         if (timeSinceLastFire >= fireRateDelay) {
           this.logger.log(`Fire cooldown complete, can fire again`);
           this.canFireAgain = true;
@@ -222,7 +223,7 @@ export class PowerActivationV2 implements IPowerActivationStrategy {
 
   getFireCooldown(): number {
     if (!this.fireActive || this.canFireAgain) return 0;
-    const fireRateDelay = gameConfig.player.powerup.v2.fireRateDelay[this.difficulty as keyof typeof gameConfig.player.powerup.v2.fireRateDelay];
+    const fireRateDelay = gameConfig.player.powerup.v2.fireRateDelay[this.difficulty];
     return Math.max(0, fireRateDelay - (Date.now() - this.lastFireTime));
   }
 
