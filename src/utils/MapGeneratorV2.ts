@@ -1222,7 +1222,7 @@ export class MapGeneratorV2 {
           if (tile === MapTile.PATH || tile === MapTile.POWERUP) {
             map[y][x] = MapValue.PATH;
           } else if (tile === MapTile.EMPTY) {
-            map[y][x] = MapValue.PATH;
+            map[y][x] = MapValue.EMPTY;
           } else if (tile === MapTile.PEN_DOOR) {
             map[y][x] = MapValue.PEN_DOOR;
           } else if (tile === MapTile.WALL_VERTICAL || tile === MapTile.WALL) {
@@ -1298,8 +1298,11 @@ export class MapGeneratorV2 {
     const tunnels: ITunnel[] = [];
 
     for (let y = 1; y < height - 1; y++) {
-      // Check if both edges are walkable
-      if (map[y][0] === MapValue.PATH && map[y][width - 1] === MapValue.PATH) {
+      // Check if both edges are walkable (either PATH or EMPTY tiles can be tunnels)
+      const leftIsWalkable = map[y][0] === MapValue.PATH || map[y][0] === MapValue.EMPTY;
+      const rightIsWalkable = map[y][width - 1] === MapValue.PATH || map[y][width - 1] === MapValue.EMPTY;
+
+      if (leftIsWalkable && rightIsWalkable) {
         // Mark as tunnel
         map[y][0] = MapValue.TUNNEL;
         map[y][width - 1] = MapValue.TUNNEL;

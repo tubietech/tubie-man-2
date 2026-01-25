@@ -203,6 +203,12 @@ export class Enemy extends Entity {
     // Update animation to normal
     this.updateAnimation();
 
+    // Restore original sprite scale
+    if (this.animatedSprite) {
+      const normalScale = (this.tileSize * gameConfig.enemy.spriteScale) / this.animatedSprite.width;
+      this.animatedSprite.setScale(normalScale);
+    }
+
     // Restore original color (Arc uses setFillStyle, not setTint)
     if (this.sprite instanceof Phaser.GameObjects.Arc) {
       this.sprite.setFillStyle(this.originalColor);
@@ -239,6 +245,12 @@ export class Enemy extends Entity {
 
     // Update animation to normal
     this.updateAnimation();
+
+    // Restore original sprite scale
+    if (this.animatedSprite) {
+      const normalScale = (this.tileSize * gameConfig.enemy.spriteScale) / this.animatedSprite.width;
+      this.animatedSprite.setScale(normalScale);
+    }
 
     // Restore original color
     if (this.sprite instanceof Phaser.GameObjects.Arc) {
@@ -354,6 +366,7 @@ export class Enemy extends Entity {
 
     if (additionalDelay > 0) {
       Logger.logStatic(LogGroup.ENEMY, `${this.type} starting respawn in pen with ${additionalDelay}ms stagger delay (total: ${this.respawnDelay}ms)`);
+      
     } else {
       Logger.logStatic(LogGroup.ENEMY, `${this.type} starting respawn in pen at (${this.gridX}, ${this.gridY}), exit path set with ${this.exitPath.length} waypoints`);
     }
@@ -370,6 +383,8 @@ export class Enemy extends Entity {
     // Update animation back to normal
     this.updateAnimation();
 
+
+    console.log("Has Animated Sprite?", this.animatedSprite);
     // Restore original scale and color
     if (this.animatedSprite) {
       const normalScale = (this.tileSize * gameConfig.enemy.spriteScale) / this.animatedSprite.width;

@@ -8,5 +8,6 @@ export enum MapTile {
   WALL_VERTICAL = '|',
   EMPTY = ' ',
   POWERUP = 'o',
-  PEN_DOOR = '-'
+  PEN_DOOR = '-',
+  TUNNEL = 'T'
 }

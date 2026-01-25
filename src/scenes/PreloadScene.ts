@@ -54,6 +54,9 @@ export class PreloadScene extends Phaser.Scene {
     // Create player animations here so they're available in all scenes
     this.createPlayerAnimations();
 
+    // Create Enemy animations here so they're available in all scenes
+    this.createEnemyAnimations();
+
     // Create projectile animation
     this.createProjectileAnimation();
 
@@ -111,6 +114,34 @@ export class PreloadScene extends Phaser.Scene {
       frameRate: frameRate,
       repeat: -1
     });
+  }
+
+  private createEnemyAnimations() {
+     const frameRate = gameConfig.player.animationFrameRate;
+
+     const createEnemyAnimations = (enemyName: string, enemyKey: string):void => {
+        const createAnimation = (name: string, key: string, direction: string): void => {
+          this.anims.create({
+            key: `${name}_${direction}`,
+            frames: [
+              { key: 'atlas', frame: `${key}_${direction}_frame_1.png` },
+              { key: 'atlas', frame: `${key}_${direction}_frame_2.png` }
+            ],
+            frameRate: frameRate,
+            repeat: -1
+          }); 
+        }
+
+        createAnimation(enemyName, enemyKey, "up");
+        createAnimation(enemyName, enemyKey, "down");
+        createAnimation(enemyName, enemyKey, "left");
+        createAnimation(enemyName, enemyKey, "right");
+     }
+
+     createEnemyAnimations("stingy", "enemy1");
+     createEnemyAnimations("pokey", "enemy2");
+     createEnemyAnimations("pricky", "enemy3");
+     createEnemyAnimations("doc", "enemy4");
   }
 
   private createProjectileAnimation() {

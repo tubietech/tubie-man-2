@@ -185,5 +185,29 @@ export const gameConfig = {
   },
   logging: {
     enabled: true // Global flag to enable/disable all logging
+  },
+  menu: {
+    colors: {
+      buttonNormal: 0x2121ff,
+      buttonHighlight: 0x6262ff,
+      buttonBorder: 0xffa500,
+      buttonText: 0xffffff,
+      buttonSelectedText: 0xffff00,
+      titleText: 0xffff00,
+      bodyText: 0xaaaaaa,
+      labelText: 0xffffff
+    },
+    layout: {
+      spacing: 30,
+      buttonWidth: 250,
+      buttonHeight: 60,
+      buttonGroupSpacing: 10,
+      padding: 20
+    },
+    animation: {
+      focusScale: 1.1,
+      transitionDuration: 200,
+      chaseSpeed: 50 // Pixels per second for chase animation
+    }
   }
 };

@@ -507,7 +507,8 @@ export class GameScene extends Phaser.Scene {
       this.score,
       this.level,
       this.highScore,
-      () => this.togglePause()  // Pause button callback
+      () => this.togglePause(),  // Pause button callback
+      this.lives  // Pass current lives count
     );
 
     this.scoreText = uiElements.scoreText;
@@ -912,6 +913,13 @@ export class GameScene extends Phaser.Scene {
   
   nextLevel() {
     this.level++;
+
+    // Reset player powerup state before moving to next level
+    if (this.player) {
+      this.player.deactivateFire();
+      this.player.hasFirePower = false;
+    }
+
     this.scene.restart(this.getSceneRestartData(false));
   }
   

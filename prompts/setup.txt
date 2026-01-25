@@ -1,0 +1,3 @@
+The project is an arcade style, pac-man inspired maze runner game called Tubie Man. The game is written in TypeScript and uses the Phaser game engine.
+
+When writing code, a primary goal is to keep the code modular and configurable. All configuration values are stored in src/config. enums, interfaces and types are stored in src/enums, src/interfaces adn src/types respectivley. A type, enum or interface should always be created in its own file. Any enum that is created should have a corresponding type created that is automatically derrived from the values of the enum.

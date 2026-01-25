@@ -158,7 +158,7 @@ export class BonusPathGenerator {
 
     const tile = map[pos.y][pos.x];
 
-    // Can walk on paths, tunnels, pen door, and around the pen
+    // Can walk on paths, tunnels, pen door, empty tiles, and around the pen
     const isInPen = pos.x >= penBounds.minX && pos.x <= penBounds.maxX &&
                     pos.y >= penBounds.minY && pos.y <= penBounds.maxY;
 
@@ -166,6 +166,7 @@ export class BonusPathGenerator {
            tile === MapValue.TUNNEL ||
            tile === MapValue.PEN_DOOR ||
            tile === MapValue.POWERUP ||
+           tile === MapValue.EMPTY ||
            isInPen;
   }
 }

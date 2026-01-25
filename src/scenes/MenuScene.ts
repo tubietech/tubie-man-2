@@ -1,15 +1,20 @@
 import Phaser from 'phaser';
 import { Orientation } from '../enums/Orientation';
 import { Language } from '../enums/Language';
+import { Difficulty } from '../enums/Difficulty';
 import { LocalizationManager } from '../config/localization/LocalizationManager';
 import { loadPreloadedMaps } from '../utils/preloadedMaps';
 import { DeveloperMode } from '../utils/DeveloperMode';
 import { gameConfig } from '../config/gameConfig';
 import { Logger } from '../utils/Logger';
 import { LogGroup } from '../enums/LogGroup';
+import { MainMenu } from '../ui/menus/MainMenu';
+import { SettingsMenu } from '../ui/menus/SettingsMenu';
+import { AboutMenu } from '../ui/menus/AboutMenu';
+import { Menu } from '../ui/menus/Menu';
+import { InstructionsMenu } from '../ui/menus/InstructionsMenu';
 
 export class MenuScene extends Phaser.Scene {
-  selectedDifficulty: string = 'medium';
   orientation: Orientation = Orientation.HORIZONTAL;
   localization!: LocalizationManager;
   mapsLoaded: boolean = false;
@@ -17,25 +22,30 @@ export class MenuScene extends Phaser.Scene {
   konamiCodeInput: string[] = [];
   konamiCodeKeys: Map<number, string> = new Map();
 
+  // Menu system
+  private mainMenu!: MainMenu;
+  private settingsMenu!: SettingsMenu;
+  private aboutMenu!: AboutMenu;
+  private instructionsMenu!: InstructionsMenu;
+  private menuStack: Menu[] = [];
+
   constructor() {
     super({ key: 'MenuScene' });
   }
 
-  async create() {
+  async create(data?: { languageChanged?: boolean }) {
     const gameLogger = new Logger(LogGroup.GAME);
     const preloadLogger = new Logger(LogGroup.PRELOAD);
-    const menuLogger = new Logger(LogGroup.MENU);
-    
+
     if (this.renderer instanceof Phaser.Renderer.WebGL.WebGLRenderer) {
-        gameLogger.log("Phaser is using WebGL.");
+      gameLogger.log("Phaser is using WebGL.");
     } else if (this.renderer instanceof Phaser.Renderer.Canvas.CanvasRenderer) {
-        gameLogger.log("Phaser is using Canvas.");
+      gameLogger.log("Phaser is using Canvas.");
     } else {
-        gameLogger.log("Unknown renderer type.");
+      gameLogger.log("Unknown renderer type.");
     }
 
     this.localization = LocalizationManager.getInstance();
-    const loc = this.localization;
 
     // Set up Konami code detection
     this.setupKonamiCode();
@@ -52,7 +62,7 @@ export class MenuScene extends Phaser.Scene {
         fontSize: '14px',
         color: '#888'
       }
-    ).setOrigin(0.5).setScrollFactor(0);
+    ).setOrigin(0.5).setScrollFactor(0).setDepth(2000);
 
     // Load preloaded maps in the background during menu
     preloadLogger.log('Preloading maps during menu...');
@@ -69,112 +79,74 @@ export class MenuScene extends Phaser.Scene {
         this.loadingText.setText('Maps will generate on-the-fly');
         this.loadingText.setColor('#ffaa00');
       });
-    
-    this.add.text(centerX, 80, loc.getText('gameTitle'), {
-      fontFamily: 'PressStart2P',
-      fontSize: '48px',
-      color: '#ffff00',
-      fontStyle: 'bold'
-    }).setOrigin(0.5).setScrollFactor(0);
 
-    this.add.text(centerX, 150, loc.getText('selectDifficulty'), {
-      fontFamily: 'PressStart2P',
-      fontSize: '24px',
-      color: '#fff'
-    }).setOrigin(0.5).setScrollFactor(0);
-    
-    const difficulties = [
-      { key: 'easy', color: '#00ff00' },
-      { key: 'medium', color: '#ffff00' },
-      { key: 'hard', color: '#ff0000' }
-    ];
-    
-    difficulties.forEach((diff, i) => {
-      const y = 220 + i * 60;
+    // Create menus (pass language change flag to focus on language selector)
+    this.createMenus(data?.languageChanged ?? false);
 
-      // Create background rectangle
-      const bg = this.add.rectangle(centerX, y, 200, 50, 0x000000)
-        .setOrigin(0.5)
-        .setInteractive({ useHandCursor: true })
-        .setScrollFactor(0);
-
-      const btn = this.add.text(
-        centerX,
-        y,
-        loc.getText(diff.key as any),
-        {
-          fontFamily: 'PressStart2P',
-          fontSize: '28px',
-          color: diff.color
-        }
-      ).setOrigin(0.5)
-        .setScrollFactor(0);
-
-      bg.on('pointerover', () => { bg.setScale(1.1); btn.setScale(1.1); });
-      bg.on('pointerout', () => { bg.setScale(1); btn.setScale(1); });
-      bg.on('pointerdown', () => {
-        this.selectedDifficulty = diff.key;
-        this.startGame();
-      });
-    });
-
-    this.add.text(centerX, 450, loc.getText('controls'), {
-      fontFamily: 'PressStart2P',
-      fontSize: '16px',
-      color: '#aaa',
-      align: 'center'
-    }).setOrigin(0.5).setScrollFactor(0);
-
-    const languages = [
-      { lang: Language.ENGLISH, label: 'EN' },
-      { lang: Language.SPANISH, label: 'ES' },
-      { lang: Language.FRENCH, label: 'FR' },
-      { lang: Language.GERMAN, label: 'DE' }
-    ];
-
-    this.add.text(centerX, 520, 'Language:', {
-      fontFamily: 'PressStart2P',
-      fontSize: '14px',
-      color: '#888'
-    }).setOrigin(0.5).setScrollFactor(0);
-    
-    languages.forEach((langObj, i) => {
-      const x = centerX - 80 + i * 50;
-      const y = 550;
-
-      // Create background rectangle
-      const bg = this.add.rectangle(x, y, 40, 30, 0x222222)
-        .setOrigin(0.5)
-        .setInteractive({ useHandCursor: true })
-        .setScrollFactor(0);
-
-      const langBtn = this.add.text(
-        x,
-        y,
-        langObj.label,
-        {
-          fontFamily: 'PressStart2P',
-          fontSize: '16px',
-          color: this.localization.getLanguage() === langObj.lang ? '#ffff00' : '#fff'
-        }
-      ).setOrigin(0.5)
-        .setScrollFactor(0);
-
-      bg.on('pointerover', () => { bg.setScale(1.1); langBtn.setScale(1.1); });
-      bg.on('pointerout', () => { bg.setScale(1); langBtn.setScale(1); });
-      bg.on('pointerdown', () => {
-        this.localization.setLanguage(langObj.lang);
-        this.scene.restart();
-      });
-    });
+    // Show main menu
+    this.openMenu(this.mainMenu);
   }
 
-  startGame() {
+  private createMenus(focusOnLanguage: boolean = false): void {
+    // Create main menu
+    this.mainMenu = new MainMenu(this, focusOnLanguage);
+    this.mainMenu.setCallbacks({
+      onStartGame: (difficulty) => this.startGame(difficulty),
+      onOpenSettings: () => this.openMenu(this.settingsMenu),
+      onOpenAbout: () => this.openMenu(this.aboutMenu),
+      onOpenInstructions: () => this.openMenu(this.instructionsMenu),
+      onLanguageChange: (language) => this.changeLanguage(language)
+    });
+
+    // Create settings menu
+    this.settingsMenu = new SettingsMenu(this);
+    this.settingsMenu.setOnBack(() => this.goBack());
+
+    // Create about menu
+    this.aboutMenu = new AboutMenu(this);
+    this.aboutMenu.setOnBack(() => this.goBack());
+
+    // Create instructions menu
+    this.instructionsMenu = new InstructionsMenu(this);
+    this.instructionsMenu.setOnBack(() => this.goBack());
+  }
+
+  private openMenu(menu: Menu): void {
+    // Hide current menu if exists
+    if (this.menuStack.length > 0) {
+      const currentMenu = this.menuStack[this.menuStack.length - 1];
+      currentMenu.hide();
+    }
+
+    // Push and show new menu
+    this.menuStack.push(menu);
+    menu.show();
+  }
+
+  private goBack(): void {
+    // Don't go back if we're at the main menu
+    if (this.menuStack.length <= 1) return;
+
+    // Pop and hide current menu
+    const currentMenu = this.menuStack.pop()!;
+    currentMenu.hide();
+
+    // Show previous menu
+    const previousMenu = this.menuStack[this.menuStack.length - 1];
+    previousMenu.show();
+  }
+
+  private startGame(difficulty: Difficulty): void {
     this.scene.start('GameScene', {
-      difficulty: this.selectedDifficulty,
+      difficulty: difficulty,
       orientation: this.orientation,
       reset: true
     });
+  }
+
+  private changeLanguage(language: Language): void {
+    this.localization.setLanguage(language);
+    this.scene.restart({ languageChanged: true });
   }
 
   private setupKonamiCode(): void {
@@ -219,5 +191,13 @@ export class MenuScene extends Phaser.Scene {
   setOrientation(orientation: Orientation) {
     this.orientation = orientation;
     Logger.logStatic(LogGroup.GAME, `Orientation set to: ${Orientation[orientation]}`);
+  }
+
+  shutdown() {
+    // Cleanup menus
+    this.mainMenu?.destroy();
+    this.settingsMenu?.destroy();
+    this.aboutMenu?.destroy();
+    this.menuStack = [];
   }
 }

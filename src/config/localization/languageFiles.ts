@@ -5,7 +5,7 @@ export const languageFiles = {
     gameTitle: 'Tubie-Man',
     gameOver: 'GAME OVER',
     clickToRestart: 'Click to Restart',
-    selectDifficulty: 'Select Difficulty:',
+    selectDifficulty: 'Difficulty:',
     easy: 'EASY',
     medium: 'MEDIUM',
     hard: 'HARD',
@@ -20,13 +20,21 @@ export const languageFiles = {
     powerActive: 'Active',
     paused: 'PAUSED',
     continue: 'CONTINUE',
-    quit: 'QUIT'
+    quit: 'QUIT',
+    menuPlay: 'PLAY',
+    menuSettings: 'SETTINGS',
+    menuAbout: 'ABOUT',
+    menuInstructions: 'INSTRUCTIONS',
+    menuBack: 'BACK',
+    language: 'Language:',
+    aboutSection: 'Tubie Man wasn’t always trapped in a maze. A routine feeding-system calibration went spectacularly wrong, overloading a prototype power adapter and tearing a hole in the grid itself. Out rolled Tubie Man—bright orange, endlessly determined, and uniquely equipped with both an NG-tube and a G-tube to keep him going no matter what the maze throws at him.\n\nUnfortunately, the maze isn’t empty.\n\nFour anthropomorphic syringes now roam its corridors, each with their own idea of “proper care.”\nStingy, the red enforcer, is fast, aggressive, and always closing in.\nPokey, green and persistent, means well but tends to get distracted—sometimes looping endlessly in circles.\nPricky, a cerulean blue bundle of nerves, tries to chase but often forgets what he’s doing and wanders off instead.\nAnd Doc, orange like Tubie Man himself, appears only in the deeper levels, slowing down to think, stopping entirely, and then changing course when he decides he has a better plan.\n\nScattered throughout the maze are nutrient pellets—tiny energy boosts Tubie Man must collect to survive. When he grabs one of the power-up band-aids tucked into the corners, things get intense. A sudden bout of catastrophic heartburn gives Tubie Man the ability to shoot fireballs for a short time, sending the syringes running for cover until the effect wears off. Pricky, especially terrified, may panic so badly he crashes into walls and stuns himself.\n\nAs the maze empties and most of the nutrients are gone, danger escalates. Stingy enters Sterilization Mode—moving even faster and becoming completely immune to fireballs. Pokey grows more erratic. Pricky grows more confused. And Doc… keeps thinking.\n\nNow Tubie Man races the clock, the maze, and his pursuers—proving he’s more than a patient. He’s a survivor. He’s a problem. And he’s not done yet.',
+    helloWorld: 'Hello World'
   },
   [Language.SPANISH]: {
     gameTitle: 'Hombre Tubía',
     gameOver: 'JUEGO TERMINADO',
     clickToRestart: 'Clic para Reiniciar',
-    selectDifficulty: 'Seleccionar\nDificultad:',
+    selectDifficulty: 'Dificultad:',
     easy: 'FÁCIL',
     medium: 'MEDIO',
     hard: 'DIFÍCIL',
@@ -41,13 +49,21 @@ export const languageFiles = {
     powerActive: 'Activo',
     paused: 'PAUSADO',
     continue: 'CONTINUAR',
-    quit: 'SALIR'
+    quit: 'SALIR',
+    menuPlay: 'JUGAR',
+    menuSettings: 'AJUSTES',
+    menuAbout: 'ACERCA DE',
+    menuInstructions: 'INSTRUCCIONES',
+    menuBack: 'VOLVER',
+    language: 'Idioma:',
+    aboutSection: '',
+    helloWorld: 'Hola Mundo'
   },
   [Language.FRENCH]: {
     gameTitle: 'Tubie-Man',
     gameOver: 'JEU TERMINÉ',
     clickToRestart: 'Cliquer pour Redémarrer',
-    selectDifficulty: 'Sélectionner\n Difficulté:',
+    selectDifficulty: 'Difficulté:',
     easy: 'FACILE',
     medium: 'MOYEN',
     hard: 'DIFFICILE',
@@ -62,13 +78,21 @@ export const languageFiles = {
     powerActive: 'Actif',
     paused: 'PAUSE',
     continue: 'CONTINUER',
-    quit: 'QUITTER'
+    quit: 'QUITTER',
+    menuPlay: 'JOUER',
+    menuSettings: 'PARAMÈTRES',
+    menuAbout: 'À PROPOS',
+    menuInstructions: 'INSTRUCTIONS',
+    menuBack: 'RETOUR',
+    language: 'Langue:',
+    aboutSection: '',
+    helloWorld: 'Bonjour le Monde'
   },
   [Language.GERMAN]: {
     gameTitle: 'Tubie-Man',
     gameOver: 'SPIEL VORBEI',
     clickToRestart: 'Klicken zum Neustarten',
-    selectDifficulty: 'Schwierigkeit\n    Wählen:',
+    selectDifficulty: 'Schwierigkeit:',
     easy: 'LEICHT',
     medium: 'MITTEL',
     hard: 'SCHWER',
@@ -83,7 +107,15 @@ export const languageFiles = {
     powerActive: 'Aktiv ',
     paused: 'PAUSIERT',
     continue: 'FORTSETZEN',
-    quit: 'BEENDEN'
+    quit: 'BEENDEN',
+    menuPlay: 'SPIELEN',
+    menuSettings: 'EINSTELLUNGEN',
+    menuAbout: 'ÜBER',
+    menuInstructions: 'ANLEITUNG',
+    menuBack: 'ZURÜCK',
+    language: 'Sprache:',
+    aboutSection: '',
+    helloWorld: 'Hallo Welt'
   }
 };
 
