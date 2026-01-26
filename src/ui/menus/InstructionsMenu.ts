@@ -18,13 +18,16 @@ export class InstructionsMenu extends Menu {
 
   private buildMenu(): void {
     const loc = this.localization;
-    const centerX = this.scene.cameras.main.centerX;
-    const centerY = this.scene.cameras.main.centerY;
 
-    // Title
+    // Define base menu dimensions and apply responsive scaling
+    const baseMenuWidth = 400;
+    const baseMenuHeight = 300;
+    this.applyResponsiveScale(baseMenuWidth, baseMenuHeight);
+
+    // Title (positioned relative to center)
     const title = new UIText(this.scene, {
-      x: centerX,
-      y: centerY - 100,
+      x: 0,
+      y: -100,
       text: loc.getText('menuInstructions'),
       fontSize: '36px',
       color: gameConfig.menu.colors.titleText
@@ -33,8 +36,8 @@ export class InstructionsMenu extends Menu {
 
     // Placeholder text
     const placeholder = new UIText(this.scene, {
-      x: centerX,
-      y: centerY,
+      x: 0,
+      y: 0,
       text: loc.getText('helloWorld'),
       fontSize: '24px',
       color: gameConfig.menu.colors.labelText
@@ -43,8 +46,8 @@ export class InstructionsMenu extends Menu {
 
     // Back button
     const backButton = new UIButton(this.scene, {
-      x: centerX,
-      y: centerY + 100,
+      x: 0,
+      y: 100,
       text: loc.getText('menuBack'),
       onClick: () => {
         if (this.onBack) {

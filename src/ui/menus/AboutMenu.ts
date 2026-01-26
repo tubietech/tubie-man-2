@@ -19,48 +19,42 @@ export class AboutMenu extends Menu {
 
   private buildMenu(): void {
     const loc = this.localization;
-    const centerX = this.scene.cameras.main.centerX;
-    const centerY = this.scene.cameras.main.centerY;
 
-    // Title
+    // Define base menu dimensions and apply responsive scaling
+    const baseMenuWidth = 450;
+    const baseMenuHeight = 700;
+    this.applyResponsiveScale(baseMenuWidth, baseMenuHeight);
+
+    // Title (positioned relative to center, which is now 0,0 in container space)
     const title = new UIText(this.scene, {
-      x: centerX,
-      y: centerY - 100,
+      x: 0,
+      y: -280,
       text: loc.getText('menuAbout'),
       fontSize: '36px',
       color: gameConfig.menu.colors.titleText
     });
     this.addElement(title);
 
-    // Placeholder text
-    // const placeholder = new UIText(this.scene, {
-    //   x: centerX,
-    //   y: centerY,
-    //   text: loc.getText('helloWorld'),
-    //   fontSize: '24px',
-    //   color: gameConfig.menu.colors.labelText
-    // });
-    // this.addElement(placeholder);
-
-    const aboutTextHeight = 500;
+    const aboutTextHeight = 450;
 
     const aboutText = new UIScrollableTextBlock(this.scene, {
-      x: centerX,
-      y: centerY - 50,
+      x: 0,
+      y: -20,
       text: loc.getText('aboutSection'),
-      width: 450,
+      width: baseMenuWidth,
       height: aboutTextHeight,
       fontSize: '14px'
-      // color?: number;
-      // lineSpacing?: number;
-      // scrollSpeed?: number;
     });
     this.addElement(aboutText);
+    this.addNavigable(aboutText);
+
+    // Set initial focus to the scrollable text (index 0)
+    this.setInitialFocusIndex(0);
 
     // Back button
     const backButton = new UIButton(this.scene, {
-      x: centerX,
-      y: centerY + (aboutTextHeight / 2),
+      x: 0,
+      y: aboutTextHeight / 2 + 50,
       text: loc.getText('menuBack'),
       onClick: () => {
         if (this.onBack) {

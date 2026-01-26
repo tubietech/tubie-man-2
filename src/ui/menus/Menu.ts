@@ -55,6 +55,31 @@ export abstract class Menu implements IMenu {
     this.initialFocusIndex = index;
   }
 
+  /**
+   * Calculate and apply scaling to fit menu within screen bounds.
+   * @param baseWidth The designed width of the menu content
+   * @param baseHeight The designed height of the menu content
+   * @param padding Screen edge padding (default 40)
+   * @returns The calculated scale factor
+   */
+  protected applyResponsiveScale(baseWidth: number, baseHeight: number, padding: number = 40): number {
+    const screenWidth = this.scene.cameras.main.width;
+    const screenHeight = this.scene.cameras.main.height;
+    const centerX = screenWidth / 2;
+    const centerY = screenHeight / 2;
+
+    // Calculate scale to fit within screen bounds
+    const scaleX = (screenWidth - padding * 2) / baseWidth;
+    const scaleY = (screenHeight - padding * 2) / baseHeight;
+    const scale = Math.min(1, scaleX, scaleY); // Never scale up, only down
+
+    // Apply scale and center the container
+    this.container.setScale(scale);
+    this.container.setPosition(centerX, centerY);
+
+    return scale;
+  }
+
   show(): void {
     if (this.isVisible) return;
 

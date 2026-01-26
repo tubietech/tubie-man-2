@@ -21,8 +21,6 @@ export class UIScrollableTextBlock extends UIElement implements INavigable {
   isFocused: boolean = false;
 
   private textObject: Phaser.GameObjects.Text;
-  private maskGraphics: Phaser.GameObjects.Graphics;
-  private mask: Phaser.Display.Masks.GeometryMask;
   private blockWidth: number;
   private blockHeight: number;
   private scrollY: number = 0;
@@ -31,6 +29,7 @@ export class UIScrollableTextBlock extends UIElement implements INavigable {
   private background: Phaser.GameObjects.Rectangle;
   private onPointerEnterCallback?: () => void;
   private isHovered: boolean = false;
+  private padding: number = 10;
 
   constructor(scene: Phaser.Scene, config: IUIScrollableTextBlockConfig) {
     super(scene, config);
@@ -48,32 +47,27 @@ export class UIScrollableTextBlock extends UIElement implements INavigable {
     this.background.setStrokeStyle(2, gameConfig.menu.colors.buttonBorder);
     this.container.add(this.background);
 
-    // Create mask for scrolling
-    this.maskGraphics = scene.add.graphics();
-    this.maskGraphics.fillStyle(0xffffff);
-    this.maskGraphics.fillRect(
-      config.x - this.blockWidth / 2,
-      config.y - this.blockHeight / 2,
-      this.blockWidth,
-      this.blockHeight
+    // Create text with left alignment for better readability
+    this.textObject = scene.add.text(
+      -this.blockWidth / 2 + this.padding,
+      -this.blockHeight / 2 + this.padding,
+      config.text,
+      {
+        fontFamily: 'PressStart2P',
+        fontSize: fontSize,
+        color: colorNumberToString(color),
+        wordWrap: { width: this.blockWidth - this.padding * 2 },
+        lineSpacing: lineSpacing
+      }
     );
-    this.mask = this.maskGraphics.createGeometryMask();
-
-    // Create text
-    this.textObject = scene.add.text(0, 0, config.text, {
-      fontFamily: 'PressStart2P',
-      fontSize: fontSize,
-      color: colorNumberToString(color),
-      wordWrap: { width: this.blockWidth - 20 },
-      lineSpacing: lineSpacing
-    });
-    this.textObject.setOrigin(0.5, 0);
-    this.textObject.setY(-this.blockHeight / 2 + 10);
-    this.textObject.setMask(this.mask);
+    this.textObject.setOrigin(0, 0);
     this.container.add(this.textObject);
 
     // Calculate max scroll
     this.calculateMaxScroll();
+
+    // Apply initial crop to hide text outside visible area
+    this.updateTextCrop();
 
     // Setup scrolling interactivity
     this.setupScrolling();
@@ -81,7 +75,7 @@ export class UIScrollableTextBlock extends UIElement implements INavigable {
 
   private calculateMaxScroll(): void {
     const textHeight = this.textObject.height;
-    const visibleHeight = this.blockHeight - 20;
+    const visibleHeight = this.blockHeight - this.padding * 2;
     this.maxScrollY = Math.max(0, textHeight - visibleHeight);
   }
 
@@ -119,14 +113,24 @@ export class UIScrollableTextBlock extends UIElement implements INavigable {
 
   private scroll(amount: number): void {
     this.scrollY = Phaser.Math.Clamp(this.scrollY + amount, 0, this.maxScrollY);
-    this.textObject.setY(-this.blockHeight / 2 + 10 - this.scrollY);
+    this.updateTextCrop();
+  }
+
+  private updateTextCrop(): void {
+    // Crop the text to show only the visible portion
+    // The crop rectangle is relative to the text object's origin (top-left)
+    const visibleHeight = this.blockHeight - this.padding * 2;
+    this.textObject.setCrop(0, this.scrollY, this.blockWidth, visibleHeight);
+
+    // Move the text up by the scroll amount so the cropped portion stays aligned with the box
+    this.textObject.setY(-this.blockHeight / 2 + this.padding - this.scrollY);
   }
 
   setText(text: string): void {
     this.textObject.setText(text);
     this.scrollY = 0;
     this.calculateMaxScroll();
-    this.textObject.setY(-this.blockHeight / 2 + 10);
+    this.updateTextCrop();
   }
 
   focus(): void {
@@ -176,7 +180,6 @@ export class UIScrollableTextBlock extends UIElement implements INavigable {
   }
 
   destroy(): void {
-    this.maskGraphics.destroy();
     super.destroy();
   }
 }

@@ -49,12 +49,19 @@ export class MainMenu extends Menu {
 
   private buildMenu(): void {
     const loc = this.localization;
-    const centerX = this.scene.cameras.main.centerX;
-    let currentY = 60;
+
+    // Define base menu dimensions and apply responsive scaling
+    // Menu content spans from y=-300 to y=300 (600 total height)
+    const baseMenuWidth = 400;
+    const baseMenuHeight = 650;
+    this.applyResponsiveScale(baseMenuWidth, baseMenuHeight);
+
+    // All positions are now relative to center (0, 0)
+    let currentY = -280;
 
     // Title
     const title = new UIText(this.scene, {
-      x: centerX,
+      x: 0,
       y: currentY,
       text: loc.getText('gameTitle'),
       fontSize: '48px',
@@ -64,13 +71,13 @@ export class MainMenu extends Menu {
     currentY += 80;
 
     // Animated chase scene
-    const chaseScene = this.createChaseScene(centerX, currentY);
+    const chaseScene = this.createChaseScene(0, currentY);
     this.addElement(chaseScene);
     currentY += 80;
 
     // Difficulty label
     const difficultyLabel = new UIText(this.scene, {
-      x: centerX,
+      x: 0,
       y: currentY,
       text: loc.getText('selectDifficulty'),
       fontSize: '16px',
@@ -81,7 +88,7 @@ export class MainMenu extends Menu {
 
     // Difficulty button group
     const difficultyGroup = new UIButtonGroup<Difficulty>(this.scene, {
-      x: centerX,
+      x: 0,
       y: currentY,
       options: [
         { label: loc.getText('easy'), value: Difficulty.EASY },
@@ -100,7 +107,7 @@ export class MainMenu extends Menu {
 
     // Play button
     const playButton = new UIButton(this.scene, {
-      x: centerX,
+      x: 0,
       y: currentY,
       text: loc.getText('menuPlay'),
       onClick: () => {
@@ -115,7 +122,7 @@ export class MainMenu extends Menu {
 
     // Settings button
     const settingsButton = new UIButton(this.scene, {
-      x: centerX,
+      x: 0,
       y: currentY,
       text: loc.getText('menuSettings'),
       onClick: () => {
@@ -130,7 +137,7 @@ export class MainMenu extends Menu {
 
     // Instructions button
     const instructionsButton = new UIButton(this.scene, {
-      x: centerX,
+      x: 0,
       y: currentY,
       text: loc.getText('menuInstructions'),
       onClick: () => {
@@ -145,7 +152,7 @@ export class MainMenu extends Menu {
 
     // About button
     const aboutButton = new UIButton(this.scene, {
-      x: centerX,
+      x: 0,
       y: currentY,
       text: loc.getText('menuAbout'),
       onClick: () => {
@@ -160,7 +167,7 @@ export class MainMenu extends Menu {
 
     // Language label
     const languageLabel = new UIText(this.scene, {
-      x: centerX,
+      x: 0,
       y: currentY,
       text: loc.getText('language'),
       fontSize: '16px',
@@ -172,7 +179,7 @@ export class MainMenu extends Menu {
     // Language button group
     const currentLangIndex = this.getCurrentLanguageIndex();
     const languageGroup = new UIButtonGroup<Language>(this.scene, {
-      x: centerX,
+      x: 0,
       y: currentY,
       options: [
         { label: 'EN', value: Language.ENGLISH },
@@ -244,7 +251,7 @@ export class MainMenu extends Menu {
       sprites: sprites,
       spacing: 70,
       animateChase: true,
-      chaseWidth: 350
+      chaseWidth: 380
     });
   }
 
