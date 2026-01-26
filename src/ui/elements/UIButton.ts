@@ -23,7 +23,7 @@ export class UIButton extends UIElement implements INavigable {
   private textObject: Phaser.GameObjects.Text;
   private buttonWidth: number;
   private buttonHeight: number;
-  private cornerRadius: number = 15;
+  private cornerRadius: number = gameConfig.menu.layout.buttonCornerRadius;
   private onPointerEnterCallback?: () => void;
 
   constructor(scene: Phaser.Scene, config: IUIButtonConfig) {

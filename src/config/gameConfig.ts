@@ -202,6 +202,8 @@ export const gameConfig = {
       buttonWidth: 250,
       buttonHeight: 60,
       buttonGroupSpacing: 10,
+      buttonCornerRadius: 15,
+      buttonGroupCornerRadius: 8,
       padding: 20
     },
     animation: {

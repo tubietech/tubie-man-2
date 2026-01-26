@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import BBCodeText from 'phaser3-rex-plugins/plugins/bbcodetext.js';
 import { MenuItemType } from '../../enums/MenuItemType';
 import { IUIElementConfig } from '../../interfaces/IUIElement';
 import { INavigable, NavigationDirection } from '../../interfaces/INavigable';
@@ -20,7 +21,7 @@ export class UIScrollableTextBlock extends UIElement implements INavigable {
   readonly type = MenuItemType.SCROLLABLE_TEXT;
   isFocused: boolean = false;
 
-  private textObject: Phaser.GameObjects.Text;
+  private textObject: BBCodeText;
   private blockWidth: number;
   private blockHeight: number;
   private scrollY: number = 0;
@@ -47,8 +48,10 @@ export class UIScrollableTextBlock extends UIElement implements INavigable {
     this.background.setStrokeStyle(2, gameConfig.menu.colors.buttonBorder);
     this.container.add(this.background);
 
-    // Create text with left alignment for better readability
-    this.textObject = scene.add.text(
+    // Create BBCode text with left alignment for better readability
+    // BBCodeText supports tags like [color=red]text[/color], [b]bold[/b], [i]italic[/i]
+    this.textObject = new BBCodeText(
+      scene,
       -this.blockWidth / 2 + this.padding,
       -this.blockHeight / 2 + this.padding,
       config.text,
@@ -56,11 +59,12 @@ export class UIScrollableTextBlock extends UIElement implements INavigable {
         fontFamily: 'PressStart2P',
         fontSize: fontSize,
         color: colorNumberToString(color),
-        wordWrap: { width: this.blockWidth - this.padding * 2 },
+        wrap: { mode: 'word', width: this.blockWidth - this.padding * 2 },
         lineSpacing: lineSpacing
       }
     );
     this.textObject.setOrigin(0, 0);
+    scene.add.existing(this.textObject);
     this.container.add(this.textObject);
 
     // Calculate max scroll

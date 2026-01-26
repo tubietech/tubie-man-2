@@ -137,9 +137,16 @@ export class PauseMenu {
     const container = this.scene.add.container(x, y);
     container.setDepth(10001);
 
-    // Button background
-    const background = this.scene.add.rectangle(0, 0, 250, 60, gameConfig.colors.pauseButtonNormal);
-    background.setStrokeStyle(3, gameConfig.colors.pauseButtonBorder);
+    const buttonWidth = 250;
+    const buttonHeight = 60;
+    const cornerRadius = gameConfig.menu.layout.buttonCornerRadius;
+
+    // Button background using Graphics for rounded corners
+    const background = this.scene.add.graphics();
+    this.drawButtonBackground(background, buttonWidth, buttonHeight, cornerRadius, gameConfig.colors.pauseButtonNormal, 3);
+
+    // Invisible hit area for interactivity
+    const hitArea = this.scene.add.rectangle(0, 0, buttonWidth, buttonHeight, 0x000000, 0);
 
     // Button text
     const buttonText = this.scene.add.text(0, 0, text, {
@@ -150,24 +157,47 @@ export class PauseMenu {
     });
     buttonText.setOrigin(0.5);
 
-    container.add([background, buttonText]);
+    container.add([background, hitArea, buttonText]);
+
+    // Store dimensions for highlight updates
+    (container as any).buttonWidth = buttonWidth;
+    (container as any).buttonHeight = buttonHeight;
+    (container as any).cornerRadius = cornerRadius;
 
     // Make interactive
-    background.setInteractive({ useHandCursor: true });
+    hitArea.setInteractive({ useHandCursor: true });
 
     // Hover effects
-    background.on('pointerover', () => {
-      background.setFillStyle(gameConfig.colors.pauseButtonHighlight);
+    hitArea.on('pointerover', () => {
+      this.drawButtonBackground(background, buttonWidth, buttonHeight, cornerRadius, gameConfig.colors.pauseButtonHighlight, 3);
     });
 
-    background.on('pointerout', () => {
-      background.setFillStyle(gameConfig.colors.pauseButtonNormal);
+    hitArea.on('pointerout', () => {
+      this.drawButtonBackground(background, buttonWidth, buttonHeight, cornerRadius, gameConfig.colors.pauseButtonNormal, 3);
     });
 
     // Click handler
-    background.on('pointerdown', onClick);
+    hitArea.on('pointerdown', onClick);
 
     return container;
+  }
+
+  /**
+   * Helper to draw button background with rounded corners
+   */
+  private drawButtonBackground(
+    graphics: Phaser.GameObjects.Graphics,
+    width: number,
+    height: number,
+    cornerRadius: number,
+    fillColor: number,
+    strokeWidth: number
+  ): void {
+    graphics.clear();
+    graphics.fillStyle(fillColor, 1);
+    graphics.fillRoundedRect(-width / 2, -height / 2, width, height, cornerRadius);
+    graphics.lineStyle(strokeWidth, gameConfig.colors.pauseButtonBorder, 1);
+    graphics.strokeRoundedRect(-width / 2, -height / 2, width, height, cornerRadius);
   }
 
   /**
@@ -247,15 +277,17 @@ export class PauseMenu {
    */
   private updateButtonHighlight(): void {
     this.buttons.forEach((button, index) => {
-      const background = button.list[0] as Phaser.GameObjects.Rectangle;
+      const background = button.list[0] as Phaser.GameObjects.Graphics;
+      const buttonWidth = (button as any).buttonWidth;
+      const buttonHeight = (button as any).buttonHeight;
+      const cornerRadius = (button as any).cornerRadius;
+
       if (index === this.selectedButtonIndex) {
         // Highlight selected button
-        background.setFillStyle(gameConfig.colors.pauseButtonHighlight);
-        background.setStrokeStyle(4, gameConfig.colors.pauseButtonBorder); // Thicker border
+        this.drawButtonBackground(background, buttonWidth, buttonHeight, cornerRadius, gameConfig.colors.pauseButtonHighlight, 4);
       } else {
         // Normal state
-        background.setFillStyle(gameConfig.colors.pauseButtonNormal);
-        background.setStrokeStyle(3, gameConfig.colors.pauseButtonBorder);
+        this.drawButtonBackground(background, buttonWidth, buttonHeight, cornerRadius, gameConfig.colors.pauseButtonNormal, 3);
       }
     });
   }

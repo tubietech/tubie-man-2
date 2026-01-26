@@ -28,7 +28,7 @@ export class AboutMenu extends Menu {
     // Title (positioned relative to center, which is now 0,0 in container space)
     const title = new UIText(this.scene, {
       x: 0,
-      y: -280,
+      y: -275,
       text: loc.getText('menuAbout'),
       fontSize: '36px',
       color: gameConfig.menu.colors.titleText
@@ -43,7 +43,7 @@ export class AboutMenu extends Menu {
       text: loc.getText('aboutSection'),
       width: baseMenuWidth,
       height: aboutTextHeight,
-      fontSize: '14px'
+      fontSize: '16px'
     });
     this.addElement(aboutText);
     this.addNavigable(aboutText);

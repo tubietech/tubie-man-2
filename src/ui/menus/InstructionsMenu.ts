@@ -5,6 +5,7 @@ import { LocalizationManager } from '../../config/localization/LocalizationManag
 import { gameConfig } from '../../config/gameConfig';
 import { UIText } from '../elements/UIText';
 import { UIButton } from '../elements/UIButton';
+import { UIScrollableTextBlock } from '../elements/UIScrollableTextBlock';
 
 export class InstructionsMenu extends Menu {
   readonly menuType = MenuType.ABOUT;
@@ -27,27 +28,33 @@ export class InstructionsMenu extends Menu {
     // Title (positioned relative to center)
     const title = new UIText(this.scene, {
       x: 0,
-      y: -100,
+      y: -275,
       text: loc.getText('menuInstructions'),
       fontSize: '36px',
       color: gameConfig.menu.colors.titleText
     });
     this.addElement(title);
 
-    // Placeholder text
-    const placeholder = new UIText(this.scene, {
+    const textHeight = 450;
+    
+    const instructionText = new UIScrollableTextBlock(this.scene, {
       x: 0,
-      y: 0,
-      text: loc.getText('helloWorld'),
-      fontSize: '24px',
-      color: gameConfig.menu.colors.labelText
+      y: -20,
+      text: loc.getText('instructionsSection'),
+      width: baseMenuWidth,
+      height: textHeight,
+      fontSize: '14px'
     });
-    this.addElement(placeholder);
+    this.addElement(instructionText);
+    this.addNavigable(instructionText);
+
+    // Set initial focus to the scrollable text (index 0)
+    this.setInitialFocusIndex(0);
 
     // Back button
     const backButton = new UIButton(this.scene, {
       x: 0,
-      y: 100,
+      y: textHeight / 2 + 50,
       text: loc.getText('menuBack'),
       onClick: () => {
         if (this.onBack) {

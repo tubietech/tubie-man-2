@@ -34,7 +34,7 @@ export class UIButtonGroup<T> extends UIElement implements INavigable, ISelectab
   private buttonWidth: number;
   private buttonHeight: number;
   private totalWidth: number = 0;
-  private cornerRadius: number = 8;
+  private cornerRadius: number = gameConfig.menu.layout.buttonGroupCornerRadius;
   private fontSize: string;
   private onPointerEnterCallback?: () => void;
 

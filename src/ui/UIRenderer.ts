@@ -569,7 +569,7 @@ export class UIRenderer {
         }
 
         // Calculate the percentage of duration remaining
-        const totalDuration = gameConfig.player.powerup.v2.duration;
+        const totalDuration = gameConfig.player.powerup.v2.duration[difficulty as keyof typeof gameConfig.player.powerup.v2.duration];
         const percentage = remainingDuration / totalDuration;
 
         // Draw background circle (outline)
