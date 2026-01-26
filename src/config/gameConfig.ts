@@ -181,7 +181,10 @@ export const gameConfig = {
     }
   },
   scores: {
-    highScoreKey: 'tubie-man-high-score'
+    highScoreKey: 'tubie-man-high-score',
+    maxEntries: 10,
+    defaultName: 'AAA',
+    characterSet: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.-+=*!@#$%&?'
   },
   logging: {
     enabled: true // Global flag to enable/disable all logging

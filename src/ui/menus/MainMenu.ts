@@ -20,6 +20,7 @@ export class MainMenu extends Menu {
   private onOpenSettings?: () => void;
   private onOpenAbout?: () => void;
   private onOpenInstructions?: () => void;
+  private onOpenHighScores?: () => void;
   private onLanguageChange?: (language: Language) => void;
 
   constructor(scene: Phaser.Scene, initialFocusOnLanguage: boolean = false) {
@@ -38,12 +39,14 @@ export class MainMenu extends Menu {
     onOpenSettings?: () => void;
     onOpenAbout?: () => void;
     onOpenInstructions?: () => void;
+    onOpenHighScores?: () => void;
     onLanguageChange?: (language: Language) => void;
   }): void {
     this.onStartGame = callbacks.onStartGame;
     this.onOpenSettings = callbacks.onOpenSettings;
     this.onOpenAbout = callbacks.onOpenAbout;
     this.onOpenInstructions = callbacks.onOpenInstructions;
+    this.onOpenHighScores = callbacks.onOpenHighScores;
     this.onLanguageChange = callbacks.onLanguageChange;
   }
 
@@ -51,9 +54,9 @@ export class MainMenu extends Menu {
     const loc = this.localization;
 
     // Define base menu dimensions and apply responsive scaling
-    // Menu content spans from y=-300 to y=300 (600 total height)
+    // Menu content spans from y=-300 to y=300+ (height increased for HIGH SCORES button)
     const baseMenuWidth = 400;
-    const baseMenuHeight = 650;
+    const baseMenuHeight = 720;
     this.applyResponsiveScale(baseMenuWidth, baseMenuHeight);
 
     // All positions are now relative to center (0, 0)
@@ -148,6 +151,21 @@ export class MainMenu extends Menu {
     });
     this.addElement(instructionsButton);
     this.addNavigable(instructionsButton);
+    currentY += 70;
+
+    // High Scores button
+    const highScoresButton = new UIButton(this.scene, {
+      x: 0,
+      y: currentY,
+      text: loc.getText('menuHighScores'),
+      onClick: () => {
+        if (this.onOpenHighScores) {
+          this.onOpenHighScores();
+        }
+      }
+    });
+    this.addElement(highScoresButton);
+    this.addNavigable(highScoresButton);
     currentY += 70;
 
     // About button

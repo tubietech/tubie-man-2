@@ -13,6 +13,7 @@ import { SettingsMenu } from '../ui/menus/SettingsMenu';
 import { AboutMenu } from '../ui/menus/AboutMenu';
 import { Menu } from '../ui/menus/Menu';
 import { InstructionsMenu } from '../ui/menus/InstructionsMenu';
+import { HighScoreListMenu } from '../ui/menus/HighScoreListMenu';
 
 export class MenuScene extends Phaser.Scene {
   orientation: Orientation = Orientation.HORIZONTAL;
@@ -27,6 +28,7 @@ export class MenuScene extends Phaser.Scene {
   private settingsMenu!: SettingsMenu;
   private aboutMenu!: AboutMenu;
   private instructionsMenu!: InstructionsMenu;
+  private highScoreListMenu!: HighScoreListMenu;
   private menuStack: Menu[] = [];
 
   constructor() {
@@ -95,6 +97,7 @@ export class MenuScene extends Phaser.Scene {
       onOpenSettings: () => this.openMenu(this.settingsMenu),
       onOpenAbout: () => this.openMenu(this.aboutMenu),
       onOpenInstructions: () => this.openMenu(this.instructionsMenu),
+      onOpenHighScores: () => this.openMenu(this.highScoreListMenu),
       onLanguageChange: (language) => this.changeLanguage(language)
     });
 
@@ -109,6 +112,10 @@ export class MenuScene extends Phaser.Scene {
     // Create instructions menu
     this.instructionsMenu = new InstructionsMenu(this);
     this.instructionsMenu.setOnBack(() => this.goBack());
+
+    // Create high score list menu
+    this.highScoreListMenu = new HighScoreListMenu(this);
+    this.highScoreListMenu.setOnBack(() => this.goBack());
   }
 
   private openMenu(menu: Menu): void {
@@ -198,6 +205,8 @@ export class MenuScene extends Phaser.Scene {
     this.mainMenu?.destroy();
     this.settingsMenu?.destroy();
     this.aboutMenu?.destroy();
+    this.instructionsMenu?.destroy();
+    this.highScoreListMenu?.destroy();
     this.menuStack = [];
   }
 }

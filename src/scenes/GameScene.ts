@@ -19,6 +19,7 @@ import { Bonus } from '../entities/Bonus';
 import { BonusSelector } from '../utils/BonusSelector';
 import { IBonusData } from '../interfaces/IBonusData';
 import { PauseMenu } from '../ui/PauseMenu';
+import { HighScoreEntryOverlay } from '../ui/HighScoreEntryOverlay';
 import { mapColorPalettes, getRandomPaletteIndex, IMapColorPalette, defaultPalette } from '../config/mapColorPalettes';
 import { DeveloperMode } from '../utils/DeveloperMode';
 import { Drawable } from '../interfaces/IPelletData';
@@ -58,6 +59,7 @@ export class GameScene extends Phaser.Scene {
   isGameOver: boolean = false;
   isPaused: boolean = false;
   pauseMenu!: PauseMenu;
+  highScoreEntryOverlay: HighScoreEntryOverlay | null = null;
   pauseKey!: Phaser.Input.Keyboard.Key;
   currentPaletteIndex: number = -1;
   currentPalette!: IMapColorPalette;
@@ -972,6 +974,45 @@ export class GameScene extends Phaser.Scene {
     // Clear all timers immediately to prevent duplicate enemy releases on restart
     this.time.removeAllEvents();
 
+    // Check if this score qualifies as a high score
+    const isDeveloperMode = DeveloperMode.getInstance().isEnabled();
+    const isNewHighScore = HighScoreManager.isHighScore(this.score, this.difficulty) && !isDeveloperMode;
+
+    if (isNewHighScore) {
+      // Show high score entry overlay
+      this.highScoreEntryOverlay = new HighScoreEntryOverlay(
+        this,
+        this.localization,
+        this.score,
+        this.difficulty,
+        (name: string) => this.handleHighScoreSave(name),
+        () => this.showNormalGameOver()
+      );
+      this.highScoreEntryOverlay.show();
+    } else {
+      // Show normal game over screen
+      this.showNormalGameOver();
+    }
+  }
+
+  private handleHighScoreSave(name: string): void {
+    // Save the high score
+    HighScoreManager.addHighScore(this.score, name, this.difficulty);
+
+    // Update the displayed high score if this is now the top score
+    const newHighScore = HighScoreManager.getHighScore(this.difficulty);
+    if (newHighScore > this.highScore) {
+      this.highScore = newHighScore;
+      this.uiRenderer.updateHighScoreText(this.highScoreText, this.orientation, this.highScore);
+    }
+
+    // Show normal game over screen for restart options
+    this.showNormalGameOver();
+  }
+
+  private showNormalGameOver(): void {
+    const loc = this.localization;
+
     this.add.text(
       this.cameras.main.centerX,
       this.cameras.main.centerY,
@@ -1005,6 +1046,12 @@ export class GameScene extends Phaser.Scene {
     // Clean up pause menu
     if (this.pauseMenu) {
       this.pauseMenu.destroy();
+    }
+
+    // Clean up high score entry overlay
+    if (this.highScoreEntryOverlay) {
+      this.highScoreEntryOverlay.destroy();
+      this.highScoreEntryOverlay = null;
     }
 
     // Reset pause state

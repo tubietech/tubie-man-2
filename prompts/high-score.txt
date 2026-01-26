@@ -1,0 +1,21 @@
+I want to add a high score screen so players can show off their scores. 
+
+Each high score entry will have an associated up to 3 character string to indicate who the player is. 
+
+The high scores should be stored in the localstorage of the browser, and up to 10 scores will be saved. The scores are sorted from highest to lowest, and when a new high score is achieved, it is inserted into the list at the appropriate location and the lowest score removed if there are more than 10 in the list.
+
+When a game ends, if the score is higher than any of the saved high scores in the list, or the list is shorter than 10, a new screen appears telling the player they have a new high score. The screen should say 'New High Score' and what their score is. Below the score they can enter their 3 character identifier. To enter they can either type on the keyboard, or use the arrow keys / controller left joystick to navigate the approved character list up and down to select a character.
+
+The character selector should be a box with the character inside it, and a triangle pointing up on top of the box, and a triangle pointing down below the box. The triangles are only visible on the character that is selected to indicate such. The approved letter list can be cycled continuously, so when you are on the last letter the next character that appears is the first in the list.
+
+The starting value for all character selectors is 'A'.
+
+Below the character selectors is a button that says 'SAVE' to save the high score.
+
+The approved character list is "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.-+=*!@#$%&?"
+
+The existing high score display may need to be updated because of this.
+
+When saving the high scores, also save the datetime of the score, this will not be displayed as of now but may be used in the future.
+
+Preserve the existing logic that when the game is in 'developer mode' high scores are not saved/updated.
