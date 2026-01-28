@@ -270,7 +270,7 @@ export class GameScene extends Phaser.Scene {
 
     // Determine number of enemies based on level from config
     const countConfig = gameConfig.enemy.countPerLevel;
-    const enemyCount = countConfig[this.level as keyof typeof countConfig] || countConfig[2]; // Default to level 2+ count
+    const enemyCount = countConfig[this.level as keyof typeof countConfig] || Object.values(countConfig)[Object.entries(countConfig).length - 1]; // Default to last entry in the list
 
     // Always include Stingy (index 2)
     // Stingy starts outside the pen, in front of the door

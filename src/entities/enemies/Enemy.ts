@@ -85,7 +85,7 @@ export class Enemy extends Entity {
             { key: 'atlas', frame: `enemy${this.enemyNumber}_${dir}_frame_1.png` },
             { key: 'atlas', frame: `enemy${this.enemyNumber}_${dir}_frame_2.png` }
           ],
-          frameRate: 8,
+          frameRate: gameConfig.enemy.animationFrameRate,
           repeat: -1
         });
       }
@@ -383,8 +383,6 @@ export class Enemy extends Entity {
     // Update animation back to normal
     this.updateAnimation();
 
-
-    console.log("Has Animated Sprite?", this.animatedSprite);
     // Restore original scale and color
     if (this.animatedSprite) {
       const normalScale = (this.tileSize * gameConfig.enemy.spriteScale) / this.animatedSprite.width;
