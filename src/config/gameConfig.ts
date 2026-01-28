@@ -29,6 +29,7 @@ export const gameConfig = {
     injuryComboResetTime: 10000, // Time before injury combo resets (ms)
   },
   enemy: {
+    animationFrameRate: 3,
     speed: { easy: 55, medium: 70, hard: 92 },
     injuredSpeed: { easy: 200, medium: 200, hard: 200 }, // Speed when injured and fleeing to pen
     scaredDuration: 5000,
@@ -40,7 +41,7 @@ export const gameConfig = {
     },
     respawnDelay: 5000, // Time to pause in pen before respawning (ms)
     releaseDelay: { easy: 4000, medium: 3000, hard: 1500 }, // Delay between enemy releases (ms)
-    spriteScale: 2.1, // Scale multiplier for enemy sprites
+    spriteScale: 1.8,//2.1, // Scale multiplier for enemy sprites
     injuredSpriteScale: 2.75, // Scale multiplier for injured enemy sprites
     injuryScore: {
       base: 100,        // Base points for injuring enemy

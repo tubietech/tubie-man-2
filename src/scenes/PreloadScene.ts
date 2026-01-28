@@ -117,7 +117,7 @@ export class PreloadScene extends Phaser.Scene {
   }
 
   private createEnemyAnimations() {
-     const frameRate = gameConfig.player.animationFrameRate;
+     const frameRate = gameConfig.enemy.animationFrameRate;
 
      const createEnemyAnimations = (enemyName: string, enemyKey: string):void => {
         const createAnimation = (name: string, key: string, direction: string): void => {
