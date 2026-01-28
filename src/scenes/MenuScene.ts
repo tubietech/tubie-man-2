@@ -48,10 +48,21 @@ export class MenuScene extends Phaser.Scene {
     }
 
     this.localization = LocalizationManager.getInstance();
+    const devLogger = new Logger(LogGroup.DEVELOPER);
 
     // Set up Konami code detection
     this.setupKonamiCode();
 
+    this.input.keyboard?.addKey(
+      Phaser.Input.Keyboard.KeyCodes[
+        gameConfig.developer.keys.reloadBrowser as keyof typeof Phaser.Input.Keyboard.KeyCodes
+      ]).on('down', () => {
+        if(DeveloperMode.getInstance().isEnabled()) {
+          devLogger.log('Reloading Browser');
+          window.location.reload();
+        }
+    });
+    
     const centerX = this.cameras.main.centerX;
 
     // Add loading indicator for map preloading
@@ -91,30 +102,30 @@ export class MenuScene extends Phaser.Scene {
 
   private createMenus(focusOnLanguage: boolean = false): void {
     // Create main menu
-    this.mainMenu = new MainMenu(this, focusOnLanguage);
+    this.mainMenu = new MainMenu(this, this.orientation);
     this.mainMenu.setCallbacks({
       onStartGame: (difficulty) => this.startGame(difficulty),
       onOpenSettings: () => this.openMenu(this.settingsMenu),
       onOpenAbout: () => this.openMenu(this.aboutMenu),
       onOpenInstructions: () => this.openMenu(this.instructionsMenu),
-      onOpenHighScores: () => this.openMenu(this.highScoreListMenu),
-      onLanguageChange: (language) => this.changeLanguage(language)
+      onOpenHighScores: () => this.openMenu(this.highScoreListMenu)
     });
 
     // Create settings menu
-    this.settingsMenu = new SettingsMenu(this);
+    this.settingsMenu = new SettingsMenu(this, this.orientation);
     this.settingsMenu.setOnBack(() => this.goBack());
+    this.settingsMenu.setOnLanguageChange((language) => this.changeLanguage(language));
 
     // Create about menu
-    this.aboutMenu = new AboutMenu(this);
+    this.aboutMenu = new AboutMenu(this, this.orientation);
     this.aboutMenu.setOnBack(() => this.goBack());
 
     // Create instructions menu
-    this.instructionsMenu = new InstructionsMenu(this);
+    this.instructionsMenu = new InstructionsMenu(this, this.orientation);
     this.instructionsMenu.setOnBack(() => this.goBack());
 
     // Create high score list menu
-    this.highScoreListMenu = new HighScoreListMenu(this);
+    this.highScoreListMenu = new HighScoreListMenu(this, this.orientation);
     this.highScoreListMenu.setOnBack(() => this.goBack());
   }
 

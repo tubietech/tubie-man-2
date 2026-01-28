@@ -69,7 +69,9 @@ export class GameScene extends Phaser.Scene {
     clearPellets: Phaser.Input.Keyboard.Key;
     killPlayer: Phaser.Input.Keyboard.Key;
     activatePowerup: Phaser.Input.Keyboard.Key;
+    reloadBrowser: Phaser.Input.Keyboard.Key;
   };
+  devKeydownHandler: ((event: KeyboardEvent) => void) | null = null;
   enemyAIEnabled: boolean = true;
   respawnQueue: Enemy[] = [];
   lastRespawnTime: number = 0;
@@ -560,13 +562,6 @@ export class GameScene extends Phaser.Scene {
   private addScore(points: number): void {
     this.score += points;
     this.uiRenderer.updateScoreText(this.scoreText, this.orientation, this.score);
-
-    // Check if we have a new high score for this difficulty
-    if (this.score > this.highScore) {
-      this.highScore = this.score;
-      HighScoreManager.saveHighScore(this.highScore, this.difficulty);
-      this.uiRenderer.updateHighScoreText(this.highScoreText, this.orientation, this.highScore);
-    }
   }
 
   private getSceneRestartData(reset: boolean): {
@@ -999,15 +994,8 @@ export class GameScene extends Phaser.Scene {
     // Save the high score
     HighScoreManager.addHighScore(this.score, name, this.difficulty);
 
-    // Update the displayed high score if this is now the top score
-    const newHighScore = HighScoreManager.getHighScore(this.difficulty);
-    if (newHighScore > this.highScore) {
-      this.highScore = newHighScore;
-      this.uiRenderer.updateHighScoreText(this.highScoreText, this.orientation, this.highScore);
-    }
-
-    // Show normal game over screen for restart options
-    this.showNormalGameOver();
+    // Go to main menu after saving high score
+    this.scene.start('MenuScene');
   }
 
   private showNormalGameOver(): void {
@@ -1052,6 +1040,12 @@ export class GameScene extends Phaser.Scene {
     if (this.highScoreEntryOverlay) {
       this.highScoreEntryOverlay.destroy();
       this.highScoreEntryOverlay = null;
+    }
+
+    // Clean up developer keydown handler
+    if (this.devKeydownHandler) {
+      window.removeEventListener('keydown', this.devKeydownHandler);
+      this.devKeydownHandler = null;
     }
 
     // Reset pause state
@@ -1137,6 +1131,17 @@ export class GameScene extends Phaser.Scene {
   private setupDeveloperKeys(): void {
     const devLogger = new Logger(LogGroup.DEVELOPER);
 
+    // ! (Shift+1) - Reset high scores for current difficulty (uses DOM event for shifted key)
+    // Set up before keyboard check since this uses DOM events
+    this.devKeydownHandler = (event: KeyboardEvent) => {
+      if (event.key === '!' && DeveloperMode.getInstance().isEnabled()) {
+        // this.difficulty is already the lowercase string value from the Difficulty enum
+        HighScoreManager.clearHighScores(this.difficulty);
+        devLogger.log(`High scores cleared for ${this.difficulty} difficulty`);
+      }
+    };
+    window.addEventListener('keydown', this.devKeydownHandler);
+
     if (!this.input.keyboard) return;
 
     // Create developer key bindings
@@ -1144,7 +1149,8 @@ export class GameScene extends Phaser.Scene {
       toggleAI: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes[gameConfig.developer.keys.toggleEnemyAI as keyof typeof Phaser.Input.Keyboard.KeyCodes]),
       clearPellets: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes[gameConfig.developer.keys.clearPellets as keyof typeof Phaser.Input.Keyboard.KeyCodes]),
       killPlayer: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes[gameConfig.developer.keys.killPlayer as keyof typeof Phaser.Input.Keyboard.KeyCodes]),
-      activatePowerup: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes[gameConfig.developer.keys.activatePowerup as keyof typeof Phaser.Input.Keyboard.KeyCodes])
+      activatePowerup: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes[gameConfig.developer.keys.activatePowerup as keyof typeof Phaser.Input.Keyboard.KeyCodes]),
+      reloadBrowser: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes[gameConfig.developer.keys.reloadBrowser as keyof typeof Phaser.Input.Keyboard.KeyCodes])
     };
 
     // Q - Toggle enemy AI
@@ -1233,6 +1239,14 @@ export class GameScene extends Phaser.Scene {
           this.mapHeight,
           this.player.getDifficulty()
         );
+      }
+    });
+
+    // R - Reload Browser
+    this.devKeys.reloadBrowser.on('down', () => {
+      if(DeveloperMode.getInstance().isEnabled()) {
+        devLogger.log('Reloading Browser');
+        window.location.reload();
       }
     });
   }

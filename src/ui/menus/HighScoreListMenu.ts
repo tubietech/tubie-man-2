@@ -10,6 +10,7 @@ import { HighScoreManager } from '../../utils/HighScoreManager';
 import { IHighScoreEntry } from '../../interfaces/IHighScore';
 import { Difficulty } from '../../enums/Difficulty';
 import { colorNumberToString } from '../../utils/utils';
+import { Orientation } from '../../enums/Orientation';
 
 export class HighScoreListMenu extends Menu {
   readonly menuType = MenuType.HIGH_SCORES;
@@ -18,8 +19,8 @@ export class HighScoreListMenu extends Menu {
   private scoreListContainer: Phaser.GameObjects.Container | null = null;
   private noScoresText: UIText | null = null;
 
-  constructor(scene: Phaser.Scene) {
-    super(scene, { type: MenuType.HIGH_SCORES });
+  constructor(scene: Phaser.Scene, orientation: Orientation) {
+    super(scene, { type: MenuType.HIGH_SCORES, orientation: orientation });
     this.localization = LocalizationManager.getInstance();
     this.buildMenu();
   }

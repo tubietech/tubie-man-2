@@ -175,21 +175,6 @@ export class HighScoreManager {
   }
 
   /**
-   * Save a new high score to localStorage for a specific difficulty
-   * @deprecated Use addHighScore instead
-   * @param score The score to save
-   * @param difficulty The difficulty level (easy, medium, hard)
-   * @returns true if save was successful, false otherwise
-   */
-  static saveHighScore(score: number, difficulty: string): boolean {
-    if (!HighScoreManager.isDeveloperMode) {
-      // Use new format - add with default name
-      return this.addHighScore(score, '???', difficulty);
-    }
-    return true;
-  }
-
-  /**
    * Update high score if the given score is higher for a specific difficulty
    * @param score The current score to check
    * @param difficulty The difficulty level (easy, medium, hard)

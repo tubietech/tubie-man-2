@@ -95,6 +95,15 @@ export class UICharacterSelectorGroup extends UIElement implements INavigable {
     }
   }
 
+  /**
+   * Focus a specific selector by index
+   */
+  focusSelector(index: number): void {
+    if (index >= 0 && index < this.selectors.length) {
+      this.focusSelectorAt(index);
+    }
+  }
+
   focus(): void {
     this.isFocused = true;
     // Focus the first selector

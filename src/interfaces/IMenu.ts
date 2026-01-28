@@ -1,9 +1,11 @@
 import { MenuType } from '../enums/MenuType';
 import { IUIElement } from './IUIElement';
 import { INavigable } from './INavigable';
+import { Orientation } from '../enums/Orientation';
 
 export interface IMenuConfig {
   type: MenuType;
+  orientation: Orientation;
   spacing?: number;
   padding?: number;
   centerX?: boolean;

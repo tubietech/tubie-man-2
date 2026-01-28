@@ -4,6 +4,7 @@ import { IMenu, IMenuConfig } from '../../interfaces/IMenu';
 import { IUIElement } from '../../interfaces/IUIElement';
 import { INavigable, NavigationDirection } from '../../interfaces/INavigable';
 import { gameConfig } from '../../config/gameConfig';
+import { Orientation } from '../../enums/Orientation';
 
 export abstract class Menu implements IMenu {
   abstract readonly menuType: MenuType;
@@ -13,6 +14,7 @@ export abstract class Menu implements IMenu {
   elements: IUIElement[] = [];
   navigableElements: INavigable[] = [];
   focusedIndex: number = 0;
+  orientation: Orientation = Orientation.HORIZONTAL;
   protected isVisible: boolean = false;
   protected initialFocusIndex: number = 0;
 
@@ -36,6 +38,7 @@ export abstract class Menu implements IMenu {
 
   constructor(scene: Phaser.Scene, config: IMenuConfig) {
     this.scene = scene;
+    this.orientation = config.orientation;
     this.config = {
       spacing: gameConfig.menu.layout.spacing,
       padding: gameConfig.menu.layout.padding,

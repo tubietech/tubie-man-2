@@ -30,10 +30,7 @@ export class HighScoreEntryOverlay {
   private leftKey: Phaser.Input.Keyboard.Key | null = null;
   private rightKey: Phaser.Input.Keyboard.Key | null = null;
   private enterKey: Phaser.Input.Keyboard.Key | null = null;
-  private wKey: Phaser.Input.Keyboard.Key | null = null;
-  private sKey: Phaser.Input.Keyboard.Key | null = null;
-  private aKey: Phaser.Input.Keyboard.Key | null = null;
-  private dKey: Phaser.Input.Keyboard.Key | null = null;
+  private tabKey: Phaser.Input.Keyboard.Key | null = null;
 
   // Character input listener
   private keydownHandler: ((event: KeyboardEvent) => void) | null = null;
@@ -296,27 +293,15 @@ export class HighScoreEntryOverlay {
     this.leftKey = this.scene.input.keyboard.addKey(KeyCodes.LEFT);
     this.rightKey = this.scene.input.keyboard.addKey(KeyCodes.RIGHT);
     this.enterKey = this.scene.input.keyboard.addKey(KeyCodes.ENTER);
+    this.tabKey = this.scene.input.keyboard.addKey(KeyCodes.TAB);
 
-    // WASD
-    this.wKey = this.scene.input.keyboard.addKey(KeyCodes.W);
-    this.sKey = this.scene.input.keyboard.addKey(KeyCodes.S);
-    this.aKey = this.scene.input.keyboard.addKey(KeyCodes.A);
-    this.dKey = this.scene.input.keyboard.addKey(KeyCodes.D);
-
-    // Navigation handlers
+    // Navigation handlers (no WASD - those are valid character inputs)
     this.upKey.on('down', () => this.handleUp());
-    this.wKey.on('down', () => this.handleUp());
-
     this.downKey.on('down', () => this.handleDown());
-    this.sKey.on('down', () => this.handleDown());
-
     this.leftKey.on('down', () => this.handleLeft());
-    this.aKey.on('down', () => this.handleLeft());
-
     this.rightKey.on('down', () => this.handleRight());
-    this.dKey.on('down', () => this.handleRight());
-
     this.enterKey.on('down', () => this.handleEnter());
+    this.tabKey.on('down', () => this.handleTab());
 
     // Direct character input using DOM event (captures all letters/numbers)
     this.keydownHandler = (event: KeyboardEvent) => {
@@ -338,8 +323,7 @@ export class HighScoreEntryOverlay {
   private cleanupKeyboardInput(): void {
     const keys = [
       this.upKey, this.downKey, this.leftKey, this.rightKey,
-      this.wKey, this.sKey, this.aKey, this.dKey,
-      this.enterKey
+      this.enterKey, this.tabKey
     ];
 
     keys.forEach(key => {
@@ -353,11 +337,8 @@ export class HighScoreEntryOverlay {
     this.downKey = null;
     this.leftKey = null;
     this.rightKey = null;
-    this.wKey = null;
-    this.sKey = null;
-    this.aKey = null;
-    this.dKey = null;
     this.enterKey = null;
+    this.tabKey = null;
 
     // Remove DOM keydown listener
     if (this.keydownHandler) {
@@ -416,6 +397,24 @@ export class HighScoreEntryOverlay {
       // Move from character selectors to save button, or handle SELECT
       const handled = this.characterSelectorGroup?.handleNavigation(NavigationDirection.SELECT);
       if (!handled) {
+        // At last character selector, move to save button
+        this.focusSaveButton();
+      }
+    }
+  }
+
+  private handleTab(): void {
+    if (!this.isVisible) return;
+
+    if (this.isSaveButtonFocused) {
+      // Wrap back to first character selector
+      this.blurSaveButton();
+      this.characterSelectorGroup?.focus();
+      this.characterSelectorGroup?.focusSelector(0);
+    } else {
+      // Try to move to next selector, if at last one move to save button
+      const moved = this.characterSelectorGroup?.handleNavigation(NavigationDirection.RIGHT);
+      if (!moved) {
         // At last character selector, move to save button
         this.focusSaveButton();
       }

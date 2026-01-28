@@ -6,13 +6,14 @@ import { gameConfig } from '../../config/gameConfig';
 import { UIText } from '../elements/UIText';
 import { UIButton } from '../elements/UIButton';
 import { UIScrollableTextBlock } from '../elements/UIScrollableTextBlock';
+import { Orientation } from '../../enums/Orientation';
 
 export class InstructionsMenu extends Menu {
   readonly menuType = MenuType.ABOUT;
   private localization: LocalizationManager;
 
-  constructor(scene: Phaser.Scene) {
-    super(scene, { type: MenuType.ABOUT });
+  constructor(scene: Phaser.Scene, orientation: Orientation) {
+    super(scene, { type: MenuType.ABOUT, orientation: orientation });
     this.localization = LocalizationManager.getInstance();
     this.buildMenu();
   }
@@ -21,7 +22,7 @@ export class InstructionsMenu extends Menu {
     const loc = this.localization;
 
     // Define base menu dimensions and apply responsive scaling
-    const baseMenuWidth = 400;
+    const baseMenuWidth = this.orientation === Orientation.HORIZONTAL ? 700 : 450;
     const baseMenuHeight = 300;
     this.applyResponsiveScale(baseMenuWidth, baseMenuHeight);
 

@@ -2,13 +2,13 @@ import Phaser from 'phaser';
 import { Menu } from './Menu';
 import { MenuType } from '../../enums/MenuType';
 import { Difficulty } from '../../enums/Difficulty';
-import { Language } from '../../enums/Language';
 import { LocalizationManager } from '../../config/localization/LocalizationManager';
 import { gameConfig } from '../../config/gameConfig';
 import { UIText } from '../elements/UIText';
 import { UIButton } from '../elements/UIButton';
 import { UIButtonGroup } from '../elements/UIButtonGroup';
 import { UISpriteGroup, ISpriteData } from '../elements/UISpriteGroup';
+import { Orientation } from '../../enums/Orientation';
 
 export class MainMenu extends Menu {
   readonly menuType = MenuType.MAIN;
@@ -21,17 +21,11 @@ export class MainMenu extends Menu {
   private onOpenAbout?: () => void;
   private onOpenInstructions?: () => void;
   private onOpenHighScores?: () => void;
-  private onLanguageChange?: (language: Language) => void;
 
-  constructor(scene: Phaser.Scene, initialFocusOnLanguage: boolean = false) {
-    super(scene, { type: MenuType.MAIN });
+  constructor(scene: Phaser.Scene, orientation: Orientation) {
+    super(scene, { type: MenuType.MAIN, orientation });
     this.localization = LocalizationManager.getInstance();
     this.buildMenu();
-
-    // If language was just changed, focus on language selector (index 1)
-    if (initialFocusOnLanguage) {
-      this.setInitialFocusIndex(1);
-    }
   }
 
   setCallbacks(callbacks: {
@@ -40,23 +34,20 @@ export class MainMenu extends Menu {
     onOpenAbout?: () => void;
     onOpenInstructions?: () => void;
     onOpenHighScores?: () => void;
-    onLanguageChange?: (language: Language) => void;
   }): void {
     this.onStartGame = callbacks.onStartGame;
     this.onOpenSettings = callbacks.onOpenSettings;
     this.onOpenAbout = callbacks.onOpenAbout;
     this.onOpenInstructions = callbacks.onOpenInstructions;
     this.onOpenHighScores = callbacks.onOpenHighScores;
-    this.onLanguageChange = callbacks.onLanguageChange;
   }
 
   private buildMenu(): void {
     const loc = this.localization;
 
     // Define base menu dimensions and apply responsive scaling
-    // Menu content spans from y=-300 to y=300+ (height increased for HIGH SCORES button)
     const baseMenuWidth = 400;
-    const baseMenuHeight = 720;
+    const baseMenuHeight = 620;
     this.applyResponsiveScale(baseMenuWidth, baseMenuHeight);
 
     // All positions are now relative to center (0, 0)
@@ -181,41 +172,6 @@ export class MainMenu extends Menu {
     });
     this.addElement(aboutButton);
     this.addNavigable(aboutButton);
-    currentY += 55;
-
-    // Language label
-    const languageLabel = new UIText(this.scene, {
-      x: 0,
-      y: currentY,
-      text: loc.getText('language'),
-      fontSize: '16px',
-      color: gameConfig.menu.colors.bodyText
-    });
-    this.addElement(languageLabel);
-    currentY += 35;
-
-    // Language button group
-    const currentLangIndex = this.getCurrentLanguageIndex();
-    const languageGroup = new UIButtonGroup<Language>(this.scene, {
-      x: 0,
-      y: currentY,
-      options: [
-        { label: 'EN', value: Language.ENGLISH },
-        { label: 'ES', value: Language.SPANISH },
-        { label: 'FR', value: Language.FRENCH },
-        { label: 'DE', value: Language.GERMAN }
-      ],
-      selectedIndex: currentLangIndex,
-      buttonWidth: 50,
-      onSelectionChange: (value) => {
-        if (this.onLanguageChange) {
-          this.onLanguageChange(value);
-        }
-      },
-      fontSize: '14px'
-    });
-    this.addElement(languageGroup);
-    this.addNavigable(languageGroup);
   }
 
   private createChaseScene(x: number, y: number): UISpriteGroup {
@@ -271,12 +227,6 @@ export class MainMenu extends Menu {
       animateChase: true,
       chaseWidth: 380
     });
-  }
-
-  private getCurrentLanguageIndex(): number {
-    const currentLang = this.localization.getLanguage();
-    const languages = [Language.ENGLISH, Language.SPANISH, Language.FRENCH, Language.GERMAN];
-    return languages.indexOf(currentLang);
   }
 
   getSelectedDifficulty(): Difficulty {

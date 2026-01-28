@@ -177,7 +177,8 @@ export const gameConfig = {
       toggleEnemyAI: 'Q',      // Toggle enemy AI on/off
       clearPellets: 'Z',       // Clear all pellets from screen
       killPlayer: 'K',         // Kill the player
-      activatePowerup: 'P'     // Activate player powerup
+      activatePowerup: 'P',    // Activate player powerup
+      reloadBrowser: 'R'         // Forces the browser to reload
     }
   },
   scores: {
@@ -202,7 +203,7 @@ export const gameConfig = {
     },
     layout: {
       spacing: 30,
-      buttonWidth: 250,
+      buttonWidth: 275,
       buttonHeight: 60,
       buttonGroupSpacing: 10,
       buttonCornerRadius: 15,
