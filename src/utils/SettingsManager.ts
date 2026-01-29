@@ -259,7 +259,34 @@ export class SettingsManager {
       'RIGHT': KeyCodes.RIGHT,
       'SHIFT': KeyCodes.SHIFT,
       'CTRL': KeyCodes.CTRL,
-      'ALT': KeyCodes.ALT
+      'ALT': KeyCodes.ALT,
+      // Punctuation and symbols
+      'COMMA': KeyCodes.COMMA,
+      'PERIOD': KeyCodes.PERIOD,
+      'SEMICOLON': KeyCodes.SEMICOLON,
+      'QUOTE': KeyCodes.QUOTES,
+      'BACKQUOTE': KeyCodes.BACKTICK,
+      'SLASH': KeyCodes.FORWARD_SLASH,
+      'BACKSLASH': KeyCodes.BACK_SLASH,
+      'MINUS': KeyCodes.MINUS,
+      'EQUAL': KeyCodes.PLUS,
+      // Bracket keys (from event.code format)
+      'BracketLeft': KeyCodes.OPEN_BRACKET,
+      'BracketRight': KeyCodes.CLOSED_BRACKET,
+      'OPENBRACKET': KeyCodes.OPEN_BRACKET,
+      'CLOSEDBRACKET': KeyCodes.CLOSED_BRACKET,
+      '[': KeyCodes.OPEN_BRACKET,
+      ']': KeyCodes.CLOSED_BRACKET,
+      // Other common keys from event.code
+      'Comma': KeyCodes.COMMA,
+      'Period': KeyCodes.PERIOD,
+      'Semicolon': KeyCodes.SEMICOLON,
+      'Quote': KeyCodes.QUOTES,
+      'Backquote': KeyCodes.BACKTICK,
+      'Slash': KeyCodes.FORWARD_SLASH,
+      'Backslash': KeyCodes.BACK_SLASH,
+      'Minus': KeyCodes.MINUS,
+      'Equal': KeyCodes.PLUS
     };
 
     if (specialKeys[keyName]) {

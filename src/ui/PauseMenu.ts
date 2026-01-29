@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { LocalizationManager } from '../config/localization/LocalizationManager';
 import { gameConfig } from '../config/gameConfig';
+import { SettingsManager } from '../utils/SettingsManager';
 
 export class PauseMenu {
   private scene: Phaser.Scene;
@@ -14,9 +15,14 @@ export class PauseMenu {
   private onQuit: () => void;
   private selectedButtonIndex: number = 0; // 0 = Continue, 1 = Quit
   private buttons: Phaser.GameObjects.Container[] = [];
+  // Arrow keys (always available)
   private upKey: Phaser.Input.Keyboard.Key | null = null;
   private downKey: Phaser.Input.Keyboard.Key | null = null;
   private enterKey: Phaser.Input.Keyboard.Key | null = null;
+  // Custom keys from settings
+  private customUpKey: Phaser.Input.Keyboard.Key | null = null;
+  private customDownKey: Phaser.Input.Keyboard.Key | null = null;
+  private customConfirmKey: Phaser.Input.Keyboard.Key | null = null;
 
   constructor(
     scene: Phaser.Scene,
@@ -222,54 +228,91 @@ export class PauseMenu {
   private setupKeyboardInput(): void {
     if (!this.scene.input.keyboard) return;
 
-    // Create key objects
-    this.upKey = this.scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.UP);
-    this.downKey = this.scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.DOWN);
-    this.enterKey = this.scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ENTER);
+    const KeyCodes = Phaser.Input.Keyboard.KeyCodes;
+    const settingsManager = SettingsManager.getInstance();
 
-    // Handle up arrow
-    this.upKey.on('down', () => {
+    // Arrow keys (always available)
+    this.upKey = this.scene.input.keyboard.addKey(KeyCodes.UP);
+    this.downKey = this.scene.input.keyboard.addKey(KeyCodes.DOWN);
+    this.enterKey = this.scene.input.keyboard.addKey(KeyCodes.ENTER);
+
+    // Custom keys from settings (only add if different from defaults)
+    const customUpCode = settingsManager.getUpKeyCode();
+    const customDownCode = settingsManager.getDownKeyCode();
+    const customConfirmCode = settingsManager.getContinueKeyCode();
+
+    if (customUpCode !== KeyCodes.UP) {
+      this.customUpKey = this.scene.input.keyboard.addKey(customUpCode);
+    }
+    if (customDownCode !== KeyCodes.DOWN) {
+      this.customDownKey = this.scene.input.keyboard.addKey(customDownCode);
+    }
+    if (customConfirmCode !== KeyCodes.ENTER) {
+      this.customConfirmKey = this.scene.input.keyboard.addKey(customConfirmCode);
+    }
+
+    // Navigate up handler
+    const handleUp = () => {
       if (this.isVisible) {
         this.selectedButtonIndex--;
         if (this.selectedButtonIndex < 0) {
-          this.selectedButtonIndex = this.buttons.length - 1; // Wrap to last button
+          this.selectedButtonIndex = this.buttons.length - 1;
         }
         this.updateButtonHighlight();
       }
-    });
+    };
 
-    // Handle down arrow
-    this.downKey.on('down', () => {
+    // Navigate down handler
+    const handleDown = () => {
       if (this.isVisible) {
         this.selectedButtonIndex++;
         if (this.selectedButtonIndex >= this.buttons.length) {
-          this.selectedButtonIndex = 0; // Wrap to first button
+          this.selectedButtonIndex = 0;
         }
         this.updateButtonHighlight();
       }
-    });
+    };
 
-    // Handle Enter key to activate selected button
-    this.enterKey.on('down', () => {
+    // Confirm handler
+    const handleConfirm = () => {
       if (this.isVisible) {
         this.activateSelectedButton();
       }
-    });
+    };
+
+    // Register handlers for arrow keys
+    this.upKey.on('down', handleUp);
+    this.downKey.on('down', handleDown);
+    this.enterKey.on('down', handleConfirm);
+
+    // Register handlers for custom keys
+    this.customUpKey?.on('down', handleUp);
+    this.customDownKey?.on('down', handleDown);
+    this.customConfirmKey?.on('down', handleConfirm);
   }
 
   /**
    * Clean up keyboard input
    */
   private cleanupKeyboardInput(): void {
-    this.upKey?.off('down');
-    this.downKey?.off('down');
-    this.enterKey?.off('down');
-    this.upKey?.destroy();
-    this.downKey?.destroy();
-    this.enterKey?.destroy();
+    const keys = [
+      this.upKey, this.downKey, this.enterKey,
+      this.customUpKey, this.customDownKey, this.customConfirmKey
+    ];
+
+    keys.forEach(key => {
+      if (key) {
+        key.off('down');
+        key.destroy();
+      }
+    });
+
     this.upKey = null;
     this.downKey = null;
     this.enterKey = null;
+    this.customUpKey = null;
+    this.customDownKey = null;
+    this.customConfirmKey = null;
   }
 
   /**

@@ -82,7 +82,22 @@ export class UIKeyBindingSetting extends UISetting {
     }
 
     if (this.currentBinding.type === 'keyboard') {
-      return this.currentBinding.key || '???';
+      const key = this.currentBinding.key || '???';
+      // Convert code-based key names to display-friendly names
+      const displayNames: { [key: string]: string } = {
+        'BracketLeft': '[',
+        'BracketRight': ']',
+        'Comma': ',',
+        'Period': '.',
+        'Semicolon': ';',
+        'Quote': "'",
+        'Backquote': '`',
+        'Slash': '/',
+        'Backslash': '\\',
+        'Minus': '-',
+        'Equal': '='
+      };
+      return displayNames[key] || key;
     } else {
       // Gamepad button - show a friendly name
       return this.getGamepadButtonName(this.currentBinding.button ?? 0);
@@ -211,6 +226,26 @@ export class UIKeyBindingSetting extends UISetting {
     // Function keys
     if (key.match(/^F\d+$/)) {
       return key;
+    }
+
+    // Handle punctuation/symbol keys - use event.code for consistency
+    // These map directly to Phaser KeyCodes in SettingsManager
+    const codeBasedKeys: { [key: string]: string } = {
+      'BracketLeft': 'BracketLeft',
+      'BracketRight': 'BracketRight',
+      'Comma': 'Comma',
+      'Period': 'Period',
+      'Semicolon': 'Semicolon',
+      'Quote': 'Quote',
+      'Backquote': 'Backquote',
+      'Slash': 'Slash',
+      'Backslash': 'Backslash',
+      'Minus': 'Minus',
+      'Equal': 'Equal'
+    };
+
+    if (codeBasedKeys[code]) {
+      return codeBasedKeys[code];
     }
 
     // Fallback to code if key isn't helpful

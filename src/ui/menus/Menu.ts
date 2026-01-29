@@ -5,6 +5,7 @@ import { IUIElement } from '../../interfaces/IUIElement';
 import { INavigable, NavigationDirection } from '../../interfaces/INavigable';
 import { gameConfig } from '../../config/gameConfig';
 import { Orientation } from '../../enums/Orientation';
+import { SettingsManager } from '../../utils/SettingsManager';
 
 export abstract class Menu implements IMenu {
   abstract readonly menuType: MenuType;
@@ -18,20 +19,21 @@ export abstract class Menu implements IMenu {
   protected isVisible: boolean = false;
   protected initialFocusIndex: number = 0;
 
-  // Keyboard keys
+  // Keyboard keys - Arrow keys (always available)
   protected upKey: Phaser.Input.Keyboard.Key | null = null;
   protected downKey: Phaser.Input.Keyboard.Key | null = null;
   protected leftKey: Phaser.Input.Keyboard.Key | null = null;
   protected rightKey: Phaser.Input.Keyboard.Key | null = null;
+  // Custom keys from settings
+  protected customUpKey: Phaser.Input.Keyboard.Key | null = null;
+  protected customDownKey: Phaser.Input.Keyboard.Key | null = null;
+  protected customLeftKey: Phaser.Input.Keyboard.Key | null = null;
+  protected customRightKey: Phaser.Input.Keyboard.Key | null = null;
+  // Action keys
   protected enterKey: Phaser.Input.Keyboard.Key | null = null;
-  protected spaceKey: Phaser.Input.Keyboard.Key | null = null;
+  protected customConfirmKey: Phaser.Input.Keyboard.Key | null = null;
   protected escapeKey: Phaser.Input.Keyboard.Key | null = null;
-  protected wKey: Phaser.Input.Keyboard.Key | null = null;
-  protected sKey: Phaser.Input.Keyboard.Key | null = null;
-  protected aKey: Phaser.Input.Keyboard.Key | null = null;
-  protected dKey: Phaser.Input.Keyboard.Key | null = null;
   protected tabKey: Phaser.Input.Keyboard.Key | null = null;
-  protected shiftTabKey: Phaser.Input.Keyboard.Key | null = null;
 
   // Callback for back navigation
   protected onBack?: () => void;
@@ -186,44 +188,61 @@ export abstract class Menu implements IMenu {
     if (!this.scene.input.keyboard) return;
 
     const KeyCodes = Phaser.Input.Keyboard.KeyCodes;
+    const settingsManager = SettingsManager.getInstance();
 
-    // Arrow keys
+    // Arrow keys (always available for navigation)
     this.upKey = this.scene.input.keyboard.addKey(KeyCodes.UP);
     this.downKey = this.scene.input.keyboard.addKey(KeyCodes.DOWN);
     this.leftKey = this.scene.input.keyboard.addKey(KeyCodes.LEFT);
     this.rightKey = this.scene.input.keyboard.addKey(KeyCodes.RIGHT);
 
-    // WASD keys
-    this.wKey = this.scene.input.keyboard.addKey(KeyCodes.W);
-    this.sKey = this.scene.input.keyboard.addKey(KeyCodes.S);
-    this.aKey = this.scene.input.keyboard.addKey(KeyCodes.A);
-    this.dKey = this.scene.input.keyboard.addKey(KeyCodes.D);
+    // Custom movement keys from settings (only add if different from arrow keys)
+    const customUpCode = settingsManager.getUpKeyCode();
+    const customDownCode = settingsManager.getDownKeyCode();
+    const customLeftCode = settingsManager.getLeftKeyCode();
+    const customRightCode = settingsManager.getRightKeyCode();
+    const customConfirmCode = settingsManager.getContinueKeyCode();
 
-    // Action keys
+    if (customUpCode !== KeyCodes.UP) {
+      this.customUpKey = this.scene.input.keyboard.addKey(customUpCode);
+    }
+    if (customDownCode !== KeyCodes.DOWN) {
+      this.customDownKey = this.scene.input.keyboard.addKey(customDownCode);
+    }
+    if (customLeftCode !== KeyCodes.LEFT) {
+      this.customLeftKey = this.scene.input.keyboard.addKey(customLeftCode);
+    }
+    if (customRightCode !== KeyCodes.RIGHT) {
+      this.customRightKey = this.scene.input.keyboard.addKey(customRightCode);
+    }
+
+    // Action keys - Enter is always available, plus custom confirm from settings (if different)
     this.enterKey = this.scene.input.keyboard.addKey(KeyCodes.ENTER);
-    this.spaceKey = this.scene.input.keyboard.addKey(KeyCodes.SPACE);
+    if (customConfirmCode !== KeyCodes.ENTER) {
+      this.customConfirmKey = this.scene.input.keyboard.addKey(customConfirmCode);
+    }
     this.escapeKey = this.scene.input.keyboard.addKey(KeyCodes.ESC);
     this.tabKey = this.scene.input.keyboard.addKey(KeyCodes.TAB);
 
-    // UP / W - Previous element
+    // UP - Previous element (arrow + custom)
     this.upKey.on('down', () => this.handleNavigationInput(NavigationDirection.UP));
-    this.wKey.on('down', () => this.handleNavigationInput(NavigationDirection.UP));
+    this.customUpKey?.on('down', () => this.handleNavigationInput(NavigationDirection.UP));
 
-    // DOWN / S - Next element
+    // DOWN - Next element (arrow + custom)
     this.downKey.on('down', () => this.handleNavigationInput(NavigationDirection.DOWN));
-    this.sKey.on('down', () => this.handleNavigationInput(NavigationDirection.DOWN));
+    this.customDownKey?.on('down', () => this.handleNavigationInput(NavigationDirection.DOWN));
 
-    // LEFT / A - Left within element
+    // LEFT - Left within element (arrow + custom)
     this.leftKey.on('down', () => this.handleNavigationInput(NavigationDirection.LEFT));
-    this.aKey.on('down', () => this.handleNavigationInput(NavigationDirection.LEFT));
+    this.customLeftKey?.on('down', () => this.handleNavigationInput(NavigationDirection.LEFT));
 
-    // RIGHT / D - Right within element
+    // RIGHT - Right within element (arrow + custom)
     this.rightKey.on('down', () => this.handleNavigationInput(NavigationDirection.RIGHT));
-    this.dKey.on('down', () => this.handleNavigationInput(NavigationDirection.RIGHT));
+    this.customRightKey?.on('down', () => this.handleNavigationInput(NavigationDirection.RIGHT));
 
-    // ENTER / SPACE - Select
+    // ENTER / Custom confirm - Select
     this.enterKey.on('down', () => this.handleNavigationInput(NavigationDirection.SELECT));
-    this.spaceKey.on('down', () => this.handleNavigationInput(NavigationDirection.SELECT));
+    this.customConfirmKey?.on('down', () => this.handleNavigationInput(NavigationDirection.SELECT));
 
     // ESC - Back
     this.escapeKey.on('down', () => this.handleNavigationInput(NavigationDirection.BACK));
@@ -270,8 +289,8 @@ export abstract class Menu implements IMenu {
   protected cleanupKeyboardInput(): void {
     const keys = [
       this.upKey, this.downKey, this.leftKey, this.rightKey,
-      this.wKey, this.sKey, this.aKey, this.dKey,
-      this.enterKey, this.spaceKey, this.escapeKey, this.tabKey
+      this.customUpKey, this.customDownKey, this.customLeftKey, this.customRightKey,
+      this.enterKey, this.customConfirmKey, this.escapeKey, this.tabKey
     ];
 
     keys.forEach(key => {
@@ -285,12 +304,12 @@ export abstract class Menu implements IMenu {
     this.downKey = null;
     this.leftKey = null;
     this.rightKey = null;
-    this.wKey = null;
-    this.sKey = null;
-    this.aKey = null;
-    this.dKey = null;
+    this.customUpKey = null;
+    this.customDownKey = null;
+    this.customLeftKey = null;
+    this.customRightKey = null;
     this.enterKey = null;
-    this.spaceKey = null;
+    this.customConfirmKey = null;
     this.escapeKey = null;
     this.tabKey = null;
   }
