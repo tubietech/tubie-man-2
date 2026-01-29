@@ -9,6 +9,7 @@ import { UIButton } from '../elements/UIButton';
 import { UIButtonGroup } from '../elements/UIButtonGroup';
 import { UISpriteGroup, ISpriteData } from '../elements/UISpriteGroup';
 import { Orientation } from '../../enums/Orientation';
+import { SettingsManager } from '../../utils/SettingsManager';
 
 export class MainMenu extends Menu {
   readonly menuType = MenuType.MAIN;
@@ -114,20 +115,23 @@ export class MainMenu extends Menu {
     this.addNavigable(playButton);
     currentY += 70;
 
-    // Settings button
-    const settingsButton = new UIButton(this.scene, {
-      x: 0,
-      y: currentY,
-      text: loc.getText('menuSettings'),
-      onClick: () => {
-        if (this.onOpenSettings) {
-          this.onOpenSettings();
+    // Settings button - only show if not in arcade mode
+    const isArcadeMode = SettingsManager.getInstance().isArcadeMode();
+    if (!isArcadeMode) {
+      const settingsButton = new UIButton(this.scene, {
+        x: 0,
+        y: currentY,
+        text: loc.getText('menuSettings'),
+        onClick: () => {
+          if (this.onOpenSettings) {
+            this.onOpenSettings();
+          }
         }
-      }
-    });
-    this.addElement(settingsButton);
-    this.addNavigable(settingsButton);
-    currentY += 70;
+      });
+      this.addElement(settingsButton);
+      this.addNavigable(settingsButton);
+      currentY += 70;
+    }
 
     // Instructions button
     const instructionsButton = new UIButton(this.scene, {

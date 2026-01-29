@@ -8,6 +8,7 @@ import { UIText } from '../elements/UIText';
 import { UIButton } from '../elements/UIButton';
 import { UIButtonGroup } from '../elements/UIButtonGroup';
 import { UIKeyBindingSetting } from '../elements/UIKeyBindingSetting';
+import { UIToggleSetting } from '../elements/UIToggleSetting';
 import { SettingsManager } from '../../utils/SettingsManager';
 import { Orientation } from '../../enums/Orientation';
 
@@ -33,7 +34,7 @@ export class SettingsMenu extends Menu {
 
     // Define base menu dimensions and apply responsive scaling
     const baseMenuWidth = 400;
-    const baseMenuHeight = 750;
+    const baseMenuHeight = 810;
     this.applyResponsiveScale(baseMenuWidth, baseMenuHeight);
 
     let currentY = -330;
@@ -192,6 +193,24 @@ export class SettingsMenu extends Menu {
     });
     this.addElement(continueBinding);
     this.addNavigable(continueBinding);
+    currentY += settingSpacing;
+
+    // Arcade Mode toggle
+    const arcadeToggle = new UIToggleSetting(this.scene, {
+      x: 0,
+      y: currentY,
+      label: loc.getText('settingArcadeMode'),
+      width: settingWidth,
+      height: settingHeight,
+      initialValue: this.settingsManager.isArcadeMode(),
+      onLabel: loc.getText('on'),
+      offLabel: loc.getText('off'),
+      onValueChange: (value) => {
+        this.settingsManager.setArcadeMode(value);
+      }
+    });
+    this.addElement(arcadeToggle);
+    this.addNavigable(arcadeToggle);
     currentY += 70;
 
     // Back button

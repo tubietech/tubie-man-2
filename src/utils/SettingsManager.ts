@@ -8,6 +8,7 @@ import Phaser from 'phaser';
  * Interface for all persisted game settings
  */
 export interface IGameSettings {
+  arcadeMode: boolean;
   controls: {
     keyboard: {
       fire: IKeyBinding;
@@ -49,6 +50,7 @@ export class SettingsManager {
    */
   private getDefaultSettings(): IGameSettings {
     return {
+      arcadeMode: false,
       controls: {
         keyboard: {
           fire: { type: 'keyboard', key: gameConfig.controls.keyboard.fire },
@@ -87,6 +89,7 @@ export class SettingsManager {
     const defaults = this.getDefaultSettings();
 
     return {
+      arcadeMode: loaded.arcadeMode ?? defaults.arcadeMode,
       controls: {
         keyboard: {
           fire: loaded.controls?.keyboard?.fire ?? defaults.controls.keyboard.fire,
@@ -118,6 +121,16 @@ export class SettingsManager {
    */
   getSettings(): IGameSettings {
     return this.settings;
+  }
+
+  // ============== Arcade Mode ==============
+  isArcadeMode(): boolean {
+    return this.settings.arcadeMode;
+  }
+
+  setArcadeMode(enabled: boolean): void {
+    this.settings.arcadeMode = enabled;
+    this.saveSettings();
   }
 
   // ============== Fire ==============
