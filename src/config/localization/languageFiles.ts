@@ -38,7 +38,14 @@ export const languageFiles = {
     name: 'NAME',
     noScores: 'No scores yet!',
     playAgain: 'PLAY AGAIN',
-    viewScores: 'VIEW SCORES'
+    viewScores: 'VIEW SCORES',
+    settingFire: 'Fire',
+    settingContinue: 'Continue',
+    settingPause: 'Pause',
+    settingUp: 'Up',
+    settingDown: 'Down',
+    settingLeft: 'Left',
+    settingRight: 'Right'
   },
   [Language.SPANISH]: {
     gameTitle: 'Hombre Tubía',
@@ -77,7 +84,14 @@ export const languageFiles = {
     name: 'NOMBRE',
     noScores: '¡Sin puntuaciones!',
     playAgain: 'JUGAR DE NUEVO',
-    viewScores: 'VER PUNTUACIONES'
+    viewScores: 'VER PUNTUACIONES',
+    settingFire: 'Fuego',
+    settingContinue: 'Continuar',
+    settingPause: 'Pausa',
+    settingUp: 'Arriba',
+    settingDown: 'Abajo',
+    settingLeft: 'Izquierda',
+    settingRight: 'Derecha'
   },
   [Language.FRENCH]: {
     gameTitle: 'Tubie-Man',
@@ -116,7 +130,14 @@ export const languageFiles = {
     name: 'NOM',
     noScores: 'Pas de scores!',
     playAgain: 'REJOUER',
-    viewScores: 'VOIR SCORES'
+    viewScores: 'VOIR SCORES',
+    settingFire: 'Feu',
+    settingContinue: 'Continuer',
+    settingPause: 'Pause',
+    settingUp: 'Haut',
+    settingDown: 'Bas',
+    settingLeft: 'Gauche',
+    settingRight: 'Droite'
   },
   [Language.GERMAN]: {
     gameTitle: 'Tubie-Man',
@@ -155,7 +176,14 @@ export const languageFiles = {
     name: 'NAME',
     noScores: 'Noch keine Punkte!',
     playAgain: 'NOCHMAL SPIELEN',
-    viewScores: 'PUNKTE ANSEHEN'
+    viewScores: 'PUNKTE ANSEHEN',
+    settingFire: 'Feuer',
+    settingContinue: 'Weiter',
+    settingPause: 'Pause',
+    settingUp: 'Hoch',
+    settingDown: 'Runter',
+    settingLeft: 'Links',
+    settingRight: 'Rechts'
   }
 };
 

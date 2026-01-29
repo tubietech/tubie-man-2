@@ -26,6 +26,7 @@ import { Drawable } from '../interfaces/IPelletData';
 import { Difficulty } from '../enums/Difficulty';
 import { Logger } from '../utils/Logger';
 import { LogGroup } from '../enums/LogGroup';
+import { SettingsManager } from '../utils/SettingsManager';
 
 export class GameScene extends Phaser.Scene {
   mapData!: IMapData;
@@ -455,15 +456,24 @@ export class GameScene extends Phaser.Scene {
   }
 
   setupInput() {
+    // Get settings manager for key bindings (persisted in localStorage)
+    const settingsManager = SettingsManager.getInstance();
+
     this.cursors = this.input.keyboard!.createCursorKeys();
+
+    // Movement keys from settings
     this.wasd = this.input.keyboard!.addKeys({
-      up: Phaser.Input.Keyboard.KeyCodes.W,
-      down: Phaser.Input.Keyboard.KeyCodes.S,
-      left: Phaser.Input.Keyboard.KeyCodes.A,
-      right: Phaser.Input.Keyboard.KeyCodes.D
+      up: settingsManager.getUpKeyCode(),
+      down: settingsManager.getDownKeyCode(),
+      left: settingsManager.getLeftKeyCode(),
+      right: settingsManager.getRightKeyCode()
     });
-    this.fireKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
-    this.pauseKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
+
+    // Fire key from settings
+    this.fireKey = this.input.keyboard!.addKey(settingsManager.getFireKeyCode());
+
+    // Pause key from settings
+    this.pauseKey = this.input.keyboard!.addKey(settingsManager.getPauseKeyCode());
 
     // Pause key handler
     this.pauseKey.on('down', () => {
@@ -617,7 +627,10 @@ export class GameScene extends Phaser.Scene {
       if (pad) {
         this.player.processGamepadInput(pad);
 
-        if (pad.buttons[gameConfig.controls.gamepad.fire].pressed) {
+        // Get fire button from settings (supports both keyboard and gamepad bindings)
+        const settingsManager = SettingsManager.getInstance();
+        const fireButton = settingsManager.getFireGamepadButton();
+        if (pad.buttons[fireButton] && pad.buttons[fireButton].pressed) {
           this.player.activateFire();
         }
       }
@@ -1018,10 +1031,11 @@ export class GameScene extends Phaser.Scene {
       this.scene.restart(this.getSceneRestartData(true));
     });
 
-    // Set up Enter key to restart
-    const enterKey = this.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.ENTER);
-    if (enterKey) {
-      enterKey.once('down', () => {
+    // Set up Continue key to restart (from settings)
+    const settingsManager = SettingsManager.getInstance();
+    const continueKey = this.input.keyboard?.addKey(settingsManager.getContinueKeyCode());
+    if (continueKey) {
+      continueKey.once('down', () => {
         this.scene.restart(this.getSceneRestartData(true));
       });
     }

@@ -30,7 +30,7 @@ export const gameConfig = {
   },
   enemy: {
     animationFrameRate: 3,
-    speed: { easy: 55, medium: 70, hard: 92 },
+    speed: { easy: 55, medium: 70, hard: 90 },
     injuredSpeed: { easy: 200, medium: 200, hard: 200 }, // Speed when injured and fleeing to pen
     scaredDuration: 5000,
     types: ['pokey', 'pricky', 'stingy', 'doc'],
