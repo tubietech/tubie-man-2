@@ -43,10 +43,11 @@ export const gameConfig = {
     releaseDelay: { easy: 4000, medium: 3000, hard: 1500 }, // Delay between enemy releases (ms)
     spriteScale: 1.8,//2.1, // Scale multiplier for enemy sprites
     injuredSpriteScale: 2.75, // Scale multiplier for injured enemy sprites
-    injuryScore: {
-      base: 100,        // Base points for injuring enemy
-      increment: 100,   // Points increase per combo
-      max: 400          // Maximum points per injury
+    injuryScores: [100, 200, 500, 700], // Points per combo: 1st, 2nd, 3rd, 4th+
+    injuryScoreDisplay: {
+      visibleDuration: 750, // Time score is fully visible (ms)
+      fadeDuration: 750, // Time for score to fade out (ms)
+      spriteScale: 0.15, // Scale for score sprite
     },
     quirks: {
       // Time range for quirk triggers (in milliseconds)
@@ -105,8 +106,12 @@ export const gameConfig = {
       firstAppearance: { min: 60, max: 75 }, // Dots eaten before first appearance
       secondAppearance: { min: 170, max: 180 }, // Dots eaten before second appearance
       penCircles: 2, // Number of times to circle the pen
+      scoreDisplay: {
+        visibleDuration: 750, // Time score is fully visible (ms)
+        fadeDuration: 750, // Time for score to fade out (ms)
+        spriteScale: 0.15, // Scale for score sprite (same as player)
+      },
     },
-    enemyScore: 200,
     minTunnels: 1,
     maxTunnels: 2,
     tunnelCooldown: 500, // Milliseconds to wait before allowing re-entry to a tunnel
@@ -140,7 +145,7 @@ export const gameConfig = {
     stingy: 0x00ffff,
     doc: 0xffb851,
     penDoor: 0xff8800,
-    tunnel: 0x00ff00,
+    tunnel: 0xffffff,
     pauseButtonNormal: 0x2121ff,
     pauseButtonHighlight: 0x6262ff,
     pauseButtonBorder: 0xffa500,
@@ -163,8 +168,37 @@ export const gameConfig = {
       pause: 'ESC'
     },
     gamepad: {
-      fire: 0,
-      pause: 8  // Select button
+      // Standard gamepad button mapping (Xbox/PlayStation layout)
+      // 0=A/X, 1=B/Circle, 2=X/Square, 3=Y/Triangle
+      // 4=LB/L1, 5=RB/R1, 6=LT/L2, 7=RT/R2
+      // 8=Select/Share, 9=Start/Options
+      // 10=L3, 11=R3, 12=DPad Up, 13=DPad Down, 14=DPad Left, 15=DPad Right
+      fire: 0,        // A/X button
+      pause: 8,       // Select/Share button
+      continue: 0,    // A/X button
+      up: 12,         // DPad Up
+      down: 13,       // DPad Down
+      left: 14,       // DPad Left
+      right: 15       // DPad Right
+    },
+    // Button name mappings for display
+    gamepadButtonNames: {
+      0: 'A',
+      1: 'B',
+      2: 'X',
+      3: 'Y',
+      4: 'LB',
+      5: 'RB',
+      6: 'LT',
+      7: 'RT',
+      8: 'SELECT',
+      9: 'START',
+      10: 'L3',
+      11: 'R3',
+      12: 'D-UP',
+      13: 'D-DOWN',
+      14: 'D-LEFT',
+      15: 'D-RIGHT'
     }
   },
   window: {

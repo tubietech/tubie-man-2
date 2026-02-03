@@ -151,6 +151,18 @@ export abstract class Menu implements IMenu {
     }
   }
 
+  /**
+   * Clear all navigable elements (used when switching tabs)
+   */
+  clearNavigables(): void {
+    // Blur current focused element before clearing
+    if (this.navigableElements.length > 0 && this.focusedIndex < this.navigableElements.length) {
+      this.navigableElements[this.focusedIndex].blur();
+    }
+    this.navigableElements = [];
+    this.focusedIndex = 0;
+  }
+
   protected blurAllExcept(exceptElement: INavigable): void {
     this.navigableElements.forEach((element, index) => {
       if (element !== exceptElement) {

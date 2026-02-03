@@ -769,6 +769,11 @@ export class GameScene extends Phaser.Scene {
 
     if (collisionResult.hasCollision) {
       if (collisionResult.hitByFire && collisionResult.enemy) {
+        // Check if enemy is already injured - don't score again
+        if (collisionResult.enemy.isInjured) {
+          return; // Already injured, no additional scoring
+        }
+
         // Check if enemy is fire-resistant (Stingy in Sterile Mode)
         const enemy = collisionResult.enemy as any;
         if (enemy.isFireResistant) {
@@ -784,16 +789,21 @@ export class GameScene extends Phaser.Scene {
           this.injuryComboCount = 0;
         }
 
-        // Calculate score based on combo count
-        const baseScore = gameConfig.enemy.injuryScore.base;
-        const increment = gameConfig.enemy.injuryScore.increment;
-        const maxScore = gameConfig.enemy.injuryScore.max;
+        // Capture enemy position before injuring (sprite may move)
+        const enemyX = collisionResult.enemy.sprite.x;
+        const enemyY = collisionResult.enemy.sprite.y;
 
-        const injuryScore = Math.min(baseScore + (increment * this.injuryComboCount), maxScore);
+        // Calculate score based on combo count using fixed array
+        const scores = gameConfig.enemy.injuryScores;
+        const scoreIndex = Math.min(this.injuryComboCount, scores.length - 1);
+        const injuryScore = scores[scoreIndex];
         this.addScore(injuryScore);
 
-        // Increment combo count (0-indexed, so max combo count is 3 for 400 points)
-        if (this.injuryComboCount < 3) {
+        // Show floating score at enemy location
+        this.showInjuryScore(enemyX, enemyY, injuryScore);
+
+        // Increment combo count (capped at array length - 1)
+        if (this.injuryComboCount < scores.length - 1) {
           this.injuryComboCount++;
         }
 
@@ -862,15 +872,73 @@ export class GameScene extends Phaser.Scene {
     // Bonus sprites are scaled to 2.2x tile size (from gameConfig.map.bonus.scale)
     // Using threshold of 1.0 for consistent gameplay feel with other collision types
     if (this.player.checkCollision(this.bonus, 1.0)) {
+      // Capture position and score before collecting (which destroys the sprite)
+      const bonusX = this.bonus.sprite.x;
+      const bonusY = this.bonus.sprite.y;
+      const bonusScore = this.bonus.score;
+
       // Collect bonus
       this.bonus.collect();
-      this.addScore(this.bonus.score);
+      this.addScore(bonusScore);
 
-      bonusLogger.log(`Collected! Score +${this.bonus.score}, New total: ${this.score}`);
+      bonusLogger.log(`Collected! Score +${bonusScore}, New total: ${this.score}`);
+
+      // Show floating score sprite at the bonus location
+      this.showFloatingScore(bonusX, bonusY, bonusScore);
 
       // Clean up bonus
       this.bonus = null;
     }
+  }
+
+  /**
+   * Display a floating score sprite at the given position that fades away
+   */
+  showFloatingScore(x: number, y: number, score: number): void {
+    const config = gameConfig.map.bonus.scoreDisplay;
+
+    // Create the score sprite using the points_${score}.png pattern
+    const scoreSprite = this.add.sprite(x, y, 'atlas', `points_${score}.png`);
+    scoreSprite.setScale(config.spriteScale);
+    scoreSprite.setDepth(1000); // Ensure it's above other game elements
+
+    // After visibleDuration, start fade out
+    this.time.delayedCall(config.visibleDuration, () => {
+      this.tweens.add({
+        targets: scoreSprite,
+        alpha: 0,
+        duration: config.fadeDuration,
+        ease: 'Power2',
+        onComplete: () => {
+          scoreSprite.destroy();
+        }
+      });
+    });
+  }
+
+  /**
+   * Display a floating injury score sprite at the given position that fades away
+   */
+  showInjuryScore(x: number, y: number, score: number): void {
+    const config = gameConfig.enemy.injuryScoreDisplay;
+
+    // Create the score sprite using the d_points_${score}.png pattern
+    const scoreSprite = this.add.sprite(x, y, 'atlas', `d_points_${score}.png`);
+    scoreSprite.setScale(config.spriteScale);
+    scoreSprite.setDepth(1000); // Ensure it's above other game elements
+
+    // After visibleDuration, start fade out
+    this.time.delayedCall(config.visibleDuration, () => {
+      this.tweens.add({
+        targets: scoreSprite,
+        alpha: 0,
+        duration: config.fadeDuration,
+        ease: 'Power2',
+        onComplete: () => {
+          scoreSprite.destroy();
+        }
+      });
+    });
   }
 
   checkWinCondition() {

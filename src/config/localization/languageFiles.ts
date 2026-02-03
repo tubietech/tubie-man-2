@@ -48,7 +48,10 @@ export const languageFiles = {
     settingRight: 'Right',
     settingArcadeMode: 'Arcade Mode',
     on: 'ON',
-    off: 'OFF'
+    off: 'OFF',
+    tabGameplay: 'GAMEPLAY',
+    tabKeyboard: 'KEYBOARD',
+    tabController: 'CONTROLLER'
   },
   [Language.SPANISH]: {
     gameTitle: 'Hombre Tubía',
@@ -97,7 +100,10 @@ export const languageFiles = {
     settingRight: 'Derecha',
     settingArcadeMode: 'Modo Arcade',
     on: 'SÍ',
-    off: 'NO'
+    off: 'NO',
+    tabGameplay: 'JUEGO',
+    tabKeyboard: 'TECLADO',
+    tabController: 'MANDO'
   },
   [Language.FRENCH]: {
     gameTitle: 'Tubie-Man',
@@ -146,7 +152,10 @@ export const languageFiles = {
     settingRight: 'Droite',
     settingArcadeMode: 'Mode Arcade',
     on: 'OUI',
-    off: 'NON'
+    off: 'NON',
+    tabGameplay: 'JEU',
+    tabKeyboard: 'CLAVIER',
+    tabController: 'MANETTE'
   },
   [Language.GERMAN]: {
     gameTitle: 'Tubie-Man',
@@ -195,7 +204,10 @@ export const languageFiles = {
     settingRight: 'Rechts',
     settingArcadeMode: 'Arcade-Modus',
     on: 'AN',
-    off: 'AUS'
+    off: 'AUS',
+    tabGameplay: 'SPIEL',
+    tabKeyboard: 'TASTATUR',
+    tabController: 'CONTROLLER'
   }
 };
 

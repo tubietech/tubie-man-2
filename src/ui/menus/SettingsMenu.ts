@@ -8,9 +8,20 @@ import { UIText } from '../elements/UIText';
 import { UIButton } from '../elements/UIButton';
 import { UIButtonGroup } from '../elements/UIButtonGroup';
 import { UIKeyBindingSetting } from '../elements/UIKeyBindingSetting';
+import { UIControllerBindingSetting } from '../elements/UIControllerBindingSetting';
 import { UIToggleSetting } from '../elements/UIToggleSetting';
+import { UITabGroup } from '../elements/UITabGroup';
+import { UIElement } from '../elements/UIElement';
 import { SettingsManager } from '../../utils/SettingsManager';
 import { Orientation } from '../../enums/Orientation';
+import { INavigable } from '../../interfaces/INavigable';
+
+type TabId = 'gameplay' | 'keyboard' | 'controller';
+
+interface TabContent {
+  elements: UIElement[];
+  navigables: INavigable[];
+}
 
 export class SettingsMenu extends Menu {
   readonly menuType = MenuType.SETTINGS;
@@ -18,8 +29,13 @@ export class SettingsMenu extends Menu {
   private settingsManager: SettingsManager;
   private onLanguageChange?: (language: Language) => void;
 
+  private tabGroup!: UITabGroup;
+  private currentTab: TabId = 'gameplay';
+  private tabContents: Map<TabId, TabContent> = new Map();
+  private backButton!: UIButton;
+
   constructor(scene: Phaser.Scene, orientation: Orientation) {
-    super(scene, { type: MenuType.SETTINGS, orientation: orientation});
+    super(scene, { type: MenuType.SETTINGS, orientation: orientation });
     this.localization = LocalizationManager.getInstance();
     this.settingsManager = SettingsManager.getInstance();
     this.buildMenu();
@@ -34,15 +50,12 @@ export class SettingsMenu extends Menu {
 
     // Define base menu dimensions and apply responsive scaling
     const baseMenuWidth = 400;
-    const baseMenuHeight = 810;
+    const baseMenuHeight = 650;
     this.applyResponsiveScale(baseMenuWidth, baseMenuHeight);
 
-    let currentY = -330;
-    const settingSpacing = 55;
-    const settingWidth = 300;
-    const settingHeight = 45;
+    let currentY = -280;
 
-    // Title (positioned relative to center)
+    // Title
     const title = new UIText(this.scene, {
       x: 0,
       y: currentY,
@@ -51,7 +64,63 @@ export class SettingsMenu extends Menu {
       color: gameConfig.menu.colors.titleText
     });
     this.addElement(title);
-    currentY += 80;
+    currentY += 70;
+
+    // Tab group
+    this.tabGroup = new UITabGroup(this.scene, {
+      x: 0,
+      y: currentY,
+      tabs: [
+        { label: loc.getText('tabGameplay'), value: 'gameplay' },
+        { label: loc.getText('tabKeyboard'), value: 'keyboard' },
+        { label: loc.getText('tabController'), value: 'controller' }
+      ],
+      selectedIndex: 0,
+      tabWidth: 110,
+      tabHeight: 30,
+      fontSize: '8px',
+      onTabChange: (value) => {
+        this.switchTab(value as TabId);
+      }
+    });
+    this.addElement(this.tabGroup);
+    this.addNavigable(this.tabGroup);
+    currentY += 50;
+
+    // Content area starts here
+    const contentStartY = currentY;
+
+    // Build content for each tab
+    this.buildGameplayTab(contentStartY);
+    this.buildKeyboardTab(contentStartY);
+    this.buildControllerTab(contentStartY);
+
+    // Back button (always visible, positioned after tab content)
+    const backButtonY = 230;
+    this.backButton = new UIButton(this.scene, {
+      x: 0,
+      y: backButtonY,
+      text: loc.getText('menuBack'),
+      onClick: () => {
+        if (this.onBack) {
+          this.onBack();
+        }
+      }
+    });
+    this.addElement(this.backButton);
+
+    // Show initial tab
+    this.switchTab('gameplay');
+  }
+
+  private buildGameplayTab(startY: number): void {
+    const loc = this.localization;
+    const elements: UIElement[] = [];
+    const navigables: INavigable[] = [];
+
+    let currentY = startY;
+    const settingWidth = 300;
+    const settingHeight = 45;
 
     // Language label
     const languageLabel = new UIText(this.scene, {
@@ -61,6 +130,7 @@ export class SettingsMenu extends Menu {
       fontSize: '16px',
       color: gameConfig.menu.colors.bodyText
     });
+    elements.push(languageLabel);
     this.addElement(languageLabel);
     currentY += 35;
 
@@ -84,116 +154,10 @@ export class SettingsMenu extends Menu {
       },
       fontSize: '14px'
     });
+    elements.push(languageGroup);
+    navigables.push(languageGroup);
     this.addElement(languageGroup);
-    this.addNavigable(languageGroup);
-    currentY += 60;
-
-    // Movement key bindings
-    const upBinding = new UIKeyBindingSetting(this.scene, {
-      x: 0,
-      y: currentY,
-      label: loc.getText('settingUp'),
-      width: settingWidth,
-      height: settingHeight,
-      initialBinding: this.settingsManager.getUpBinding(),
-      onBindingChange: (binding) => {
-        this.settingsManager.setUpBinding(binding);
-      }
-    });
-    this.addElement(upBinding);
-    this.addNavigable(upBinding);
-    currentY += settingSpacing;
-
-    const downBinding = new UIKeyBindingSetting(this.scene, {
-      x: 0,
-      y: currentY,
-      label: loc.getText('settingDown'),
-      width: settingWidth,
-      height: settingHeight,
-      initialBinding: this.settingsManager.getDownBinding(),
-      onBindingChange: (binding) => {
-        this.settingsManager.setDownBinding(binding);
-      }
-    });
-    this.addElement(downBinding);
-    this.addNavigable(downBinding);
-    currentY += settingSpacing;
-
-    const leftBinding = new UIKeyBindingSetting(this.scene, {
-      x: 0,
-      y: currentY,
-      label: loc.getText('settingLeft'),
-      width: settingWidth,
-      height: settingHeight,
-      initialBinding: this.settingsManager.getLeftBinding(),
-      onBindingChange: (binding) => {
-        this.settingsManager.setLeftBinding(binding);
-      }
-    });
-    this.addElement(leftBinding);
-    this.addNavigable(leftBinding);
-    currentY += settingSpacing;
-
-    const rightBinding = new UIKeyBindingSetting(this.scene, {
-      x: 0,
-      y: currentY,
-      label: loc.getText('settingRight'),
-      width: settingWidth,
-      height: settingHeight,
-      initialBinding: this.settingsManager.getRightBinding(),
-      onBindingChange: (binding) => {
-        this.settingsManager.setRightBinding(binding);
-      }
-    });
-    this.addElement(rightBinding);
-    this.addNavigable(rightBinding);
-    currentY += settingSpacing;
-
-    // Action key bindings
-    const fireBinding = new UIKeyBindingSetting(this.scene, {
-      x: 0,
-      y: currentY,
-      label: loc.getText('settingFire'),
-      width: settingWidth,
-      height: settingHeight,
-      initialBinding: this.settingsManager.getFireBinding(),
-      onBindingChange: (binding) => {
-        this.settingsManager.setFireBinding(binding);
-      }
-    });
-    this.addElement(fireBinding);
-    this.addNavigable(fireBinding);
-    currentY += settingSpacing;
-
-    const pauseBinding = new UIKeyBindingSetting(this.scene, {
-      x: 0,
-      y: currentY,
-      label: loc.getText('settingPause'),
-      width: settingWidth,
-      height: settingHeight,
-      initialBinding: this.settingsManager.getPauseBinding(),
-      onBindingChange: (binding) => {
-        this.settingsManager.setPauseBinding(binding);
-      }
-    });
-    this.addElement(pauseBinding);
-    this.addNavigable(pauseBinding);
-    currentY += settingSpacing;
-
-    const continueBinding = new UIKeyBindingSetting(this.scene, {
-      x: 0,
-      y: currentY,
-      label: loc.getText('settingContinue'),
-      width: settingWidth,
-      height: settingHeight,
-      initialBinding: this.settingsManager.getContinueBinding(),
-      onBindingChange: (binding) => {
-        this.settingsManager.setContinueBinding(binding);
-      }
-    });
-    this.addElement(continueBinding);
-    this.addNavigable(continueBinding);
-    currentY += settingSpacing;
+    currentY += 70;
 
     // Arcade Mode toggle
     const arcadeToggle = new UIToggleSetting(this.scene, {
@@ -209,23 +173,290 @@ export class SettingsMenu extends Menu {
         this.settingsManager.setArcadeMode(value);
       }
     });
+    elements.push(arcadeToggle);
+    navigables.push(arcadeToggle);
     this.addElement(arcadeToggle);
-    this.addNavigable(arcadeToggle);
-    currentY += 70;
 
-    // Back button
-    const backButton = new UIButton(this.scene, {
+    this.tabContents.set('gameplay', { elements, navigables });
+  }
+
+  private buildKeyboardTab(startY: number): void {
+    const loc = this.localization;
+    const elements: UIElement[] = [];
+    const navigables: INavigable[] = [];
+
+    let currentY = startY;
+    const settingSpacing = 50;
+    const settingWidth = 300;
+    const settingHeight = 40;
+
+    // Movement key bindings
+    const upBinding = new UIKeyBindingSetting(this.scene, {
       x: 0,
       y: currentY,
-      text: loc.getText('menuBack'),
-      onClick: () => {
-        if (this.onBack) {
-          this.onBack();
-        }
+      label: loc.getText('settingUp'),
+      width: settingWidth,
+      height: settingHeight,
+      initialBinding: this.settingsManager.getUpBinding(),
+      onBindingChange: (binding) => {
+        this.settingsManager.setUpBinding(binding);
       }
     });
-    this.addElement(backButton);
-    this.addNavigable(backButton);
+    elements.push(upBinding);
+    navigables.push(upBinding);
+    this.addElement(upBinding);
+    currentY += settingSpacing;
+
+    const downBinding = new UIKeyBindingSetting(this.scene, {
+      x: 0,
+      y: currentY,
+      label: loc.getText('settingDown'),
+      width: settingWidth,
+      height: settingHeight,
+      initialBinding: this.settingsManager.getDownBinding(),
+      onBindingChange: (binding) => {
+        this.settingsManager.setDownBinding(binding);
+      }
+    });
+    elements.push(downBinding);
+    navigables.push(downBinding);
+    this.addElement(downBinding);
+    currentY += settingSpacing;
+
+    const leftBinding = new UIKeyBindingSetting(this.scene, {
+      x: 0,
+      y: currentY,
+      label: loc.getText('settingLeft'),
+      width: settingWidth,
+      height: settingHeight,
+      initialBinding: this.settingsManager.getLeftBinding(),
+      onBindingChange: (binding) => {
+        this.settingsManager.setLeftBinding(binding);
+      }
+    });
+    elements.push(leftBinding);
+    navigables.push(leftBinding);
+    this.addElement(leftBinding);
+    currentY += settingSpacing;
+
+    const rightBinding = new UIKeyBindingSetting(this.scene, {
+      x: 0,
+      y: currentY,
+      label: loc.getText('settingRight'),
+      width: settingWidth,
+      height: settingHeight,
+      initialBinding: this.settingsManager.getRightBinding(),
+      onBindingChange: (binding) => {
+        this.settingsManager.setRightBinding(binding);
+      }
+    });
+    elements.push(rightBinding);
+    navigables.push(rightBinding);
+    this.addElement(rightBinding);
+    currentY += settingSpacing;
+
+    // Action key bindings
+    const fireBinding = new UIKeyBindingSetting(this.scene, {
+      x: 0,
+      y: currentY,
+      label: loc.getText('settingFire'),
+      width: settingWidth,
+      height: settingHeight,
+      initialBinding: this.settingsManager.getFireBinding(),
+      onBindingChange: (binding) => {
+        this.settingsManager.setFireBinding(binding);
+      }
+    });
+    elements.push(fireBinding);
+    navigables.push(fireBinding);
+    this.addElement(fireBinding);
+    currentY += settingSpacing;
+
+    const pauseBinding = new UIKeyBindingSetting(this.scene, {
+      x: 0,
+      y: currentY,
+      label: loc.getText('settingPause'),
+      width: settingWidth,
+      height: settingHeight,
+      initialBinding: this.settingsManager.getPauseBinding(),
+      onBindingChange: (binding) => {
+        this.settingsManager.setPauseBinding(binding);
+      }
+    });
+    elements.push(pauseBinding);
+    navigables.push(pauseBinding);
+    this.addElement(pauseBinding);
+    currentY += settingSpacing;
+
+    const continueBinding = new UIKeyBindingSetting(this.scene, {
+      x: 0,
+      y: currentY,
+      label: loc.getText('settingContinue'),
+      width: settingWidth,
+      height: settingHeight,
+      initialBinding: this.settingsManager.getContinueBinding(),
+      onBindingChange: (binding) => {
+        this.settingsManager.setContinueBinding(binding);
+      }
+    });
+    elements.push(continueBinding);
+    navigables.push(continueBinding);
+    this.addElement(continueBinding);
+
+    this.tabContents.set('keyboard', { elements, navigables });
+  }
+
+  private buildControllerTab(startY: number): void {
+    const loc = this.localization;
+    const elements: UIElement[] = [];
+    const navigables: INavigable[] = [];
+
+    let currentY = startY;
+    const settingSpacing = 50;
+    const settingWidth = 300;
+    const settingHeight = 40;
+
+    // Movement controller bindings
+    const upBinding = new UIControllerBindingSetting(this.scene, {
+      x: 0,
+      y: currentY,
+      label: loc.getText('settingUp'),
+      width: settingWidth,
+      height: settingHeight,
+      initialBinding: this.settingsManager.getGamepadUpBinding(),
+      onBindingChange: (binding) => {
+        this.settingsManager.setGamepadUpBinding(binding);
+      }
+    });
+    elements.push(upBinding);
+    navigables.push(upBinding);
+    this.addElement(upBinding);
+    currentY += settingSpacing;
+
+    const downBinding = new UIControllerBindingSetting(this.scene, {
+      x: 0,
+      y: currentY,
+      label: loc.getText('settingDown'),
+      width: settingWidth,
+      height: settingHeight,
+      initialBinding: this.settingsManager.getGamepadDownBinding(),
+      onBindingChange: (binding) => {
+        this.settingsManager.setGamepadDownBinding(binding);
+      }
+    });
+    elements.push(downBinding);
+    navigables.push(downBinding);
+    this.addElement(downBinding);
+    currentY += settingSpacing;
+
+    const leftBinding = new UIControllerBindingSetting(this.scene, {
+      x: 0,
+      y: currentY,
+      label: loc.getText('settingLeft'),
+      width: settingWidth,
+      height: settingHeight,
+      initialBinding: this.settingsManager.getGamepadLeftBinding(),
+      onBindingChange: (binding) => {
+        this.settingsManager.setGamepadLeftBinding(binding);
+      }
+    });
+    elements.push(leftBinding);
+    navigables.push(leftBinding);
+    this.addElement(leftBinding);
+    currentY += settingSpacing;
+
+    const rightBinding = new UIControllerBindingSetting(this.scene, {
+      x: 0,
+      y: currentY,
+      label: loc.getText('settingRight'),
+      width: settingWidth,
+      height: settingHeight,
+      initialBinding: this.settingsManager.getGamepadRightBinding(),
+      onBindingChange: (binding) => {
+        this.settingsManager.setGamepadRightBinding(binding);
+      }
+    });
+    elements.push(rightBinding);
+    navigables.push(rightBinding);
+    this.addElement(rightBinding);
+    currentY += settingSpacing;
+
+    // Action controller bindings
+    const fireBinding = new UIControllerBindingSetting(this.scene, {
+      x: 0,
+      y: currentY,
+      label: loc.getText('settingFire'),
+      width: settingWidth,
+      height: settingHeight,
+      initialBinding: this.settingsManager.getGamepadFireBinding(),
+      onBindingChange: (binding) => {
+        this.settingsManager.setGamepadFireBinding(binding);
+      }
+    });
+    elements.push(fireBinding);
+    navigables.push(fireBinding);
+    this.addElement(fireBinding);
+    currentY += settingSpacing;
+
+    const pauseBinding = new UIControllerBindingSetting(this.scene, {
+      x: 0,
+      y: currentY,
+      label: loc.getText('settingPause'),
+      width: settingWidth,
+      height: settingHeight,
+      initialBinding: this.settingsManager.getGamepadPauseBinding(),
+      onBindingChange: (binding) => {
+        this.settingsManager.setGamepadPauseBinding(binding);
+      }
+    });
+    elements.push(pauseBinding);
+    navigables.push(pauseBinding);
+    this.addElement(pauseBinding);
+    currentY += settingSpacing;
+
+    const continueBinding = new UIControllerBindingSetting(this.scene, {
+      x: 0,
+      y: currentY,
+      label: loc.getText('settingContinue'),
+      width: settingWidth,
+      height: settingHeight,
+      initialBinding: this.settingsManager.getGamepadContinueBinding(),
+      onBindingChange: (binding) => {
+        this.settingsManager.setGamepadContinueBinding(binding);
+      }
+    });
+    elements.push(continueBinding);
+    navigables.push(continueBinding);
+    this.addElement(continueBinding);
+
+    this.tabContents.set('controller', { elements, navigables });
+  }
+
+  private switchTab(tabId: TabId): void {
+    // Hide all tab contents
+    for (const [id, content] of this.tabContents) {
+      const visible = id === tabId;
+      for (const element of content.elements) {
+        element.setVisible(visible);
+      }
+    }
+
+    // Update navigables list
+    this.clearNavigables();
+    this.addNavigable(this.tabGroup);
+
+    // Add navigables for active tab
+    const activeContent = this.tabContents.get(tabId);
+    if (activeContent) {
+      for (const navigable of activeContent.navigables) {
+        this.addNavigable(navigable);
+      }
+    }
+
+    // Add back button
+    this.addNavigable(this.backButton);
+
+    this.currentTab = tabId;
   }
 
   private getCurrentLanguageIndex(): number {

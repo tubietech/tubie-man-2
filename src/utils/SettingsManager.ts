@@ -5,6 +5,13 @@ import { IKeyBinding } from '../ui/elements/UIKeyBindingSetting';
 import Phaser from 'phaser';
 
 /**
+ * Interface for controller button binding
+ */
+export interface IControllerBinding {
+  button: number;
+}
+
+/**
  * Interface for all persisted game settings
  */
 export interface IGameSettings {
@@ -18,6 +25,15 @@ export interface IGameSettings {
       down: IKeyBinding;
       left: IKeyBinding;
       right: IKeyBinding;
+    };
+    gamepad: {
+      fire: IControllerBinding;
+      continue: IControllerBinding;
+      pause: IControllerBinding;
+      up: IControllerBinding;
+      down: IControllerBinding;
+      left: IControllerBinding;
+      right: IControllerBinding;
     };
   };
 }
@@ -60,6 +76,15 @@ export class SettingsManager {
           down: { type: 'keyboard', key: gameConfig.controls.keyboard.down },
           left: { type: 'keyboard', key: gameConfig.controls.keyboard.left },
           right: { type: 'keyboard', key: gameConfig.controls.keyboard.right }
+        },
+        gamepad: {
+          fire: { button: gameConfig.controls.gamepad.fire },
+          continue: { button: gameConfig.controls.gamepad.continue },
+          pause: { button: gameConfig.controls.gamepad.pause },
+          up: { button: gameConfig.controls.gamepad.up },
+          down: { button: gameConfig.controls.gamepad.down },
+          left: { button: gameConfig.controls.gamepad.left },
+          right: { button: gameConfig.controls.gamepad.right }
         }
       }
     };
@@ -99,6 +124,15 @@ export class SettingsManager {
           down: loaded.controls?.keyboard?.down ?? defaults.controls.keyboard.down,
           left: loaded.controls?.keyboard?.left ?? defaults.controls.keyboard.left,
           right: loaded.controls?.keyboard?.right ?? defaults.controls.keyboard.right
+        },
+        gamepad: {
+          fire: loaded.controls?.gamepad?.fire ?? defaults.controls.gamepad.fire,
+          continue: loaded.controls?.gamepad?.continue ?? defaults.controls.gamepad.continue,
+          pause: loaded.controls?.gamepad?.pause ?? defaults.controls.gamepad.pause,
+          up: loaded.controls?.gamepad?.up ?? defaults.controls.gamepad.up,
+          down: loaded.controls?.gamepad?.down ?? defaults.controls.gamepad.down,
+          left: loaded.controls?.gamepad?.left ?? defaults.controls.gamepad.left,
+          right: loaded.controls?.gamepad?.right ?? defaults.controls.gamepad.right
         }
       }
     };
@@ -238,6 +272,79 @@ export class SettingsManager {
 
   getRightKeyCode(): number {
     return this.getKeyCode(this.getRightBinding(), Phaser.Input.Keyboard.KeyCodes.D);
+  }
+
+  // ============== Gamepad Bindings ==============
+
+  getGamepadFireBinding(): IControllerBinding {
+    return this.settings.controls.gamepad.fire;
+  }
+
+  setGamepadFireBinding(binding: IControllerBinding): void {
+    this.settings.controls.gamepad.fire = binding;
+    this.saveSettings();
+  }
+
+  getGamepadContinueBinding(): IControllerBinding {
+    return this.settings.controls.gamepad.continue;
+  }
+
+  setGamepadContinueBinding(binding: IControllerBinding): void {
+    this.settings.controls.gamepad.continue = binding;
+    this.saveSettings();
+  }
+
+  getGamepadPauseBinding(): IControllerBinding {
+    return this.settings.controls.gamepad.pause;
+  }
+
+  setGamepadPauseBinding(binding: IControllerBinding): void {
+    this.settings.controls.gamepad.pause = binding;
+    this.saveSettings();
+  }
+
+  getGamepadUpBinding(): IControllerBinding {
+    return this.settings.controls.gamepad.up;
+  }
+
+  setGamepadUpBinding(binding: IControllerBinding): void {
+    this.settings.controls.gamepad.up = binding;
+    this.saveSettings();
+  }
+
+  getGamepadDownBinding(): IControllerBinding {
+    return this.settings.controls.gamepad.down;
+  }
+
+  setGamepadDownBinding(binding: IControllerBinding): void {
+    this.settings.controls.gamepad.down = binding;
+    this.saveSettings();
+  }
+
+  getGamepadLeftBinding(): IControllerBinding {
+    return this.settings.controls.gamepad.left;
+  }
+
+  setGamepadLeftBinding(binding: IControllerBinding): void {
+    this.settings.controls.gamepad.left = binding;
+    this.saveSettings();
+  }
+
+  getGamepadRightBinding(): IControllerBinding {
+    return this.settings.controls.gamepad.right;
+  }
+
+  setGamepadRightBinding(binding: IControllerBinding): void {
+    this.settings.controls.gamepad.right = binding;
+    this.saveSettings();
+  }
+
+  /**
+   * Get button name from button number
+   */
+  getGamepadButtonName(button: number): string {
+    const buttonNames = gameConfig.controls.gamepadButtonNames as { [key: number]: string };
+    return buttonNames[button] ?? `BTN${button}`;
   }
 
   // ============== Helper Methods ==============
