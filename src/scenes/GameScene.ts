@@ -119,7 +119,7 @@ export class GameScene extends Phaser.Scene {
       // Full reset - start new game
       this.score = 0;
       this.level = 1;
-      this.lives = gameConfig.player.startLives;
+      this.lives = gameConfig.player.startLives[this.difficulty as keyof typeof gameConfig.player.startLives];
       this.currentPaletteIndex = -1; // Reset palette
     } else {
       // Level transition - preserve game state
@@ -522,7 +522,8 @@ export class GameScene extends Phaser.Scene {
       this.level,
       this.highScore,
       () => this.togglePause(),  // Pause button callback
-      this.lives  // Pass current lives count
+      this.lives,  // Pass current lives count
+      this.difficulty  // Pass difficulty for lives sprite count
     );
 
     this.scoreText = uiElements.scoreText;

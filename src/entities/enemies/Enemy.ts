@@ -350,7 +350,8 @@ export class Enemy extends Entity {
     this.isRespawning = true;
     this.isReleased = false;
     this.respawnTimer = 0;
-    this.respawnDelay = gameConfig.enemy.respawnDelay + additionalDelay;
+    const baseRespawnDelay = gameConfig.enemy.respawnDelay[this.difficulty as keyof typeof gameConfig.enemy.respawnDelay];
+    this.respawnDelay = baseRespawnDelay + additionalDelay;
 
     // Ensure enemy is exactly at pen center
     this.moveTo(this.mapData.penCenter.x, this.mapData.penCenter.y);

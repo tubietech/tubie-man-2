@@ -17,7 +17,7 @@ export const gameConfig = {
         animationFrameRate: 25, // Frame rate for projectile animation
       }
     },
-    startLives: 3,
+    startLives: { easy: 4, medium: 3, hard: 3 },
     playerStartingHeight: 7, // Player starts 7 rows above bottom of map
     animationFrameRate: 18,
     spriteScale: 2,
@@ -30,7 +30,7 @@ export const gameConfig = {
   },
   enemy: {
     animationFrameRate: 3,
-    speed: { easy: 55, medium: 70, hard: 90 },
+    speed: { easy: 53, medium: 70, hard: 90 },
     injuredSpeed: { easy: 200, medium: 200, hard: 200 }, // Speed when injured and fleeing to pen
     scaredDuration: 5000,
     types: ['pokey', 'pricky', 'stingy', 'doc'],
@@ -39,8 +39,8 @@ export const gameConfig = {
       2: 3,  // Level 2: Pokey, Pricky, Stingy
       3: 4   // Level 3+: All four enemies (Doc appears)
     },
-    respawnDelay: 5000, // Time to pause in pen before respawning (ms)
-    releaseDelay: { easy: 4000, medium: 3000, hard: 1500 }, // Delay between enemy releases (ms)
+    respawnDelay: { easy: 10000, medium: 5000, hard: 3500 }, // Time to pause in pen before respawning (ms)
+    releaseDelay: { easy: 5000, medium: 3000, hard: 1500 }, // Delay between enemy releases (ms)
     spriteScale: 1.8,//2.1, // Scale multiplier for enemy sprites
     injuredSpriteScale: 2.75, // Scale multiplier for injured enemy sprites
     injuryScores: [100, 200, 500, 700], // Points per combo: 1st, 2nd, 3rd, 4th+
@@ -101,7 +101,7 @@ export const gameConfig = {
       scores: [100, 200, 300, 500, 700, 800, 1000, 1600, 2000, 3000, 5000],
       defaultScore: 5000, // Score for level 12+
       scale: 2.2, // Scale bonus sprite relative to tile size
-      speed: { easy: 60, medium: 100, hard: 140 }, // Pixels per second by difficulty
+      speed: { easy: 50, medium: 100, hard: 140 }, // Pixels per second by difficulty
       appearancesPerLevel: 2,
       firstAppearance: { min: 60, max: 75 }, // Dots eaten before first appearance
       secondAppearance: { min: 170, max: 180 }, // Dots eaten before second appearance

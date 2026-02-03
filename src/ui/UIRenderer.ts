@@ -150,11 +150,12 @@ export class UIRenderer {
     x: number,
     y: number,
     currentLives: number,
+    difficulty: string,
     spriteScale: number = 1.5,
     spacing: number = 5
   ): Phaser.GameObjects.Sprite[] {
     const sprites: Phaser.GameObjects.Sprite[] = [];
-    const maxLives = gameConfig.player.startLives;
+    const maxLives = gameConfig.player.startLives[difficulty as keyof typeof gameConfig.player.startLives];
 
     for (let i = 0; i < maxLives; i++) {
       const sprite = this.scene.add.sprite(
@@ -217,15 +218,16 @@ export class UIRenderer {
     level: number,
     highScore: number,
     onPauseClick?: () => void,
-    lives?: number
+    lives?: number,
+    difficulty: string = 'medium'
   ): IUIElements {
     const loc = this.localization;
-    const currentLives = lives ?? gameConfig.player.startLives;
+    const currentLives = lives ?? gameConfig.player.startLives[difficulty as keyof typeof gameConfig.player.startLives];
 
     if (orientation === Orientation.VERTICAL) {
-      return this.createVerticalUI(mapOffsetX, mapOffsetY, mapWidth, mapHeight, score, level, highScore, loc, onPauseClick, currentLives);
+      return this.createVerticalUI(mapOffsetX, mapOffsetY, mapWidth, mapHeight, score, level, highScore, loc, onPauseClick, currentLives, difficulty);
     } else {
-      return this.createHorizontalUI(mapOffsetX, mapOffsetY, mapWidth, mapHeight, score, level, highScore, loc, onPauseClick, currentLives);
+      return this.createHorizontalUI(mapOffsetX, mapOffsetY, mapWidth, mapHeight, score, level, highScore, loc, onPauseClick, currentLives, difficulty);
     }
   }
 
@@ -239,7 +241,8 @@ export class UIRenderer {
     highScore: number,
     loc: LocalizationManager,
     onPauseClick?: () => void,
-    currentLives?: number
+    currentLives?: number,
+    difficulty: string = 'medium'
   ): IUIElements {
     const scoreText = this.createLabelValueTextVertical(
       mapOffsetX + 40,
@@ -264,7 +267,8 @@ export class UIRenderer {
     const livesSprites = this.createLivesSprites(
       mapOffsetX + mapWidth * 2 / 3 - 20,
       mapOffsetY - 50,
-      currentLives ?? gameConfig.player.startLives,
+      currentLives ?? gameConfig.player.startLives[difficulty as keyof typeof gameConfig.player.startLives],
+      difficulty,
       1,
       15
     );
@@ -351,7 +355,8 @@ export class UIRenderer {
     highScore: number,
     loc: LocalizationManager,
     onPauseClick?: () => void,
-    currentLives?: number
+    currentLives?: number,
+    difficulty: string = 'medium'
   ): IUIElements {
     const uiX = mapOffsetX + mapWidth + 20;
 
@@ -388,7 +393,8 @@ export class UIRenderer {
     const livesSprites = this.createLivesSprites(
       uiX - 10,
       230,
-      currentLives ?? gameConfig.player.startLives,
+      currentLives ?? gameConfig.player.startLives[difficulty as keyof typeof gameConfig.player.startLives],
+      difficulty,
       1,
       15
     );
