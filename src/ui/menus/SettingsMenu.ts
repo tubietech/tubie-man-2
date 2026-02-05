@@ -97,7 +97,7 @@ export class SettingsMenu extends Menu {
     this.buildControllerTab(contentStartY);
 
     // Back button (always visible, positioned after tab content)
-    const backButtonY = 230;
+    const backButtonY = 250;
     this.backButton = new UIButton(this.scene, {
       x: 0,
       y: backButtonY,
@@ -179,8 +179,8 @@ export class SettingsMenu extends Menu {
     this.addElement(arcadeToggle);
     currentY += 55;
 
-    // Mute toggle
-    const muteToggle = new UIToggleSetting(this.scene, {
+    // Master Mute toggle
+    const masterMuteToggle = new UIToggleSetting(this.scene, {
       x: 0,
       y: currentY,
       label: loc.getText('settingMute'),
@@ -193,9 +193,47 @@ export class SettingsMenu extends Menu {
         this.settingsManager.setMasterMuted(value);
       }
     });
-    elements.push(muteToggle);
-    navigables.push(muteToggle);
-    this.addElement(muteToggle);
+    elements.push(masterMuteToggle);
+    navigables.push(masterMuteToggle);
+    this.addElement(masterMuteToggle);
+    currentY += 55;
+
+    // Music Mute toggle
+    const musicMuteToggle = new UIToggleSetting(this.scene, {
+      x: 0,
+      y: currentY,
+      label: loc.getText('settingsMusicMute'),
+      width: settingWidth,
+      height: settingHeight,
+      initialValue: this.settingsManager.isMusicMuted(),
+      onLabel: loc.getText('on'),
+      offLabel: loc.getText('off'),
+      onValueChange: (value) => {
+        this.settingsManager.setMusicMuted(value);
+      }
+    });
+    elements.push(musicMuteToggle);
+    navigables.push(musicMuteToggle);
+    this.addElement(musicMuteToggle);
+    currentY += 55;
+
+    // Sfx Mute toggle
+    const sfxMuteToggle = new UIToggleSetting(this.scene, {
+      x: 0,
+      y: currentY,
+      label: loc.getText('settingsSfxMute'),
+      width: settingWidth,
+      height: settingHeight,
+      initialValue: this.settingsManager.isSfxMuted(),
+      onLabel: loc.getText('on'),
+      offLabel: loc.getText('off'),
+      onValueChange: (value) => {
+        this.settingsManager.setSfxMuted  (value);
+      }
+    });
+    elements.push(sfxMuteToggle);
+    navigables.push(sfxMuteToggle);
+    this.addElement(sfxMuteToggle);
     currentY += 55;
 
     // Master Volume slider
@@ -342,6 +380,22 @@ export class SettingsMenu extends Menu {
     elements.push(continueBinding);
     navigables.push(continueBinding);
     this.addElement(continueBinding);
+    currentY += settingSpacing;
+
+    const muteBinding = new UIKeyBindingSetting(this.scene, {
+      x: 0,
+      y: currentY,
+      label: loc.getText('settingMuteKey'),
+      width: settingWidth,
+      height: settingHeight,
+      initialBinding: this.settingsManager.getMuteBinding(),
+      onBindingChange: (binding) => {
+        this.settingsManager.setMuteBinding(binding);
+      }
+    });
+    elements.push(muteBinding);
+    navigables.push(muteBinding);
+    this.addElement(muteBinding);
 
     this.tabContents.set('keyboard', { elements, navigables });
   }

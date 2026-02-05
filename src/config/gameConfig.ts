@@ -101,7 +101,7 @@ export const gameConfig = {
       scores: [100, 200, 300, 500, 700, 800, 1000, 1600, 2000, 3000, 5000],
       defaultScore: 5000, // Score for level 12+
       scale: 2.2, // Scale bonus sprite relative to tile size
-      speed: { easy: 50, medium: 100, hard: 140 }, // Pixels per second by difficulty
+      speed: { easy: 25, medium: 50, hard: 100 }, // Pixels per second by difficulty
       appearancesPerLevel: 2,
       firstAppearance: { min: 60, max: 75 }, // Dots eaten before first appearance
       secondAppearance: { min: 170, max: 180 }, // Dots eaten before second appearance
@@ -167,7 +167,8 @@ export const gameConfig = {
       right: 'D',
       fire: 'SPACE',
       continue: 'ENTER',
-      pause: 'ESC'
+      pause: 'ESC',
+      mute: 'M'
     },
     gamepad: {
       // Standard gamepad button mapping (Xbox/PlayStation layout)

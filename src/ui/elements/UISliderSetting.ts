@@ -152,7 +152,6 @@ export class UISliderSetting extends UISetting {
 
   private setupSliderInteractivity(): void {
     // Make the slider track clickable
-    const trackX = this.sliderX - this.sliderWidth / 2;
     const trackWidth = this.sliderWidth;
     const clickArea = this.scene.add.rectangle(
       this.sliderX,
@@ -161,24 +160,54 @@ export class UISliderSetting extends UISetting {
       this.settingHeight - 10
     );
     clickArea.setAlpha(0.001);
-    clickArea.setInteractive({ useHandCursor: true });
+    clickArea.setInteractive({ useHandCursor: true, draggable: true });
+
+    // Track if we're currently dragging
+    let isDragging = false;
 
     clickArea.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
+      isDragging = true;
       this.handleSliderClick(pointer);
     });
 
     clickArea.on('pointermove', (pointer: Phaser.Input.Pointer) => {
-      if (pointer.isDown) {
+      if (isDragging && pointer.isDown) {
         this.handleSliderClick(pointer);
       }
+    });
+
+    clickArea.on('pointerup', () => {
+      isDragging = false;
+    });
+
+    clickArea.on('pointerout', () => {
+      isDragging = false;
+    });
+
+    // Also listen for global pointer events for smoother dragging
+    this.scene.input.on('pointermove', (pointer: Phaser.Input.Pointer) => {
+      if (isDragging && pointer.isDown) {
+        this.handleSliderClick(pointer);
+      }
+    });
+
+    this.scene.input.on('pointerup', () => {
+      isDragging = false;
     });
 
     this.container.add(clickArea);
   }
 
   private handleSliderClick(pointer: Phaser.Input.Pointer): void {
-    // Convert pointer position to local container coordinates
-    const localX = pointer.x - this.container.x;
+    // Get the world position of the container by traversing the parent hierarchy
+    const worldMatrix = this.container.getWorldTransformMatrix();
+    const containerWorldX = worldMatrix.tx;
+    const containerScale = worldMatrix.scaleX; // Assuming uniform scaling
+
+    // Convert pointer world position to local container coordinates
+    // Account for container position and scale
+    const localX = (pointer.x - containerWorldX) / containerScale;
+
     const trackLeft = this.sliderX - this.sliderWidth / 2;
     const trackRight = this.sliderX + this.sliderWidth / 2;
 

@@ -22,6 +22,7 @@ export interface IGameSettings {
       fire: IKeyBinding;
       continue: IKeyBinding;
       pause: IKeyBinding;
+      mute: IKeyBinding;
       up: IKeyBinding;
       down: IKeyBinding;
       left: IKeyBinding;
@@ -73,6 +74,7 @@ export class SettingsManager {
           fire: { type: 'keyboard', key: gameConfig.controls.keyboard.fire },
           continue: { type: 'keyboard', key: gameConfig.controls.keyboard.continue },
           pause: { type: 'keyboard', key: gameConfig.controls.keyboard.pause },
+          mute: { type: 'keyboard', key: gameConfig.controls.keyboard.mute },
           up: { type: 'keyboard', key: gameConfig.controls.keyboard.up },
           down: { type: 'keyboard', key: gameConfig.controls.keyboard.down },
           left: { type: 'keyboard', key: gameConfig.controls.keyboard.left },
@@ -121,6 +123,7 @@ export class SettingsManager {
           fire: loaded.controls?.keyboard?.fire ?? defaults.controls.keyboard.fire,
           continue: loaded.controls?.keyboard?.continue ?? defaults.controls.keyboard.continue,
           pause: loaded.controls?.keyboard?.pause ?? defaults.controls.keyboard.pause,
+          mute: loaded.controls?.keyboard?.mute ?? defaults.controls.keyboard.mute,
           up: loaded.controls?.keyboard?.up ?? defaults.controls.keyboard.up,
           down: loaded.controls?.keyboard?.down ?? defaults.controls.keyboard.down,
           left: loaded.controls?.keyboard?.left ?? defaults.controls.keyboard.left,
@@ -220,6 +223,20 @@ export class SettingsManager {
 
   getPauseKeyCode(): number {
     return this.getKeyCode(this.getPauseBinding(), Phaser.Input.Keyboard.KeyCodes.ESC);
+  }
+
+  // ============== Mute ==============
+  getMuteBinding(): IKeyBinding {
+    return this.settings.controls.keyboard.mute;
+  }
+
+  setMuteBinding(binding: IKeyBinding): void {
+    this.settings.controls.keyboard.mute = binding;
+    this.saveSettings();
+  }
+
+  getMuteKeyCode(): number {
+    return this.getKeyCode(this.getMuteBinding(), Phaser.Input.Keyboard.KeyCodes.M);
   }
 
   // ============== Movement ==============
@@ -500,4 +517,29 @@ export class SettingsManager {
   setSfxVolume(volume: number): void {
     AudioManager.getInstance().setSfxVolume(volume);
   }
+
+  /** 
+  * Set music mute state
+  */
+  setMusicMuted(muted: boolean): void {
+    AudioManager.getInstance().setMusicMuted(muted);
+  }
+
+  isMusicMuted(): boolean {
+    return AudioManager.getInstance().isMusicMutedState();
+  }
+
+  /**
+   * Mutes and unmutes the sfx
+   */
+  setSfxMuted(muted: boolean): void {
+    AudioManager.getInstance().setSfxMuted(muted);
+  }
+
+  /**
+   * Returns if sfx are muted
+   */
+  isSfxMuted(): boolean {
+    return AudioManager.getInstance().isSfxMutedState();
+  } 
 }

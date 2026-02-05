@@ -54,7 +54,10 @@ export const languageFiles = {
     tabController: 'CONTROLLER',
     getReady: 'Get Ready!',
     settingMasterVolume: 'Volume',
-    settingMute: 'Mute'
+    settingMute: 'Mute ALl',
+    settingsSfxMute: 'Mute Sounds',
+    settingsMusicMute: 'Mute Music',
+    settingMuteKey: 'Mute Key'
   },
   [Language.SPANISH]: {
     gameTitle: 'Hombre Tubía',
@@ -109,7 +112,10 @@ export const languageFiles = {
     tabController: 'MANDO',
     getReady: '¡Prepárate!',
     settingMasterVolume: 'Volumen',
-    settingMute: 'Silenciar'
+    settingMute: 'Silenciar',
+    settingsSfxMute: 'Silenciar Sonidos',
+    settingsMusicMute: 'Silenciar Música',
+    settingMuteKey: 'Tecla Silencio'
   },
   [Language.FRENCH]: {
     gameTitle: 'Tubie-Man',
@@ -164,7 +170,10 @@ export const languageFiles = {
     tabController: 'MANETTE',
     getReady: 'Préparez-vous!',
     settingMasterVolume: 'Volume',
-    settingMute: 'Muet'
+    settingMute: 'Muet',
+    settingsSfxMute: 'Couper les Sons',
+    settingsMusicMute: 'Couper la Musique',
+    settingMuteKey: 'Touche Muet'
   },
   [Language.GERMAN]: {
     gameTitle: 'Tubie-Man',
@@ -219,7 +228,10 @@ export const languageFiles = {
     tabController: 'CONTROLLER',
     getReady: 'Mach dich bereit!',
     settingMasterVolume: 'Lautstärke',
-    settingMute: 'Stumm'
+    settingMute: 'Stumm',
+    settingsSfxMute: 'Töne Stumm',
+    settingsMusicMute: 'Musik Stumm',
+    settingMuteKey: 'Stumm-Taste'
   }
 };
 

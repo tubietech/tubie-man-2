@@ -65,6 +65,7 @@ export class GameScene extends Phaser.Scene {
   pauseMenu!: PauseMenu;
   highScoreEntryOverlay: HighScoreEntryOverlay | null = null;
   pauseKey!: Phaser.Input.Keyboard.Key;
+  muteKey!: Phaser.Input.Keyboard.Key;
   currentPaletteIndex: number = -1;
   currentPalette!: IMapColorPalette;
   developerIndicator!: Phaser.GameObjects.Text;
@@ -487,6 +488,11 @@ export class GameScene extends Phaser.Scene {
     // Pause key handler
     this.pauseKey.on('down', () => {
       this.togglePause();
+    });
+
+    this.muteKey = this.input.keyboard!.addKey(settingsManager.getMuteKeyCode());
+    this.muteKey.on('down', () => {
+      AudioManager.getInstance().toggleMasterMute();
     });
 
     // Gamepad pause button handler (Select button = button 8)

@@ -35,6 +35,9 @@ export abstract class Menu implements IMenu {
   protected customConfirmKey: Phaser.Input.Keyboard.Key | null = null;
   protected escapeKey: Phaser.Input.Keyboard.Key | null = null;
   protected tabKey: Phaser.Input.Keyboard.Key | null = null;
+  // Mute key
+  protected muteKey: Phaser.Input.Keyboard.Key | null = null;
+  protected customMuteKey: Phaser.Input.Keyboard.Key | null = null;
 
   // Callback for back navigation
   protected onBack?: () => void;
@@ -208,6 +211,7 @@ export abstract class Menu implements IMenu {
     this.downKey = this.scene.input.keyboard.addKey(KeyCodes.DOWN);
     this.leftKey = this.scene.input.keyboard.addKey(KeyCodes.LEFT);
     this.rightKey = this.scene.input.keyboard.addKey(KeyCodes.RIGHT);
+    this.muteKey = this.scene.input.keyboard.addKey(KeyCodes.M);
 
     // Custom movement keys from settings (only add if different from arrow keys)
     const customUpCode = settingsManager.getUpKeyCode();
@@ -215,6 +219,7 @@ export abstract class Menu implements IMenu {
     const customLeftCode = settingsManager.getLeftKeyCode();
     const customRightCode = settingsManager.getRightKeyCode();
     const customConfirmCode = settingsManager.getContinueKeyCode();
+    const customMuteCode = settingsManager.getMuteKeyCode();
 
     if (customUpCode !== KeyCodes.UP) {
       this.customUpKey = this.scene.input.keyboard.addKey(customUpCode);
@@ -227,6 +232,10 @@ export abstract class Menu implements IMenu {
     }
     if (customRightCode !== KeyCodes.RIGHT) {
       this.customRightKey = this.scene.input.keyboard.addKey(customRightCode);
+    }
+
+    if(customMuteCode !== KeyCodes.M) {
+      this.customMuteKey = this.scene.input.keyboard.addKey(customMuteCode);
     }
 
     // Action keys - Enter is always available, plus custom confirm from settings (if different)
@@ -270,6 +279,11 @@ export abstract class Menu implements IMenu {
         this.focusNext();
       }
     });
+    
+    const _muteKey = this.customMuteKey ? this.customMuteKey : this.muteKey;
+    _muteKey?.on('down', () => {
+      AudioManager.getInstance().toggleMasterMute();
+    });
   }
 
   protected handleNavigationInput(direction: NavigationDirection): void {
@@ -306,7 +320,7 @@ export abstract class Menu implements IMenu {
     const keys = [
       this.upKey, this.downKey, this.leftKey, this.rightKey,
       this.customUpKey, this.customDownKey, this.customLeftKey, this.customRightKey,
-      this.enterKey, this.customConfirmKey, this.escapeKey, this.tabKey
+      this.enterKey, this.customConfirmKey, this.escapeKey, this.tabKey, this.muteKey, this.customMuteKey
     ];
 
     keys.forEach(key => {
@@ -328,6 +342,8 @@ export abstract class Menu implements IMenu {
     this.customConfirmKey = null;
     this.escapeKey = null;
     this.tabKey = null;
+    this.muteKey = null;
+    this.customMuteKey = null;
   }
 
   destroy(): void {
