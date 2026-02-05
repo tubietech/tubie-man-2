@@ -51,7 +51,10 @@ export const languageFiles = {
     off: 'OFF',
     tabGameplay: 'GAMEPLAY',
     tabKeyboard: 'KEYBOARD',
-    tabController: 'CONTROLLER'
+    tabController: 'CONTROLLER',
+    getReady: 'Get Ready!',
+    settingMasterVolume: 'Volume',
+    settingMute: 'Mute'
   },
   [Language.SPANISH]: {
     gameTitle: 'Hombre Tubía',
@@ -103,7 +106,10 @@ export const languageFiles = {
     off: 'NO',
     tabGameplay: 'JUEGO',
     tabKeyboard: 'TECLADO',
-    tabController: 'MANDO'
+    tabController: 'MANDO',
+    getReady: '¡Prepárate!',
+    settingMasterVolume: 'Volumen',
+    settingMute: 'Silenciar'
   },
   [Language.FRENCH]: {
     gameTitle: 'Tubie-Man',
@@ -155,7 +161,10 @@ export const languageFiles = {
     off: 'NON',
     tabGameplay: 'JEU',
     tabKeyboard: 'CLAVIER',
-    tabController: 'MANETTE'
+    tabController: 'MANETTE',
+    getReady: 'Préparez-vous!',
+    settingMasterVolume: 'Volume',
+    settingMute: 'Muet'
   },
   [Language.GERMAN]: {
     gameTitle: 'Tubie-Man',
@@ -207,7 +216,10 @@ export const languageFiles = {
     off: 'AUS',
     tabGameplay: 'SPIEL',
     tabKeyboard: 'TASTATUR',
-    tabController: 'CONTROLLER'
+    tabController: 'CONTROLLER',
+    getReady: 'Mach dich bereit!',
+    settingMasterVolume: 'Lautstärke',
+    settingMute: 'Stumm'
   }
 };
 

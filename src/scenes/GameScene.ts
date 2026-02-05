@@ -27,6 +27,7 @@ import { Difficulty } from '../enums/Difficulty';
 import { Logger } from '../utils/Logger';
 import { LogGroup } from '../enums/LogGroup';
 import { SettingsManager } from '../utils/SettingsManager';
+import { AudioManager } from '../utils/AudioManager';
 
 export class GameScene extends Phaser.Scene {
   mapData!: IMapData;
@@ -59,6 +60,8 @@ export class GameScene extends Phaser.Scene {
   lastInjuryTime: number = 0;
   isGameOver: boolean = false;
   isPaused: boolean = false;
+  isGetReady: boolean = true;
+  getReadyText: Phaser.GameObjects.Text | null = null;
   pauseMenu!: PauseMenu;
   highScoreEntryOverlay: HighScoreEntryOverlay | null = null;
   pauseKey!: Phaser.Input.Keyboard.Key;
@@ -76,6 +79,11 @@ export class GameScene extends Phaser.Scene {
   enemyAIEnabled: boolean = true;
   respawnQueue: Enemy[] = [];
   lastRespawnTime: number = 0;
+
+  // Audio state tracking
+  isEatingPellet: boolean = false;
+  lastPelletEatTime: number = 0;
+  pelletEatSoundTimeout: number = 200; // Stop eating sound if no pellet eaten for this duration (ms)
 
   scoreText!: Phaser.GameObjects.Container;
   highScoreText!: Phaser.GameObjects.Container;
@@ -112,8 +120,9 @@ export class GameScene extends Phaser.Scene {
     // Always create a fresh graphics object
     this.graphics = this.add.graphics();
 
-    // Reset game over flag
+    // Reset game over and get ready flags
     this.isGameOver = false;
+    this.isGetReady = true;
 
     if (data.reset) {
       // Full reset - start new game
@@ -232,6 +241,7 @@ export class GameScene extends Phaser.Scene {
     this.initializeBonus();
     this.setupInput();
     this.createUI();
+    this.showGetReady();
   }
 
   initializeBonus() {
@@ -398,9 +408,8 @@ export class GameScene extends Phaser.Scene {
       enemy.onReachedPen = (reachedEnemy) => this.handleEnemyReachedPen(reachedEnemy);
     });
 
-    // Release Stingy immediately since he's already outside
+    // Initialize enemy release counter (actual release happens after "Get Ready" phase)
     this.enemiesReleased = 0;
-    this.scheduleNextEnemyRelease();
   }
 
   /**
@@ -575,6 +584,58 @@ export class GameScene extends Phaser.Scene {
     this.uiRenderer.updateScoreText(this.scoreText, this.orientation, this.score);
   }
 
+  /**
+   * Show "Get Ready!" text at the start of each level
+   * Prevents player and enemy movement until the delay expires
+   */
+  private showGetReady(): void {
+    const loc = this.localization;
+
+    // Calculate center of screen
+    const centerX = this.cameras.main.width / 2;
+    const centerY = this.cameras.main.height / 2;
+
+    // Create the "Get Ready!" text with stroke (outline)
+    this.getReadyText = this.add.text(centerX, centerY, loc.getText('getReady'), {
+      fontFamily: 'PressStart2P',
+      fontSize: '32px',
+      color: colorNumberToString(gameConfig.colors.getReadyText),
+      stroke: colorNumberToString(gameConfig.colors.getReadyOutline),
+      strokeThickness: gameConfig.levelStart.getReadyOutlineThickness,
+      align: 'center'
+    });
+    this.getReadyText.setOrigin(0.5);
+    this.getReadyText.setScrollFactor(0);
+    this.getReadyText.setDepth(10000);
+
+    // Play the "Get Ready" music
+    AudioManager.getInstance().playBackgroundMusic('getReady', false);
+
+    // Set up timer to hide text and start game
+    this.time.delayedCall(gameConfig.levelStart.getReadyDelay, () => {
+      this.hideGetReady();
+    });
+  }
+
+  /**
+   * Hide "Get Ready!" text and start the game
+   */
+  private hideGetReady(): void {
+    this.isGetReady = false;
+
+    if (this.getReadyText) {
+      this.getReadyText.destroy();
+      this.getReadyText = null;
+    }
+
+    // Stop the "Get Ready" music and start game background music
+    AudioManager.getInstance().stopBackgroundMusic();
+    AudioManager.getInstance().playBackgroundMusic('game', true);
+
+    // Now schedule enemy releases since the game is starting
+    this.scheduleNextEnemyRelease();
+  }
+
   private getSceneRestartData(reset: boolean): {
     difficulty: string;
     orientation: Orientation;
@@ -611,6 +672,11 @@ export class GameScene extends Phaser.Scene {
 
     // Guard: Don't update game logic if paused
     if (this.isPaused) {
+      return;
+    }
+
+    // Guard: Don't update game logic during "Get Ready" phase
+    if (this.isGetReady) {
       return;
     }
 
@@ -685,6 +751,8 @@ export class GameScene extends Phaser.Scene {
         if (isPower) {
           this.addScore(gameConfig.map.powerup.score);
           this.player.giveFirePower();
+          // Play powerup collect sound effect
+          AudioManager.getInstance().playSoundEffect('powerupCollect');
           this.uiRenderer.updatePowerText(
             this.powerText,
             this.orientation,
@@ -704,6 +772,13 @@ export class GameScene extends Phaser.Scene {
         } else {
           this.addScore(gameConfig.map.pellet.score);
           this.pelletsEaten++;
+
+          // Start pellet eating sound if not already playing
+          if (!this.isEatingPellet) {
+            this.isEatingPellet = true;
+            AudioManager.getInstance().startLoopingSoundEffect('pelletEat');
+          }
+          this.lastPelletEatTime = this.time.now;
 
           // Check if bonus should spawn
           this.checkBonusSpawn();
@@ -734,6 +809,12 @@ export class GameScene extends Phaser.Scene {
       this.mapHeight,
       this.player.getDifficulty()
     );
+
+    // Check if pellet eating sound should stop
+    if (this.isEatingPellet && this.time.now - this.lastPelletEatTime > this.pelletEatSoundTimeout) {
+      this.isEatingPellet = false;
+      AudioManager.getInstance().stopLoopingSoundEffect('pelletEat');
+    }
   }
   
   checkTunnels() {
@@ -813,6 +894,9 @@ export class GameScene extends Phaser.Scene {
 
         gameLogger.log(`Enemy injured! Score +${injuryScore}, Combo: ${this.injuryComboCount}`);
 
+        // Play enemy hit sound effect
+        AudioManager.getInstance().playSoundEffect('enemyHit');
+
         // Injure the enemy (changes to gray, pathfinds to pen)
         collisionResult.enemy.injure();
       } else {
@@ -881,6 +965,9 @@ export class GameScene extends Phaser.Scene {
       // Collect bonus
       this.bonus.collect();
       this.addScore(bonusScore);
+
+      // Play bonus collect sound effect
+      AudioManager.getInstance().playSoundEffect('bonusCollect');
 
       bonusLogger.log(`Collected! Score +${bonusScore}, New total: ${this.score}`);
 
@@ -953,6 +1040,16 @@ export class GameScene extends Phaser.Scene {
     //this.uiRenderer.updateLivesText(this.livesText, this.orientation, this.lives);
     this.uiRenderer.updateLivesSprites(this.livesSprites, this.orientation, this.lives);
 
+    // Stop pellet eating sound
+    if (this.isEatingPellet) {
+      this.isEatingPellet = false;
+      AudioManager.getInstance().stopLoopingSoundEffect('pelletEat');
+    }
+
+    // Stop game background music and play death sound effect
+    AudioManager.getInstance().stopBackgroundMusic();
+    AudioManager.getInstance().playSoundEffect('playerDeath');
+
     // Remove bonus if it's currently on screen
     if (this.bonus && this.bonus.isActive()) {
       this.bonus.cleanup();
@@ -985,6 +1082,9 @@ export class GameScene extends Phaser.Scene {
       enemy.show();
     });
 
+    // Restart game background music
+    AudioManager.getInstance().playBackgroundMusic('game', true);
+
     // Restart staggered release
     this.enemiesReleased = 0;
     this.scheduleNextEnemyRelease();
@@ -992,6 +1092,16 @@ export class GameScene extends Phaser.Scene {
   
   nextLevel() {
     this.level++;
+
+    // Stop pellet eating sound
+    if (this.isEatingPellet) {
+      this.isEatingPellet = false;
+      AudioManager.getInstance().stopLoopingSoundEffect('pelletEat');
+    }
+
+    // Stop game background music and play level complete sound
+    AudioManager.getInstance().stopBackgroundMusic();
+    AudioManager.getInstance().playSoundEffect('levelComplete');
 
     // Reset player powerup state before moving to next level
     if (this.player) {
@@ -1047,6 +1157,9 @@ export class GameScene extends Phaser.Scene {
   gameOver() {
     const loc = this.localization;
     this.isGameOver = true;
+
+    // Stop any playing audio (music already stopped in loseLife, but ensure cleanup)
+    AudioManager.getInstance().stopBackgroundMusic();
 
     // Clear all timers immediately to prevent duplicate enemy releases on restart
     this.time.removeAllEvents();
@@ -1114,6 +1227,13 @@ export class GameScene extends Phaser.Scene {
     // Remove all timed events to prevent them from firing after scene restart
     this.time.removeAllEvents();
 
+    // Stop any playing audio
+    if (this.isEatingPellet) {
+      this.isEatingPellet = false;
+      AudioManager.getInstance().stopLoopingSoundEffect('pelletEat');
+    }
+    AudioManager.getInstance().stopBackgroundMusic();
+
     // Clean up pause menu
     if (this.pauseMenu) {
       this.pauseMenu.destroy();
@@ -1123,6 +1243,12 @@ export class GameScene extends Phaser.Scene {
     if (this.highScoreEntryOverlay) {
       this.highScoreEntryOverlay.destroy();
       this.highScoreEntryOverlay = null;
+    }
+
+    // Clean up get ready text
+    if (this.getReadyText) {
+      this.getReadyText.destroy();
+      this.getReadyText = null;
     }
 
     // Clean up developer keydown handler

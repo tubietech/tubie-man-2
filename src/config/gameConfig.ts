@@ -22,8 +22,8 @@ export const gameConfig = {
     animationFrameRate: 18,
     spriteScale: 2,
     deathAnimation: {
-      spinCount: 3, // Number of 360-degree spins
-      spinDuration: 750, // Duration of each spin in milliseconds
+      spinCount: 4, // Number of 360-degree spins
+      spinDuration: 1000, // Duration of each spin in milliseconds
     },
     invulnerabilityDuration: 2000, // Duration of invulnerability after losing a life (ms)
     injuryComboResetTime: 10000, // Time before injury combo resets (ms)
@@ -155,7 +155,9 @@ export const gameConfig = {
     powerupActive: 0xffa500,
     gameUiText: 0xffffff,
     gameUiValue: 0xffff00, // Color for score/lives/level values (yellow)
-    developerIndicator: 0xffff00 // Yellow asterisk for developer mode indicator
+    developerIndicator: 0xffff00, // Yellow asterisk for developer mode indicator
+    getReadyText: 0xffa500, // Bright orange for "Get Ready!" text
+    getReadyOutline: 0xffffff // White outline for "Get Ready!" text
   },
   controls: {
     keyboard: {
@@ -222,6 +224,10 @@ export const gameConfig = {
     defaultName: 'AAA',
     characterSet: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.-+=*!@#$%&?'
   },
+  levelStart: {
+    getReadyDelay: 4250, // Duration to show "Get Ready!" text (ms)
+    getReadyOutlineThickness: 4
+  },
   logging: {
     enabled: true // Global flag to enable/disable all logging
   },
@@ -249,6 +255,34 @@ export const gameConfig = {
       focusScale: 1.1,
       transitionDuration: 200,
       chaseSpeed: 50 // Pixels per second for chase animation
+    }
+  },
+  audio: {
+    // Background music track mappings (keys must match audio file keys in PreloadScene)
+    tracks: {
+      menu: 'music_menu',
+      game: 'music_game',
+      gameOver: 'music_gameOver',
+      victory: 'music_victory',
+      getReady: 'music_getReady'
+    },
+    // Sound effect mappings (keys must match audio file keys in PreloadScene)
+    effects: {
+      pelletEat: 'sfx_pellet',
+      powerupCollect: 'sfx_powerup',
+      enemyHit: 'sfx_enemyHit',
+      enemyReturn: 'sfx_enemyReturn',
+      playerDeath: 'sfx_death',
+      bonusCollect: 'sfx_bonus',
+      levelComplete: 'sfx_levelComplete',
+      menuSelect: 'sfx_menuSelect',
+      menuNavigate: 'sfx_menuNavigate'
+    },
+    // Default volume settings (0-1)
+    defaultVolume: {
+      master: 1.0,
+      music: 0.5,
+      sfx: 0.7
     }
   }
 };

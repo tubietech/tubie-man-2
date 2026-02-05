@@ -6,6 +6,7 @@ import { INavigable, NavigationDirection } from '../../interfaces/INavigable';
 import { gameConfig } from '../../config/gameConfig';
 import { Orientation } from '../../enums/Orientation';
 import { SettingsManager } from '../../utils/SettingsManager';
+import { AudioManager } from '../../utils/AudioManager';
 
 export abstract class Menu implements IMenu {
   abstract readonly menuType: MenuType;
@@ -273,6 +274,9 @@ export abstract class Menu implements IMenu {
 
   protected handleNavigationInput(direction: NavigationDirection): void {
     if (!this.isVisible) return;
+
+    // Notify AudioManager of user interaction (for autoplay unlock)
+    AudioManager.getInstance().onUserInteraction();
 
     // First, let the focused element try to handle the input
     if (this.navigableElements.length > 0) {

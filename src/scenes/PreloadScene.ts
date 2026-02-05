@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { gameConfig } from '../config/gameConfig';
+import { AudioManager } from '../utils/AudioManager';
 
 export class PreloadScene extends Phaser.Scene {
   constructor() {
@@ -13,6 +14,8 @@ export class PreloadScene extends Phaser.Scene {
     // Load the sprite atlas
     this.load.atlas('atlas', '/assets/sprites/atlas.png', '/assets/sprites/atlas.json');
 
+    // Load audio files
+    this.loadAudio();
 
     // Optional: Add a loading bar
     const width = this.cameras.main.width;
@@ -60,8 +63,36 @@ export class PreloadScene extends Phaser.Scene {
     // Create projectile animation
     this.createProjectileAnimation();
 
+    // Initialize AudioManager and mark audio as loaded
+    const audioManager = AudioManager.getInstance();
+    audioManager.initialize(this);
+    audioManager.setLoaded(true);
+
     // Start the menu scene
     this.scene.start('MenuScene');
+  }
+
+  /**
+   * Load all audio files for the game
+   */
+  private loadAudio(): void {
+    // Background music tracks
+    this.load.audio('music_menu', '/assets/audio/getting-it-done.mp3');
+    this.load.audio('music_game', '/assets/audio/chase_2.mp3');
+    this.load.audio('music_gameOver', '/assets/audio/robobozo-death.mp3');
+    this.load.audio('music_victory', '/assets/audio/win.mp3');
+    this.load.audio('music_getReady', '/assets/audio/bit-shift-clip.mp3');
+
+    // Sound effects
+    this.load.audio('sfx_pellet', '/assets/audio/tubie-tubie-8.mp3');
+    this.load.audio('sfx_powerup', '/assets/audio/pixel-peeker-polka-bonus.mp3');
+    this.load.audio('sfx_enemyHit', '/assets/audio/spazzmatica-powerup.mp3');
+    this.load.audio('sfx_enemyReturn', '/assets/audio/enemy_return.mp3');
+    this.load.audio('sfx_death', '/assets/audio/robobozo-death.mp3');
+    this.load.audio('sfx_bonus', '/assets/audio/spazzmatica-powerup.mp3');
+    this.load.audio('sfx_levelComplete', '/assets/audio/win.mp3');
+    this.load.audio('sfx_menuSelect', '/assets/audio/tubie-tubie.mp3');
+    this.load.audio('sfx_menuNavigate', '/assets/audio/bit-shift-clip.mp3');
   }
 
   private createPlayerAnimations() {

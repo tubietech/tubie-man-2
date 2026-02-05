@@ -2,6 +2,7 @@ import { gameConfig } from '../config/gameConfig';
 import { Logger } from './Logger';
 import { LogGroup } from '../enums/LogGroup';
 import { IKeyBinding } from '../ui/elements/UIKeyBindingSetting';
+import { AudioManager } from './AudioManager';
 import Phaser from 'phaser';
 
 /**
@@ -440,5 +441,63 @@ export class SettingsManager {
   resetToDefaults(): void {
     this.settings = this.getDefaultSettings();
     this.saveSettings();
+  }
+
+  // ============== Audio Settings (delegated to AudioManager) ==============
+
+  /**
+   * Get the master volume (0-1)
+   */
+  getMasterVolume(): number {
+    return AudioManager.getInstance().getMasterVolume();
+  }
+
+  /**
+   * Set the master volume (0-1)
+   */
+  setMasterVolume(volume: number): void {
+    AudioManager.getInstance().setMasterVolume(volume);
+  }
+
+  /**
+   * Check if master audio is muted
+   */
+  isMasterMuted(): boolean {
+    return AudioManager.getInstance().isMasterMutedState();
+  }
+
+  /**
+   * Set master mute state
+   */
+  setMasterMuted(muted: boolean): void {
+    AudioManager.getInstance().setMasterMuted(muted);
+  }
+
+  /**
+   * Get the music volume (0-1)
+   */
+  getMusicVolume(): number {
+    return AudioManager.getInstance().getMusicVolume();
+  }
+
+  /**
+   * Set the music volume (0-1)
+   */
+  setMusicVolume(volume: number): void {
+    AudioManager.getInstance().setMusicVolume(volume);
+  }
+
+  /**
+   * Get the SFX volume (0-1)
+   */
+  getSfxVolume(): number {
+    return AudioManager.getInstance().getSfxVolume();
+  }
+
+  /**
+   * Set the SFX volume (0-1)
+   */
+  setSfxVolume(volume: number): void {
+    AudioManager.getInstance().setSfxVolume(volume);
   }
 }

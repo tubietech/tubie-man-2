@@ -5,6 +5,7 @@ import { Difficulty } from '../enums/Difficulty';
 import { LocalizationManager } from '../config/localization/LocalizationManager';
 import { loadPreloadedMaps } from '../utils/preloadedMaps';
 import { DeveloperMode } from '../utils/DeveloperMode';
+import { AudioManager } from '../utils/AudioManager';
 import { gameConfig } from '../config/gameConfig';
 import { Logger } from '../utils/Logger';
 import { LogGroup } from '../enums/LogGroup';
@@ -30,6 +31,10 @@ export class MenuScene extends Phaser.Scene {
   private instructionsMenu!: InstructionsMenu;
   private highScoreListMenu!: HighScoreListMenu;
   private menuStack: Menu[] = [];
+
+  // Audio
+  private audioManager!: AudioManager;
+  private userInteractionHandler: (() => void) | null = null;
 
   constructor() {
     super({ key: 'MenuScene' });
@@ -98,6 +103,57 @@ export class MenuScene extends Phaser.Scene {
 
     // Show main menu
     this.openMenu(this.mainMenu);
+
+    // Initialize audio
+    this.setupAudio();
+  }
+
+  /**
+   * Set up background music for the menu
+   * Handles browser autoplay restrictions by waiting for user interaction on first load
+   */
+  private setupAudio(): void {
+    this.audioManager = AudioManager.getInstance();
+    this.audioManager.initialize(this);
+
+    // Try to play menu music
+    // If user hasn't interacted yet, this will queue the track
+    this.audioManager.playBackgroundMusic('menu');
+
+    // If user hasn't interacted yet, set up listener for first interaction
+    if (!this.audioManager.hasUserInteracted()) {
+      this.userInteractionHandler = () => {
+        this.audioManager.onUserInteraction();
+        this.removeUserInteractionListeners();
+      };
+
+      // Listen for any user interaction
+      this.input.keyboard?.on('keydown', this.userInteractionHandler);
+      this.input.on('pointerdown', this.userInteractionHandler);
+      this.input.on('pointermove', this.userInteractionHandler);
+
+      // Also listen on window for clicks outside game canvas
+      window.addEventListener('keydown', this.userInteractionHandler, { once: true });
+      window.addEventListener('click', this.userInteractionHandler, { once: true });
+      window.addEventListener('touchstart', this.userInteractionHandler, { once: true });
+      window.addEventListener('mousemove', this.userInteractionHandler, { once: true });
+    }
+  }
+
+  /**
+   * Remove user interaction listeners once interaction is detected
+   */
+  private removeUserInteractionListeners(): void {
+    if (this.userInteractionHandler) {
+      this.input.keyboard?.off('keydown', this.userInteractionHandler);
+      this.input.off('pointerdown', this.userInteractionHandler);
+      this.input.off('pointermove', this.userInteractionHandler);
+      window.removeEventListener('keydown', this.userInteractionHandler);
+      window.removeEventListener('click', this.userInteractionHandler);
+      window.removeEventListener('touchstart', this.userInteractionHandler);
+      window.removeEventListener('mousemove', this.userInteractionHandler);
+      this.userInteractionHandler = null;
+    }
   }
 
   private createMenus(focusOnLanguage: boolean = false): void {
@@ -155,6 +211,9 @@ export class MenuScene extends Phaser.Scene {
   }
 
   private startGame(difficulty: Difficulty): void {
+    // Stop menu music before starting game
+    this.audioManager.stopBackgroundMusic();
+
     this.scene.start('GameScene', {
       difficulty: difficulty,
       orientation: this.orientation,
@@ -219,5 +278,8 @@ export class MenuScene extends Phaser.Scene {
     this.instructionsMenu?.destroy();
     this.highScoreListMenu?.destroy();
     this.menuStack = [];
+
+    // Cleanup audio interaction listeners
+    this.removeUserInteractionListeners();
   }
 }

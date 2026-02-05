@@ -10,6 +10,7 @@ import { UIButtonGroup } from '../elements/UIButtonGroup';
 import { UIKeyBindingSetting } from '../elements/UIKeyBindingSetting';
 import { UIControllerBindingSetting } from '../elements/UIControllerBindingSetting';
 import { UIToggleSetting } from '../elements/UIToggleSetting';
+import { UISliderSetting } from '../elements/UISliderSetting';
 import { UITabGroup } from '../elements/UITabGroup';
 import { UIElement } from '../elements/UIElement';
 import { SettingsManager } from '../../utils/SettingsManager';
@@ -176,6 +177,45 @@ export class SettingsMenu extends Menu {
     elements.push(arcadeToggle);
     navigables.push(arcadeToggle);
     this.addElement(arcadeToggle);
+    currentY += 55;
+
+    // Mute toggle
+    const muteToggle = new UIToggleSetting(this.scene, {
+      x: 0,
+      y: currentY,
+      label: loc.getText('settingMute'),
+      width: settingWidth,
+      height: settingHeight,
+      initialValue: this.settingsManager.isMasterMuted(),
+      onLabel: loc.getText('on'),
+      offLabel: loc.getText('off'),
+      onValueChange: (value) => {
+        this.settingsManager.setMasterMuted(value);
+      }
+    });
+    elements.push(muteToggle);
+    navigables.push(muteToggle);
+    this.addElement(muteToggle);
+    currentY += 55;
+
+    // Master Volume slider
+    const volumeSlider = new UISliderSetting(this.scene, {
+      x: 0,
+      y: currentY,
+      label: loc.getText('settingMasterVolume'),
+      width: settingWidth,
+      height: settingHeight,
+      initialValue: this.settingsManager.getMasterVolume(),
+      minValue: 0,
+      maxValue: 1,
+      step: 0.1,
+      onValueChange: (value) => {
+        this.settingsManager.setMasterVolume(value);
+      }
+    });
+    elements.push(volumeSlider);
+    navigables.push(volumeSlider);
+    this.addElement(volumeSlider);
 
     this.tabContents.set('gameplay', { elements, navigables });
   }
