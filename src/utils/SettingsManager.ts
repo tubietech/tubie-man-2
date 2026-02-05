@@ -36,6 +36,7 @@ export interface IGameSettings {
       down: IControllerBinding;
       left: IControllerBinding;
       right: IControllerBinding;
+      mute: IControllerBinding;
     };
   };
 }
@@ -87,7 +88,8 @@ export class SettingsManager {
           up: { button: gameConfig.controls.gamepad.up },
           down: { button: gameConfig.controls.gamepad.down },
           left: { button: gameConfig.controls.gamepad.left },
-          right: { button: gameConfig.controls.gamepad.right }
+          right: { button: gameConfig.controls.gamepad.right },
+          mute: { button: gameConfig.controls.gamepad.mute }
         }
       }
     };
@@ -136,7 +138,8 @@ export class SettingsManager {
           up: loaded.controls?.gamepad?.up ?? defaults.controls.gamepad.up,
           down: loaded.controls?.gamepad?.down ?? defaults.controls.gamepad.down,
           left: loaded.controls?.gamepad?.left ?? defaults.controls.gamepad.left,
-          right: loaded.controls?.gamepad?.right ?? defaults.controls.gamepad.right
+          right: loaded.controls?.gamepad?.right ?? defaults.controls.gamepad.right,
+          mute: loaded.controls?.gamepad?.mute ?? defaults.controls.gamepad.mute
         }
       }
     };
@@ -354,6 +357,15 @@ export class SettingsManager {
 
   setGamepadRightBinding(binding: IControllerBinding): void {
     this.settings.controls.gamepad.right = binding;
+    this.saveSettings();
+  }
+
+  getGamepadMuteBinding(): IControllerBinding {
+    return this.settings.controls.gamepad.mute;
+  }
+
+  setGamepadMuteBinding(binding: IControllerBinding): void {
+    this.settings.controls.gamepad.mute = binding;
     this.saveSettings();
   }
 

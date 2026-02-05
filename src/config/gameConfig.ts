@@ -182,7 +182,8 @@ export const gameConfig = {
       up: 12,         // DPad Up
       down: 13,       // DPad Down
       left: 14,       // DPad Left
-      right: 15       // DPad Right
+      right: 15,       // DPad Right
+      mute: 1         // B/Circle button
     },
     // Button name mappings for display
     gamepadButtonNames: {

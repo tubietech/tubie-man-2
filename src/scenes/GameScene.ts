@@ -500,6 +500,10 @@ export class GameScene extends Phaser.Scene {
       if (button.index === gameConfig.controls.gamepad.pause) {
         this.togglePause();
       }
+
+      if(button.index === gameConfig.controls.gamepad.mute) { 
+        AudioManager.getInstance().toggleMasterMute();
+      }
     });
 
     this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
