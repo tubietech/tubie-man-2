@@ -9,6 +9,8 @@ export interface IUIToggleSettingConfig extends IUISettingConfig {
   onLabel?: string;
   offLabel?: string;
   onValueChange?: (value: boolean) => void;
+  /** Optional getter to poll for external value changes */
+  valueGetter?: () => boolean;
 }
 
 /**
@@ -24,6 +26,7 @@ export class UIToggleSetting extends UISetting {
   private onLabel: string;
   private offLabel: string;
   private onValueChange?: (value: boolean) => void;
+  private valueGetter?: () => boolean;
 
   constructor(scene: Phaser.Scene, config: IUIToggleSettingConfig) {
     super(scene, config);
@@ -32,6 +35,7 @@ export class UIToggleSetting extends UISetting {
     this.onLabel = config.onLabel ?? 'ON';
     this.offLabel = config.offLabel ?? 'OFF';
     this.onValueChange = config.onValueChange;
+    this.valueGetter = config.valueGetter;
 
     // Create toggle box background (in the input area on the right)
     this.toggleBox = scene.add.graphics();
@@ -97,6 +101,17 @@ export class UIToggleSetting extends UISetting {
       this.currentValue = value;
       this.drawToggleBox();
       this.valueText.setText(this.getDisplayText());
+    }
+  }
+
+  /**
+   * Sync the display with the external value if a valueGetter is configured.
+   * Call this periodically to detect external changes.
+   */
+  syncFromGetter(): void {
+    if (this.valueGetter) {
+      const externalValue = this.valueGetter();
+      this.setValue(externalValue);
     }
   }
 }

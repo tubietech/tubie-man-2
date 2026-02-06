@@ -27,14 +27,16 @@ interface TabContent {
 export class SettingsMenu extends Menu {
   readonly menuType = MenuType.SETTINGS;
   private localization: LocalizationManager;
-  private settingsManager: SettingsManager;
   private onLanguageChange?: (language: Language) => void;
-
+  
   private tabGroup!: UITabGroup;
   private currentTab: TabId = 'gameplay';
   private tabContents: Map<TabId, TabContent> = new Map();
   private backButton!: UIButton;
-
+  
+  protected settingsManager: SettingsManager;
+  private masterMuteToggle!: UIToggleSetting;
+  
   constructor(scene: Phaser.Scene, orientation: Orientation) {
     super(scene, { type: MenuType.SETTINGS, orientation: orientation });
     this.localization = LocalizationManager.getInstance();
@@ -191,8 +193,10 @@ export class SettingsMenu extends Menu {
       offLabel: loc.getText('off'),
       onValueChange: (value) => {
         this.settingsManager.setMasterMuted(value);
-      }
+      },
+      valueGetter: () => this.settingsManager.isMasterMuted()
     });
+    this.masterMuteToggle = masterMuteToggle;
     elements.push(masterMuteToggle);
     navigables.push(masterMuteToggle);
     this.addElement(masterMuteToggle);
@@ -557,5 +561,13 @@ export class SettingsMenu extends Menu {
     const currentLang = this.localization.getLanguage();
     const languages = [Language.ENGLISH, Language.SPANISH, Language.FRENCH, Language.GERMAN];
     return languages.indexOf(currentLang);
+  }
+
+  /**
+   * Sync toggle displays with external value changes.
+   * Call this periodically when the menu is visible.
+   */
+  update(): void {
+    this.masterMuteToggle.syncFromGetter();
   }
 }

@@ -265,6 +265,15 @@ export class MenuScene extends Phaser.Scene {
     });
   }
 
+  update(): void {
+    // Sync settings menu toggles with external value changes (e.g., mute key pressed)
+    if (this.menuStack.length > 0) {
+      const currentMenu = this.menuStack[this.menuStack.length - 1];
+      if (currentMenu === this.settingsMenu)
+        this.settingsMenu.update();
+    }
+  }
+
   setOrientation(orientation: Orientation) {
     this.orientation = orientation;
     Logger.logStatic(LogGroup.GAME, `Orientation set to: ${Orientation[orientation]}`);

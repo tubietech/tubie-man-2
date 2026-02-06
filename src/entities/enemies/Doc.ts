@@ -49,7 +49,7 @@ export class Doc extends Enemy {
   }
 
   updateTarget(): void {
-    const player = (this.scene as GameScene).player;
+    const player = (this.scene as GameScene).entityManager.player;
     const dist = Math.abs(this.gridX - player.gridX) + Math.abs(this.gridY - player.gridY);
 
     if (dist <= this.closeDistance) {

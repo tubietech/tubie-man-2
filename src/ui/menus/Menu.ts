@@ -38,6 +38,7 @@ export abstract class Menu implements IMenu {
   // Mute key
   protected muteKey: Phaser.Input.Keyboard.Key | null = null;
   protected customMuteKey: Phaser.Input.Keyboard.Key | null = null;
+  protected settingsManager: SettingsManager = SettingsManager.getInstance();
 
   // Callback for back navigation
   protected onBack?: () => void;
@@ -282,7 +283,9 @@ export abstract class Menu implements IMenu {
     
     const _muteKey = this.customMuteKey ? this.customMuteKey : this.muteKey;
     _muteKey?.on('down', () => {
-      AudioManager.getInstance().toggleMasterMute();
+      const audioManager = AudioManager.getInstance();
+      audioManager.toggleMasterMute();
+      this.settingsManager.setMasterMuted(audioManager.isMasterMutedState());
     });
   }
 

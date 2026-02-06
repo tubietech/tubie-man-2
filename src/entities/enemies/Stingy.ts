@@ -124,7 +124,7 @@ export class Stingy extends Enemy {
   }
 
   updateTarget(): void {
-    const player = (this.scene as GameScene).player;
+    const player = (this.scene as GameScene).entityManager.player;
 
     // Precision tracking - directly target the player
     // Stingy is the most reliable and consistent chaser

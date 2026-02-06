@@ -71,7 +71,7 @@ export class Pokey extends Enemy {
       }
     } else {
       // Normal behavior - direct chase
-      const player = (this.scene as GameScene).player;
+      const player = (this.scene as GameScene).entityManager.player;
       this.targetX = player.gridX;
       this.targetY = player.gridY;
     }

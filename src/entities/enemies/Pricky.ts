@@ -27,7 +27,7 @@ export class Pricky extends Enemy {
 
   protected triggerQuirk(): void {
     // Check if player is using fire
-    const player = (this.scene as GameScene).player;
+    const player = (this.scene as GameScene).entityManager.player;
 
     if (player.fireActive && !this.lastPlayerFireState) {
       // Player just activated fire - trigger panic!
@@ -42,7 +42,7 @@ export class Pricky extends Enemy {
     this.panicTimer = 0;
     this.panicPaused = false;
     // Run in opposite direction from player
-    const player = (this.scene as GameScene).player;
+    const player = (this.scene as GameScene).entityManager.player;
     const dx = this.gridX - player.gridX;
     const dy = this.gridY - player.gridY;
 
@@ -55,7 +55,7 @@ export class Pricky extends Enemy {
   }
 
   update(time: number, delta: number): void {
-    const player = (this.scene as GameScene).player;
+    const player = (this.scene as GameScene).entityManager.player;
 
     // Always check for fire activation
     if (player.fireActive && !this.lastPlayerFireState && !this.isPanicking) {
@@ -118,7 +118,7 @@ export class Pricky extends Enemy {
       }
     } else {
       // Normal twitchy behavior
-      const player = (this.scene as GameScene).player;
+      const player = (this.scene as GameScene).entityManager.player;
 
       // Semi-random behavior: sometimes chase, sometimes flee, sometimes wander
       // Get behavior chances from config
