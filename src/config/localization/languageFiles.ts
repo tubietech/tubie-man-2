@@ -1,3 +1,4 @@
+import { RIGHT } from 'phaser';
 import { Language } from '../../enums/Language';
 
 export const languageFiles = {
@@ -57,7 +58,10 @@ export const languageFiles = {
     settingMute: 'Mute ALl',
     settingsSfxMute: 'Mute Sounds',
     settingsMusicMute: 'Mute Music',
-    settingMuteKey: 'Mute Key'
+    settingMuteKey: 'Mute Key',
+    isRightHanded: 'Touch Layout',
+    rightHanded: 'Right',
+    leftHanded: 'Left'
   },
   [Language.SPANISH]: {
     gameTitle: 'Hombre Tubía',
@@ -115,7 +119,10 @@ export const languageFiles = {
     settingMute: 'Silenciar',
     settingsSfxMute: 'Silenciar Sonidos',
     settingsMusicMute: 'Silenciar Música',
-    settingMuteKey: 'Tecla Silencio'
+    settingMuteKey: 'Tecla Silencio',  
+    isRightHanded: "Diseño táctil",
+    rightHanded: "Diestro",
+    leftHanded: "Zurdo"
   },
   [Language.FRENCH]: {
     gameTitle: 'Tubie-Man',
@@ -173,7 +180,10 @@ export const languageFiles = {
     settingMute: 'Muet',
     settingsSfxMute: 'Couper les Sons',
     settingsMusicMute: 'Couper la Musique',
-    settingMuteKey: 'Touche Muet'
+    settingMuteKey: 'Touche Muet',  
+    isRightHanded: "Disposition tactile",
+    rightHanded: "Droitier",
+    leftHanded: "Gaucher"
   },
   [Language.GERMAN]: {
     gameTitle: 'Tubie-Man',
@@ -231,7 +241,10 @@ export const languageFiles = {
     settingMute: 'Stumm',
     settingsSfxMute: 'Töne Stumm',
     settingsMusicMute: 'Musik Stumm',
-    settingMuteKey: 'Stumm-Taste'
+    settingMuteKey: 'Stumm-Taste',
+    isRightHanded: "Touch-Layout",
+    rightHanded: "Rechts",
+    leftHanded: "Links"
   }
 };
 

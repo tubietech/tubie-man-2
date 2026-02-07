@@ -89,13 +89,15 @@ export class MenuScene extends Phaser.Scene {
       .then(() => {
         this.mapsLoaded = true;
         preloadLogger.log('✓ Preloaded maps ready');
-        this.loadingText.setText('✓ Maps ready');
+        // this.loadingText.setText('✓ Maps ready');
+        this.loadingText.setText('©Tubie Tech 2025, All Rights Reserved');
         this.loadingText.setColor('#00ff00');
       })
       .catch((error) => {
         preloadLogger.warnMultiLine(['Failed to preload maps:', error]);
         this.mapsLoaded = true; // Continue anyway
-        this.loadingText.setText('Maps will generate on-the-fly');
+        // this.loadingText.setText('Maps will generate on-the-fly');
+        this.loadingText.setText('©Tubie Tech 2025, All Rights Reserved');
         this.loadingText.setColor('#ffaa00');
       });
 

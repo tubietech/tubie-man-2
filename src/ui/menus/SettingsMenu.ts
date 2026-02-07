@@ -526,6 +526,25 @@ export class SettingsMenu extends Menu {
     elements.push(continueBinding);
     navigables.push(continueBinding);
     this.addElement(continueBinding);
+    
+    // Left Right Hand Toggle
+    const sfxMuteToggle = new UIToggleSetting(this.scene, {
+      x: 0,
+      y: currentY,
+      label: loc.getText('isRightHanded'),
+      width: settingWidth,
+      height: settingHeight,
+      initialValue: this.settingsManager.getTouchIsRightHanded(),
+      onLabel: loc.getText('rightHanded'),
+      offLabel: loc.getText('leftHanded'),
+      onValueChange: (value) => {
+        this.settingsManager.setTouchIsRightHanded(value);
+      }
+    });
+    elements.push(sfxMuteToggle);
+    navigables.push(sfxMuteToggle);
+    this.addElement(sfxMuteToggle);
+    currentY += 55;
 
     this.tabContents.set('controller', { elements, navigables });
   }

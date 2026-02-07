@@ -56,6 +56,9 @@ export class InputManager {
   // State check function (injected from scene)
   private isPaused: () => boolean;
 
+  // Optional pointer filter to prevent touch control conflicts
+  private pointerFilter: ((pointer: Phaser.Input.Pointer) => boolean) | null = null;
+
   constructor(
     scene: Phaser.Scene,
     callbacks: IInputCallbacks,
@@ -116,14 +119,26 @@ export class InputManager {
 
   private setupPointerInput(): void {
     this.scene.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
-      if (!this.isPaused())
+      if (!this.isPaused() && !this.isFilteredPointer(pointer))
         this.callbacks.onPointerInput(pointer.x, pointer.y);
     });
 
     this.scene.input.on('pointermove', (pointer: Phaser.Input.Pointer) => {
-      if (!this.isPaused() && pointer.isDown && pointer.primaryDown)
+      if (!this.isPaused() && pointer.isDown && pointer.primaryDown && !this.isFilteredPointer(pointer))
         this.callbacks.onPointerDrag(pointer.x, pointer.y);
     });
+  }
+
+  /**
+   * Set a filter function to prevent pointer events from conflicting with touch controls.
+   * When the filter returns true, pointer input/drag callbacks are skipped.
+   */
+  setPointerFilter(filter: (pointer: Phaser.Input.Pointer) => boolean): void {
+    this.pointerFilter = filter;
+  }
+
+  private isFilteredPointer(pointer: Phaser.Input.Pointer): boolean {
+    return this.pointerFilter ? this.pointerFilter(pointer) : false;
   }
 
   /**

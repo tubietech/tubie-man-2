@@ -38,6 +38,9 @@ export interface IGameSettings {
       right: IControllerBinding;
       mute: IControllerBinding;
     };
+    touch: {
+      isRightHanded: boolean;
+    };
   };
 }
 
@@ -90,6 +93,9 @@ export class SettingsManager {
           left: { button: gameConfig.controls.gamepad.left },
           right: { button: gameConfig.controls.gamepad.right },
           mute: { button: gameConfig.controls.gamepad.mute }
+        },
+        touch: {
+          isRightHanded: true
         }
       }
     };
@@ -140,6 +146,9 @@ export class SettingsManager {
           left: loaded.controls?.gamepad?.left ?? defaults.controls.gamepad.left,
           right: loaded.controls?.gamepad?.right ?? defaults.controls.gamepad.right,
           mute: loaded.controls?.gamepad?.mute ?? defaults.controls.gamepad.mute
+        },
+        touch: {
+          isRightHanded: loaded.controls?.touch?.isRightHanded ?? defaults.controls.touch.isRightHanded
         }
       }
     };
@@ -366,6 +375,15 @@ export class SettingsManager {
 
   setGamepadMuteBinding(binding: IControllerBinding): void {
     this.settings.controls.gamepad.mute = binding;
+    this.saveSettings();
+  }
+
+  getTouchIsRightHanded(): boolean {
+    return this.settings.controls.touch.isRightHanded;
+  }
+
+  setTouchIsRightHanded(isRightHanded: boolean): void {
+    this.settings.controls.touch.isRightHanded = isRightHanded;
     this.saveSettings();
   }
 

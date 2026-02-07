@@ -18,13 +18,15 @@ import { Difficulty } from '../enums/Difficulty';
 import { Logger } from '../utils/Logger';
 import { LogGroup } from '../enums/LogGroup';
 import { SettingsManager } from '../utils/SettingsManager';
-import { AudioManager } from '../utils/AudioManager';
+import { AudioManager, SoundEffect } from '../utils/AudioManager';
 import { GameStateManager } from '../managers/GameStateManager';
 import { InputManager } from '../managers/InputManager';
 import { EntityManager } from '../managers/EntityManager';
 import { CollisionManager } from '../managers/CollisionManager';
 import { LevelManager } from '../managers/LevelManager';
 import { ICollisionContext } from '../interfaces/ICollisionContext';
+import { TouchControls } from '../ui/TouchControls';
+import { Direction } from '../enums/Direction';
 
 export class GameScene extends Phaser.Scene {
   // Managers
@@ -69,6 +71,7 @@ export class GameScene extends Phaser.Scene {
   cooldownBar?: Phaser.GameObjects.Graphics;
   cooldownBarBg?: Phaser.GameObjects.Graphics;
 
+  touchControls: TouchControls | null = null;
   graphics: Phaser.GameObjects.Graphics | null;
   mapRectangles: Phaser.GameObjects.Rectangle[] = [];
   
@@ -179,6 +182,9 @@ export class GameScene extends Phaser.Scene {
     // Center the map on the canvas
     this.mapOffsetX = (canvasWidth - mapPixelWidth) / 2;
     this.mapOffsetY = (canvasHeight - mapPixelHeight) / 2;
+
+    if(TouchControls.isTouchDevice())
+      this.mapOffsetY = this.mapOffsetY / 2;
   }
 
   async create() {
@@ -245,6 +251,9 @@ export class GameScene extends Phaser.Scene {
         this.entityManager.bonus = null;
       }
     });
+
+    // Enable multi-touch for virtual controls (D-Pad + Fire simultaneously)
+    this.input.addPointer(1);
 
     this.setupInput();
     this.createUI();
@@ -429,6 +438,33 @@ export class GameScene extends Phaser.Scene {
       ).setScrollFactor(0).setDepth(10002);
       devLogger.log('Indicator displayed');
     }
+
+    this.createTouchControls();
+  }
+
+  private createTouchControls(): void {
+    if (!TouchControls.isTouchDevice()) return;
+
+    this.touchControls = new TouchControls(this, {
+      onDirectionInput: (dir: Direction) => {
+        this.entityManager.player.processInput({ direction: dir });
+      },
+      onFirePressed: () => {
+        this.entityManager.player.activateFire();
+      }
+    });
+
+    this.touchControls.create(
+      this.orientation,
+      this.mapOffsetX,
+      this.mapOffsetY,
+      this.mapWidth,
+      this.mapHeight
+    );
+
+    this.inputManager.setPointerFilter(
+      (pointer) => this.touchControls!.isPointerOnControls(pointer)
+    );
   }
 
   private isInitialized(): boolean {
@@ -602,6 +638,10 @@ export class GameScene extends Phaser.Scene {
     if (pad)
       player.processGamepadInput(pad);
 
+    // Process touch control input
+    if (this.touchControls)
+      this.touchControls.update();
+
     // Update all entities
     this.entityManager.updateAll(time, delta, this.enemyAIEnabled);
 
@@ -638,6 +678,10 @@ export class GameScene extends Phaser.Scene {
       this.mapHeight,
       player.getDifficulty()
     );
+
+    // Update touch control fire button state
+    if (this.touchControls)
+      this.touchControls.updateFireButtonState(player.hasFirePower, player.fireActive);
 
     // Check if pellet eating sound should stop
     if (this.isEatingPellet && this.time.now - this.lastPelletEatTime > this.pelletEatSoundTimeout) {
@@ -779,6 +823,10 @@ export class GameScene extends Phaser.Scene {
     // Pause all Phaser timers
     this.time.paused = true;
 
+    // Hide touch controls during pause
+    if (this.touchControls)
+      this.touchControls.setVisible(false);
+
     // Show pause menu
     this.pauseMenu.show();
   }
@@ -791,6 +839,10 @@ export class GameScene extends Phaser.Scene {
 
     // Hide pause menu
     this.pauseMenu.hide();
+
+    // Restore touch controls
+    if (this.touchControls)
+      this.touchControls.setVisible(true);
   }
 
   quitToMenu(): void {
@@ -804,6 +856,10 @@ export class GameScene extends Phaser.Scene {
 
   gameOver() {
     this.gameState.setGameOver();
+
+    // Hide touch controls
+    if (this.touchControls)
+      this.touchControls.setVisible(false);
 
     // Stop any playing audio (music already stopped in loseLife, but ensure cleanup)
     AudioManager.getInstance().stopBackgroundMusic();
@@ -897,6 +953,12 @@ export class GameScene extends Phaser.Scene {
     if (this.getReadyText) {
       this.getReadyText.destroy();
       this.getReadyText = null;
+    }
+
+    // Clean up touch controls
+    if (this.touchControls) {
+      this.touchControls.destroy();
+      this.touchControls = null;
     }
 
     // Clean up input manager
