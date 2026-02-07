@@ -57,7 +57,7 @@ export class Stingy extends Enemy {
     }
 
     const gameScene = this.scene as GameScene;
-    const pelletsRemaining = gameScene.countRemainingPellets();
+    const pelletsRemaining = gameScene.levelManager.countRemainingPellets();
     const threshold = gameConfig.enemy.quirks.stingy.sterileModeThreshold;
 
     if (pelletsRemaining <= threshold && !this.inSterileMode) {

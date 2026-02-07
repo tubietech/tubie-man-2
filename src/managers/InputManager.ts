@@ -1,10 +1,10 @@
 import Phaser from 'phaser';
 import { gameConfig } from '../config/gameConfig';
 import { SettingsManager } from '../utils/SettingsManager';
-import { AudioManager } from '../utils/AudioManager';
 import { DeveloperMode } from '../utils/DeveloperMode';
 import { Logger } from '../utils/Logger';
 import { LogGroup } from '../enums/LogGroup';
+import { AudioInputHelper } from './AudioInputHelper';
 
 /**
  * Callbacks for input actions that need to be handled by the scene
@@ -41,7 +41,7 @@ export class InputManager {
   };
   fireKey!: Phaser.Input.Keyboard.Key;
   private pauseKey!: Phaser.Input.Keyboard.Key;
-  private muteKey!: Phaser.Input.Keyboard.Key;
+  private audioInputHelper!: AudioInputHelper;
 
   // Developer keys
   private devKeys!: {
@@ -99,13 +99,9 @@ export class InputManager {
       this.callbacks.onTogglePause();
     });
 
-    // Mute key from settings
-    this.muteKey = this.scene.input.keyboard!.addKey(settingsManager.getMuteKeyCode());
-    this.muteKey.on('down', () => {
-      const audioManager = AudioManager.getInstance();
-      audioManager.toggleMasterMute();
-      SettingsManager.getInstance().setMasterMuted(audioManager.isMasterMutedState());
-    });
+    // Mute key using AudioInputHelper
+    this.audioInputHelper = new AudioInputHelper(this.scene);
+    this.audioInputHelper.setupMuteKey();
   }
 
   private setupGamepadInput(): void {
@@ -113,11 +109,8 @@ export class InputManager {
       if (button.index === gameConfig.controls.gamepad.pause)
         this.callbacks.onTogglePause();
 
-      if (button.index === gameConfig.controls.gamepad.mute) {
-        const audioManager = AudioManager.getInstance();
-        audioManager.toggleMasterMute();
-        SettingsManager.getInstance().setMasterMuted(audioManager.isMasterMutedState());
-      }
+      if (button.index === gameConfig.controls.gamepad.mute)
+        AudioInputHelper.toggleMasterMute();
     });
   }
 
@@ -237,5 +230,8 @@ export class InputManager {
       window.removeEventListener('keydown', this.devKeydownHandler);
       this.devKeydownHandler = null;
     }
+
+    if (this.audioInputHelper)
+      this.audioInputHelper.cleanup();
   }
 }

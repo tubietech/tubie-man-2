@@ -183,16 +183,15 @@ export class PowerActivationV2 implements IPowerActivationStrategy {
     this.fireActive = false;
     this.canFireAgain = true;
     this.lastFireTime = 0;
+    // Projectiles are NOT destroyed here — they finish their flight naturally
+  }
 
-    // Clean up all projectiles
-    if (this.projectiles && this.projectiles.length > 0) {
-      for (const projectile of this.projectiles) {
-        if (projectile && projectile.active) {
-          projectile.destroy();
-        }
-      }
-      this.projectiles = [];
+  destroyAllProjectiles(): void {
+    for (const projectile of this.projectiles) {
+      if (projectile && projectile.active)
+        projectile.destroy();
     }
+    this.projectiles = [];
   }
 
   isActive(): boolean {

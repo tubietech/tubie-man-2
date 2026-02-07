@@ -11,8 +11,6 @@ import { IPowerActivationStrategy } from '../interfaces/IPowerActivationStrategy
 import { PowerActivationV2 } from './powerup/PowerActivationV2';
 import { Logger } from '../utils/Logger';
 import { LogGroup } from '../enums/LogGroup';
-// import { PowerActivationV1 } from './powerup/PowerActivationV1'; // Uncomment to switch back to V1
-
 export class Player extends Entity {
   hasFirePower: boolean = false;
   fireActive: boolean = false;
@@ -24,7 +22,6 @@ export class Player extends Entity {
   invulnerabilityTimer: number = 0;
   originalScale: number = 1;
 
-  // Power activation strategy (V2 by default, can switch to V1)
   private powerActivationStrategy: IPowerActivationStrategy;
   private difficulty: string;
 
@@ -33,9 +30,7 @@ export class Player extends Entity {
 
     this.difficulty = difficulty;
 
-    // Initialize power activation strategy (V2 by default)
     this.powerActivationStrategy = new PowerActivationV2(scene, mapData, tileSize, mapOffsetX, mapOffsetY, difficulty);
-    // To use V1: this.powerActivationStrategy = new PowerActivationV1(scene, mapData, tileSize, mapOffsetX, mapOffsetY, difficulty);
 
     // Create animated sprite
     const pixelPos = this.getTargetPixelPosition({ x, y });
@@ -272,6 +267,7 @@ export class Player extends Entity {
 
   deactivateFire(): void {
     this.powerActivationStrategy.deactivate();
+    this.powerActivationStrategy.destroyAllProjectiles();
     this.fireActive = false;
     this.hasFirePower = false;
   }

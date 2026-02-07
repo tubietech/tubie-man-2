@@ -22,9 +22,15 @@ export interface IPowerActivationStrategy {
   update(delta: number): void;
 
   /**
-   * Deactivate the fire powerup and clean up all projectiles
+   * Deactivate the fire powerup (stops firing, but lets in-flight projectiles finish)
    */
   deactivate(): void;
+
+  /**
+   * Immediately destroy all active projectiles.
+   * Use for forced cleanup (level change, scene shutdown).
+   */
+  destroyAllProjectiles(): void;
 
   /**
    * Check if fire is currently active

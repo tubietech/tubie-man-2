@@ -2,10 +2,6 @@ export const gameConfig = {
   player: {
     speed: { easy: 60, medium: 75, hard: 90 },
     powerup: {
-      v1: {
-        duration: 1500, // Duration of fire breath effect (ms)
-        projectileCount: 3, // Number of projectiles fired in a row
-      },
       v2: {
         duration: { easy: 10000, medium: 7000, hard: 3000 }, // Duration window for firing multiple projectiles (ms)
         fireRateDelay: { easy: 300, medium: 700, hard: 1200 }, // Minimum time between projectile fires (ms) by difficulty

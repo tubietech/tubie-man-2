@@ -229,6 +229,11 @@ export class AudioManager {
       return;
     }
 
+    if (!this.game.cache.audio.exists(trackKey)) {
+      this.logger.log(`Audio not yet loaded: ${trackKey}`);
+      return;
+    }
+
     try {
       // Use game.sound instead of scene.sound for persistence across scenes
       this.backgroundMusic = this.game.sound.add(trackKey, {
@@ -312,6 +317,9 @@ export class AudioManager {
       return;
     }
 
+    if (!this.game.cache.audio.exists(effectKey))
+      return;
+
     try {
       // Use game.sound instead of scene.sound for persistence across scenes
       const sound = this.game.sound.add(effectKey, {
@@ -350,6 +358,9 @@ export class AudioManager {
       this.logger.log(`Unknown sound effect: ${effect}`);
       return;
     }
+
+    if (!this.game.cache.audio.exists(effectKey))
+      return;
 
     try {
       const sound = this.game.sound.add(effectKey, {

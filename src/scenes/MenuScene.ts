@@ -35,6 +35,7 @@ export class MenuScene extends Phaser.Scene {
   // Audio
   private audioManager!: AudioManager;
   private userInteractionHandler: (() => void) | null = null;
+  private gameAudioLoaded: boolean = false;
 
   constructor() {
     super({ key: 'MenuScene' });
@@ -106,6 +107,9 @@ export class MenuScene extends Phaser.Scene {
 
     // Initialize audio
     this.setupAudio();
+
+    // Lazy-load game audio in the background
+    this.loadGameAudio();
   }
 
   /**
@@ -154,6 +158,37 @@ export class MenuScene extends Phaser.Scene {
       window.removeEventListener('mousemove', this.userInteractionHandler);
       this.userInteractionHandler = null;
     }
+  }
+
+  /**
+   * Lazy-load game audio (sound effects, game music) in the background
+   * so the menu appears instantly without waiting for all audio.
+   */
+  private loadGameAudio(): void {
+    if (this.gameAudioLoaded) return;
+
+    const logger = new Logger(LogGroup.PRELOAD);
+    logger.log('Lazy-loading game audio...');
+
+    // Queue game audio files
+    this.load.audio('music_game', '/assets/audio/chase_2.mp3');
+    this.load.audio('music_gameOver', '/assets/audio/robobozo-death.mp3');
+    this.load.audio('music_victory', '/assets/audio/win.mp3');
+    this.load.audio('music_getReady', '/assets/audio/bit-shift-clip.mp3');
+    this.load.audio('sfx_pellet', '/assets/audio/tubie-tubie-8.mp3');
+    this.load.audio('sfx_powerup', '/assets/audio/pixel-peeker-polka-bonus.mp3');
+    this.load.audio('sfx_enemyHit', '/assets/audio/spazzmatica-powerup.mp3');
+    this.load.audio('sfx_enemyReturn', '/assets/audio/enemy_return.mp3');
+    this.load.audio('sfx_death', '/assets/audio/robobozo-death.mp3');
+    this.load.audio('sfx_bonus', '/assets/audio/spazzmatica-powerup.mp3');
+    this.load.audio('sfx_levelComplete', '/assets/audio/win.mp3');
+
+    this.load.once('complete', () => {
+      this.gameAudioLoaded = true;
+      logger.log('Game audio loaded');
+    });
+
+    this.load.start();
   }
 
   private createMenus(focusOnLanguage: boolean = false): void {
