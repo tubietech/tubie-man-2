@@ -144,3 +144,36 @@ export function calculateBonusAppearances(): number[] {
 export function colorNumberToString(colorNumber: number): string {
   return '#' + colorNumber.toString(16).padStart(6, '0');
 }
+
+/**
+ * Extract R, G, B components from a hex color number (e.g., 0xff8800)
+ */
+export function hexToRgb(color: number): { r: number; g: number; b: number } {
+  return {
+    r: (color >> 16) & 0xff,
+    g: (color >> 8) & 0xff,
+    b: color & 0xff
+  };
+}
+
+/**
+ * Combine R, G, B components into a hex color number
+ */
+export function rgbToHex(r: number, g: number, b: number): number {
+  return (r << 16) | (g << 8) | b;
+}
+
+/**
+ * Linearly interpolate between two hex colors
+ * @param color1 Start color
+ * @param color2 End color
+ * @param t Interpolation factor (0 = color1, 1 = color2)
+ */
+export function lerpColor(color1: number, color2: number, t: number): number {
+  const c1 = hexToRgb(color1);
+  const c2 = hexToRgb(color2);
+  const r = Math.round(c1.r + (c2.r - c1.r) * t);
+  const g = Math.round(c1.g + (c2.g - c1.g) * t);
+  const b = Math.round(c1.b + (c2.b - c1.b) * t);
+  return rgbToHex(r, g, b);
+}

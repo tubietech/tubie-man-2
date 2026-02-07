@@ -15,6 +15,7 @@ import { AboutMenu } from '../ui/menus/AboutMenu';
 import { Menu } from '../ui/menus/Menu';
 import { InstructionsMenu } from '../ui/menus/InstructionsMenu';
 import { HighScoreListMenu } from '../ui/menus/HighScoreListMenu';
+import { colorNumberToString } from '../utils/utils';
 
 export class MenuScene extends Phaser.Scene {
   orientation: Orientation = Orientation.HORIZONTAL;
@@ -85,20 +86,23 @@ export class MenuScene extends Phaser.Scene {
 
     // Load preloaded maps in the background during menu
     preloadLogger.log('Preloading maps during menu...');
+
+
+    this.loadingText.setText(this.localization.getText('copyright'));
+    this.loadingText.setFontSize(gameConfig.menu.fontSize.copyright );
+
     loadPreloadedMaps()
       .then(() => {
         this.mapsLoaded = true;
         preloadLogger.log('✓ Preloaded maps ready');
         // this.loadingText.setText('✓ Maps ready');
-        this.loadingText.setText('©Tubie Tech 2025, All Rights Reserved');
-        this.loadingText.setColor('#00ff00');
+        this.loadingText.setColor(colorNumberToString(gameConfig.colors.mapsLoadedText));
       })
       .catch((error) => {
         preloadLogger.warnMultiLine(['Failed to preload maps:', error]);
         this.mapsLoaded = true; // Continue anyway
         // this.loadingText.setText('Maps will generate on-the-fly');
-        this.loadingText.setText('©Tubie Tech 2025, All Rights Reserved');
-        this.loadingText.setColor('#ffaa00');
+        this.loadingText.setColor(colorNumberToString(gameConfig.colors.mapsFailedText));
       });
 
     // Create menus (pass language change flag to focus on language selector)

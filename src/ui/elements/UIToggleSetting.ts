@@ -11,6 +11,10 @@ export interface IUIToggleSettingConfig extends IUISettingConfig {
   onValueChange?: (value: boolean) => void;
   /** Optional getter to poll for external value changes */
   valueGetter?: () => boolean;
+  toggleBackground1?: number; // Optional custom background color for ON state
+  toggleBackground2?: number; // Optional custom background color for OFF state
+  toggleBorder1?: number; // Optional custom border color for ON state
+  toggleBorder2?: number; // Optional custom border color for OFF state
 }
 
 /**
@@ -60,9 +64,15 @@ export class UIToggleSetting extends UISetting {
     const boxX = this.inputAreaX - boxWidth / 2;
     const boxY = -boxHeight / 2;
 
+
+    const menuColors = gameConfig.menu.colors;
     // Different colors for ON vs OFF state
-    const fillColor = this.currentValue ? 0x004400 : 0x440000;
-    const borderColor = this.currentValue ? 0x00ff00 : 0xff0000;
+    const cfg = this.config as IUIToggleSettingConfig;
+    const fillColor = this.currentValue ? (cfg?.toggleBackground1 ?? menuColors.toggleValueBackground1) : (cfg?.toggleBackground2 ?? menuColors.toggleValueBackground2);
+    const borderColor = this.currentValue ? (cfg?.toggleBorder1 ?? menuColors.toggleBorder1) : (cfg?.toggleBorder2 ?? menuColors.toggleBorder2);
+
+    // const fillColor = this.currentValue ? menuColors.toggleValueBackground1 : menuColors.toggleValueBackground2;
+    // const borderColor = this.currentValue ? menuColors.toggleBorder1 : menuColors.toggleBorder2;
 
     this.toggleBox.fillStyle(fillColor, 0.8);
     this.toggleBox.fillRoundedRect(boxX, boxY, boxWidth, boxHeight, 5);

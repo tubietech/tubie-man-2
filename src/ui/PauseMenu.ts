@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { LocalizationManager } from '../config/localization/LocalizationManager';
 import { gameConfig } from '../config/gameConfig';
 import { SettingsManager } from '../utils/SettingsManager';
+import { colorNumberToString } from '../utils/utils';
 
 export class PauseMenu {
   private scene: Phaser.Scene;
@@ -54,8 +55,8 @@ export class PauseMenu {
       centerY,
       camera.width,
       camera.height,
-      0x000000,
-      0.7
+      gameConfig.menu.colors.pauseMenuColor,
+      gameConfig.menu.colors.pauseMenuAlpha
     );
     this.overlay.setDepth(10000); // Very high depth to ensure it's on top
 
@@ -65,9 +66,9 @@ export class PauseMenu {
       centerY - 100,
       this.localization.getText('paused'),
       {
-        fontFamily: 'PressStart2P',
-        fontSize: '48px',
-        color: '#ffffff',
+        fontFamily: gameConfig.menu.font.title,
+        fontSize: gameConfig.menu.fontSize.title,
+        color: colorNumberToString(gameConfig.menu.colors.titleText),
         align: 'center'
       }
     );
@@ -149,16 +150,16 @@ export class PauseMenu {
 
     // Button background using Graphics for rounded corners
     const background = this.scene.add.graphics();
-    this.drawButtonBackground(background, buttonWidth, buttonHeight, cornerRadius, gameConfig.colors.pauseButtonNormal, 3);
+    this.drawButtonBackground(background, buttonWidth, buttonHeight, cornerRadius, gameConfig.menu.colors.buttonNormal, gameConfig.menu.layout.borderThickness);
 
     // Invisible hit area for interactivity
     const hitArea = this.scene.add.rectangle(0, 0, buttonWidth, buttonHeight, 0x000000, 0);
 
     // Button text
     const buttonText = this.scene.add.text(0, 0, text, {
-      fontFamily: 'PressStart2P',
-      fontSize: '20px',
-      color: '#ffffff',
+      fontFamily: gameConfig.menu.font.button,
+      fontSize: gameConfig.menu.fontSize.button,
+      color: colorNumberToString(gameConfig.menu.colors.buttonText),
       align: 'center'
     });
     buttonText.setOrigin(0.5);
@@ -175,11 +176,11 @@ export class PauseMenu {
 
     // Hover effects
     hitArea.on('pointerover', () => {
-      this.drawButtonBackground(background, buttonWidth, buttonHeight, cornerRadius, gameConfig.colors.pauseButtonHighlight, 3);
+      this.drawButtonBackground(background, buttonWidth, buttonHeight, cornerRadius, gameConfig.menu.colors.buttonHighlight, gameConfig.menu.layout.selectedBorderThickness);
     });
 
     hitArea.on('pointerout', () => {
-      this.drawButtonBackground(background, buttonWidth, buttonHeight, cornerRadius, gameConfig.colors.pauseButtonNormal, 3);
+      this.drawButtonBackground(background, buttonWidth, buttonHeight, cornerRadius, gameConfig.menu.colors.buttonNormal, gameConfig.menu.layout.borderThickness);
     });
 
     // Click handler
@@ -202,7 +203,7 @@ export class PauseMenu {
     graphics.clear();
     graphics.fillStyle(fillColor, 1);
     graphics.fillRoundedRect(-width / 2, -height / 2, width, height, cornerRadius);
-    graphics.lineStyle(strokeWidth, gameConfig.colors.pauseButtonBorder, 1);
+    graphics.lineStyle(strokeWidth, gameConfig.menu.colors.buttonBorder, gameConfig.menu.layout.borderThickness);
     graphics.strokeRoundedRect(-width / 2, -height / 2, width, height, cornerRadius);
   }
 
@@ -327,10 +328,10 @@ export class PauseMenu {
 
       if (index === this.selectedButtonIndex) {
         // Highlight selected button
-        this.drawButtonBackground(background, buttonWidth, buttonHeight, cornerRadius, gameConfig.colors.pauseButtonHighlight, 4);
+        this.drawButtonBackground(background, buttonWidth, buttonHeight, cornerRadius, gameConfig.menu.colors.buttonHighlight, gameConfig.menu.layout.selectedBorderThickness);
       } else {
         // Normal state
-        this.drawButtonBackground(background, buttonWidth, buttonHeight, cornerRadius, gameConfig.colors.pauseButtonNormal, 3);
+        this.drawButtonBackground(background, buttonWidth, buttonHeight, cornerRadius, gameConfig.menu.colors.buttonNormal, gameConfig.menu.layout.borderThickness);
       }
     });
   }

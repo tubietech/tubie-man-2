@@ -142,10 +142,6 @@ export const gameConfig = {
     doc: 0xffb851,
     penDoor: 0xff8800,
     tunnel: 0xffffff,
-    pauseButtonNormal: 0x2121ff,
-    pauseButtonHighlight: 0x6262ff,
-    pauseButtonBorder: 0xffa500,
-    pauseButtonIcon: 0xffffff,
     powerupReady: 0x00ff00,
     powerupNotReady: 0xff0000,
     powerupActive: 0xffa500,
@@ -153,7 +149,9 @@ export const gameConfig = {
     gameUiValue: 0xffff00, // Color for score/lives/level values (yellow)
     developerIndicator: 0xffff00, // Yellow asterisk for developer mode indicator
     getReadyText: 0xffa500, // Bright orange for "Get Ready!" text
-    getReadyOutline: 0xffffff // White outline for "Get Ready!" text
+    getReadyOutline: 0xffffff, // White outline for "Get Ready!" text
+    mapsLoadedText: 0x2fb7a1, // Green for maps loaded successfully
+    mapsFailedText: 0xffaa00 // Orange for map loading failure
   },
   controls: {
     keyboard: {
@@ -250,15 +248,37 @@ export const gameConfig = {
     enabled: true // Global flag to enable/disable all logging
   },
   menu: {
+    font: {
+      title: 'PressStart2P',
+      button: 'PressStart2P',
+      body: 'PressStart2P',
+      label: 'PressStart2P',
+    },
     colors: {
-      buttonNormal: 0x2121ff,
-      buttonHighlight: 0x6262ff,
-      buttonBorder: 0xffa500,
+      buttonNormal: 0x2b2b2b,
+      buttonHighlight: 0x636363,
+      buttonBorder: 0x243763,
       buttonText: 0xffffff,
-      buttonSelectedText: 0xffff00,
-      titleText: 0xffff00,
+      buttonSelectedText: 0xff6e31,
+      titleText: 0xff6e31,
       bodyText: 0xaaaaaa,
-      labelText: 0xffffff
+      labelText: 0xffffff,
+      buttonGroupUnselectedBackground: 0x222222,
+      pauseMenuColor: 0x000000,
+      pauseMenuAlpha: 0.75,
+      toggleValueBackground1: 0x004400, // Dark green for ON state
+      toggleValueBackground2: 0x440000, // Dark red for OFF state,
+      toggleValueBackground3: 0xffa500,
+      toggleValueBackground4: 0x6262ff,
+      toggleBorder1: 0x00ff00, // Bright green border for ON state
+      toggleBorder2: 0xff0000, // Bright red border for OFF state
+      toggleBorder3: 0xffa500,
+      toggleBorder4: 0x2121ff,
+      sliderGradient: {
+        start: 0xff0000, // Red at minimum value
+        mid: 0xffff00,   // Yellow at midpoint
+        end: 0x00ff00    // Green at maximum value
+      }
     },
     layout: {
       spacing: 30,
@@ -267,12 +287,21 @@ export const gameConfig = {
       buttonGroupSpacing: 10,
       buttonCornerRadius: 15,
       buttonGroupCornerRadius: 8,
-      padding: 20
+      padding: 20,
+      borderThickness: 4,
+      selectedBorderThickness: 5
     },
     animation: {
       focusScale: 1.1,
       transitionDuration: 200,
       chaseSpeed: 50 // Pixels per second for chase animation
+    },
+    fontSize: {
+      title: '48px',
+      button: '20px',
+      body: '18px',
+      label: '16px',
+      copyright: '10px'
     }
   },
   audio: {

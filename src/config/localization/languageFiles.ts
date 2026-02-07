@@ -61,7 +61,8 @@ export const languageFiles = {
     settingMuteKey: 'Mute Key',
     isRightHanded: 'Touch Layout',
     rightHanded: 'Right',
-    leftHanded: 'Left'
+    leftHanded: 'Left',
+    copyright: '©Tubie Tech 2026, All Rights Reserved'
   },
   [Language.SPANISH]: {
     gameTitle: 'Hombre Tubía',
@@ -122,7 +123,8 @@ export const languageFiles = {
     settingMuteKey: 'Tecla Silencio',  
     isRightHanded: "Diseño táctil",
     rightHanded: "Diestro",
-    leftHanded: "Zurdo"
+    leftHanded: "Zurdo",
+    copyright: '©Tubie Tech 2026, All Rights Reserved'
   },
   [Language.FRENCH]: {
     gameTitle: 'Tubie-Man',
@@ -183,7 +185,8 @@ export const languageFiles = {
     settingMuteKey: 'Touche Muet',  
     isRightHanded: "Disposition tactile",
     rightHanded: "Droitier",
-    leftHanded: "Gaucher"
+    leftHanded: "Gaucher",
+    copyright: '©Tubie Tech 2026, All Rights Reserved'
   },
   [Language.GERMAN]: {
     gameTitle: 'Tubie-Man',
@@ -244,7 +247,8 @@ export const languageFiles = {
     settingMuteKey: 'Stumm-Taste',
     isRightHanded: "Touch-Layout",
     rightHanded: "Rechts",
-    leftHanded: "Links"
+    leftHanded: "Links",
+    copyright: '©Tubie Tech 2026, All Rights Reserved'
   }
 };
 

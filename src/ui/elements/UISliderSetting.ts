@@ -3,7 +3,7 @@ import { MenuItemType } from '../../enums/MenuItemType';
 import { UISetting, IUISettingConfig } from './UISetting';
 import { NavigationDirection } from '../../interfaces/INavigable';
 import { gameConfig } from '../../config/gameConfig';
-import { colorNumberToString } from '../../utils/utils';
+import { colorNumberToString, lerpColor } from '../../utils/utils';
 
 export interface IUISliderSettingConfig extends IUISettingConfig {
   initialValue: number;  // 0-1 range
@@ -88,11 +88,11 @@ export class UISliderSetting extends UISetting {
     const trackY = -this.sliderHeight / 2;
 
     // Draw track background
-    this.sliderTrack.fillStyle(0x333333, 1);
+    this.sliderTrack.fillStyle(gameConfig.menu.colors.buttonNormal, 1);
     this.sliderTrack.fillRoundedRect(trackX, trackY, this.sliderWidth, this.sliderHeight, 6);
 
     // Draw track border
-    this.sliderTrack.lineStyle(2, 0x666666, 1);
+    this.sliderTrack.lineStyle(2, gameConfig.menu.colors.buttonHighlight, 1);
     this.sliderTrack.strokeRoundedRect(trackX, trackY, this.sliderWidth, this.sliderHeight, 6);
   }
 
@@ -114,20 +114,13 @@ export class UISliderSetting extends UISetting {
   }
 
   private getFillColor(): number {
-    // Color gradient from red (0%) to yellow (50%) to green (100%)
+    const { start, mid, end } = gameConfig.menu.colors.sliderGradient;
     const normalizedValue = (this.currentValue - this.minValue) / (this.maxValue - this.minValue);
 
-    if (normalizedValue < 0.5) {
-      // Red to yellow
-      const r = 255;
-      const g = Math.floor(255 * (normalizedValue * 2));
-      return (r << 16) | (g << 8);
-    } else {
-      // Yellow to green
-      const r = Math.floor(255 * (1 - (normalizedValue - 0.5) * 2));
-      const g = 255;
-      return (r << 16) | (g << 8);
-    }
+    if (normalizedValue < 0.5)
+      return lerpColor(start, mid, normalizedValue * 2);
+    else
+      return lerpColor(mid, end, (normalizedValue - 0.5) * 2);
   }
 
   private drawSliderHandle(): void {

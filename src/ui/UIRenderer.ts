@@ -469,11 +469,11 @@ export class UIRenderer {
     container.setDepth(100);
 
     // Button background (circular)
-    const background = this.scene.add.circle(0, 0, 25, gameConfig.colors.pauseButtonNormal);
-    background.setStrokeStyle(2, gameConfig.colors.pauseButtonBorder);
+    const background = this.scene.add.circle(0, 0, 25, gameConfig.menu.colors.buttonNormal);
+    background.setStrokeStyle(gameConfig.menu.layout.borderThickness, gameConfig.menu.colors.buttonBorder);
 
     // Pause icon (two vertical bars)    
-    const iconColor = gameConfig.colors.pauseButtonIcon;
+    const iconColor = gameConfig.menu.colors.buttonText;
     const bar1 = this.scene.add.rectangle(-8, 0, 6, 20, iconColor);
     const bar2 = this.scene.add.rectangle(8, 0, 6, 20, iconColor);
 
@@ -484,11 +484,11 @@ export class UIRenderer {
 
     // Hover effects
     background.on('pointerover', () => {
-      background.setFillStyle(gameConfig.colors.pauseButtonHighlight);
+      background.setFillStyle(gameConfig.menu.colors.buttonHighlight);
     });
 
     background.on('pointerout', () => {
-      background.setFillStyle(gameConfig.colors.pauseButtonNormal);
+      background.setFillStyle(gameConfig.menu.colors.buttonNormal);
     });
 
     // Click handler

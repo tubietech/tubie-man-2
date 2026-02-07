@@ -72,9 +72,9 @@ export class UIButtonGroup<T> extends UIElement implements INavigable, ISelectab
       hitArea.setAlpha(0.001);
 
       const text = this.scene.add.text(x, 0, option.label, {
-        fontFamily: 'PressStart2P',
+        fontFamily: gameConfig.menu.font.label,
         fontSize: this.fontSize,
-        color: '#ffffff'
+        color: colorNumberToString(gameConfig.menu.colors.labelText)
       }).setOrigin(0.5);
 
       const buttonContainer = this.scene.add.container(0, 0, [background, hitArea, text]);
@@ -93,7 +93,7 @@ export class UIButtonGroup<T> extends UIElement implements INavigable, ISelectab
           this.onPointerEnterCallback();
         }
         if (index !== this.selectedIndex) {
-          this.drawButtonBackground(index, 0x444444, 2);
+          this.drawButtonBackground(index, gameConfig.menu.colors.buttonHighlight, gameConfig.menu.layout.borderThickness);
         }
       });
       hitArea.on('pointerout', () => {
@@ -154,10 +154,10 @@ export class UIButtonGroup<T> extends UIElement implements INavigable, ISelectab
 
     if (isSelected) {
       button.text.setColor(colorNumberToString(gameConfig.menu.colors.buttonSelectedText));
-      this.drawButtonBackground(index, gameConfig.menu.colors.buttonHighlight, 3);
+      this.drawButtonBackground(index, gameConfig.menu.colors.buttonHighlight, gameConfig.menu.layout.selectedBorderThickness);
     } else {
-      button.text.setColor('#ffffff');
-      this.drawButtonBackground(index, 0x222222, 2);
+      button.text.setColor(colorNumberToString(gameConfig.menu.colors.buttonText));
+      this.drawButtonBackground(index, gameConfig.menu.colors.buttonGroupUnselectedBackground, gameConfig.menu.layout.borderThickness);
     }
   }
 

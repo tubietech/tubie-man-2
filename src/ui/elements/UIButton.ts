@@ -43,8 +43,8 @@ export class UIButton extends UIElement implements INavigable {
 
     // Create text
     this.textObject = scene.add.text(0, 0, config.text, {
-      fontFamily: 'PressStart2P',
-      fontSize: '20px',
+      fontFamily: gameConfig.menu.font.button,
+      fontSize: gameConfig.menu.fontSize.button,
       color: colorNumberToString(gameConfig.menu.colors.buttonText)
     });
     this.textObject.setOrigin(0.5);
@@ -103,7 +103,7 @@ export class UIButton extends UIElement implements INavigable {
 
   focus(): void {
     this.isFocused = true;
-    this.drawBackground(gameConfig.menu.colors.buttonHighlight, 4);
+    this.drawBackground(gameConfig.menu.colors.buttonHighlight, gameConfig.menu.layout.selectedBorderThickness);
 
     // Scale animation
     this.scene.tweens.add({
@@ -117,7 +117,7 @@ export class UIButton extends UIElement implements INavigable {
 
   blur(): void {
     this.isFocused = false;
-    this.drawBackground(gameConfig.menu.colors.buttonNormal, 3);
+    this.drawBackground(gameConfig.menu.colors.buttonNormal, gameConfig.menu.layout.borderThickness);
 
     // Scale animation back
     this.scene.tweens.add({

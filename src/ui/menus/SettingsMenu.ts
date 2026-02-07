@@ -528,7 +528,7 @@ export class SettingsMenu extends Menu {
     this.addElement(continueBinding);
     
     // Left Right Hand Toggle
-    const sfxMuteToggle = new UIToggleSetting(this.scene, {
+    const touchSideToggle = new UIToggleSetting(this.scene, {
       x: 0,
       y: currentY,
       label: loc.getText('isRightHanded'),
@@ -539,11 +539,16 @@ export class SettingsMenu extends Menu {
       offLabel: loc.getText('leftHanded'),
       onValueChange: (value) => {
         this.settingsManager.setTouchIsRightHanded(value);
-      }
+      },
+      toggleBackground1: gameConfig.menu.colors.toggleValueBackground3, // Optional custom background color for ON state
+      toggleBackground2: gameConfig.menu.colors.toggleValueBackground4, // Optional custom background color for OFF state
+      toggleBorder1: gameConfig.menu.colors.toggleBorder3, // Optional custom border color for ON state
+      toggleBorder2: gameConfig.menu.colors.toggleBorder4, // Optional custom border color for OFF state
     });
-    elements.push(sfxMuteToggle);
-    navigables.push(sfxMuteToggle);
-    this.addElement(sfxMuteToggle);
+
+    elements.push(touchSideToggle);
+    navigables.push(touchSideToggle);
+    this.addElement(touchSideToggle);
     currentY += 55;
 
     this.tabContents.set('controller', { elements, navigables });
