@@ -128,4 +128,4 @@ Audio files: `public/assets/audio/`
 ## Dependencies on External Assets
 - Sprite atlas: `public/assets/sprites/atlas.png` + `atlas.json`
 - Font: `public/assets/fonts/PressStart2P.ttf`
-- Audio: `public/assets/audio/*.mp3`
+- Audio: `public/assets/audio/*.ogg`

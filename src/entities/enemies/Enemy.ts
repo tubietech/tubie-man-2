@@ -239,7 +239,6 @@ export class Enemy extends Entity {
     this.isRespawning = false;
     this.respawnTimer = 0;
     this.speed = this.normalSpeed;
-    this.isPaused = false;
     this.isFollowingExitPath = false;
     this.exitPathIndex = 0;
 

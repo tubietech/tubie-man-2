@@ -77,9 +77,7 @@ export class PreloadScene extends Phaser.Scene {
    */
   private loadAudio(): void {
     // Menu music and sound effects (needed immediately)
-    this.load.audio('music_menu', '/assets/audio/getting-it-done.mp3');
-    this.load.audio('sfx_menuSelect', '/assets/audio/tubie-tubie.mp3');
-    this.load.audio('sfx_menuNavigate', '/assets/audio/bit-shift-clip.mp3');
+    this.load.audio('music_menu', '/assets/audio/getting-it-done.ogg');
   }
 
   private createPlayerAnimations() {

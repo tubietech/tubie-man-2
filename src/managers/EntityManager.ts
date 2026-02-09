@@ -47,6 +47,7 @@ export class EntityManager {
 
   // Enemy release state
   private enemiesReleased: number = 0;
+  private releaseTimer: Phaser.Time.TimerEvent | null = null;
 
   constructor(
     scene: Phaser.Scene,
@@ -293,7 +294,8 @@ export class EntityManager {
       } else {
         // Schedule next enemy release after delay
         const releaseDelay = gameConfig.enemy.releaseDelay[this.difficulty as keyof typeof gameConfig.enemy.releaseDelay];
-        this.scene.time.delayedCall(releaseDelay, () => {
+        this.releaseTimer = this.scene.time.delayedCall(releaseDelay, () => {
+          this.releaseTimer = null;
           if (this.enemiesReleased < this.enemies.length) {
             this.enemies[this.enemiesReleased].release();
             this.enemiesReleased++;
@@ -306,9 +308,20 @@ export class EntityManager {
   }
 
   /**
+   * Cancel any pending enemy release timer
+   */
+  cancelPendingRelease(): void {
+    if (this.releaseTimer) {
+      this.releaseTimer.destroy();
+      this.releaseTimer = null;
+    }
+  }
+
+  /**
    * Reset enemy release counter and restart staggered release
    */
   restartEnemyRelease(): void {
+    this.cancelPendingRelease();
     this.enemiesReleased = 0;
     this.scheduleNextEnemyRelease();
   }
@@ -337,9 +350,10 @@ export class EntityManager {
    * Pause and hide all enemies, reset them to starting positions
    */
   pauseAndHideEnemies(): void {
+    this.cancelPendingRelease();
     this.enemies.forEach(enemy => {
-      enemy.pause();
       enemy.resetToStart();
+      enemy.pause();
       enemy.hide();
     });
   }
@@ -348,7 +362,10 @@ export class EntityManager {
    * Show all enemies
    */
   showEnemies(): void {
-    this.enemies.forEach(enemy => enemy.show());
+    this.enemies.forEach(enemy => {
+      enemy.resume();
+      enemy.show();
+    });
   }
 
   /**
@@ -365,6 +382,8 @@ export class EntityManager {
    * Clean up all entities
    */
   cleanup(): void {
+    this.cancelPendingRelease();
+
     if (this.player)
       this.player.cleanup();
 

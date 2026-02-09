@@ -245,7 +245,7 @@ export class UIRenderer {
     difficulty: string = 'medium'
   ): IUIElements {
     const scoreText = this.createLabelValueTextVertical(
-      mapOffsetX + 40,
+      mapOffsetX + 25,
       mapOffsetY - 40,
       loc.getText('score'),
       score,
@@ -255,8 +255,9 @@ export class UIRenderer {
     );
   
     const highScoreText = this.createLabelValueTextVertical(
-      mapOffsetX + mapWidth / 2 - 20,
-      mapOffsetY - 40,
+      //mapOffsetX + mapWidth / 2 - 20,
+      mapOffsetX + 80,
+      mapOffsetY - 80,
       loc.getText('highScore'),
       highScore,
       '16px',
@@ -265,7 +266,7 @@ export class UIRenderer {
     );
 
     const livesSprites = this.createLivesSprites(
-      mapOffsetX + mapWidth * 2 / 3 - 20,
+      mapOffsetX + mapWidth * 2 / 3 - 50,
       mapOffsetY - 50,
       currentLives ?? gameConfig.player.startLives[difficulty as keyof typeof gameConfig.player.startLives],
       difficulty,
@@ -274,7 +275,7 @@ export class UIRenderer {
     );
 
     const levelText = this.createLabelValueText(
-      mapOffsetX + mapWidth / 4 + 25,
+      mapOffsetX + mapWidth / 4 + 40,
       mapOffsetY + mapHeight + 5,
       loc.getText('level'),
       level,
@@ -284,7 +285,7 @@ export class UIRenderer {
     );
 
     const levelSprites = this.createLevelSprites(
-      mapOffsetX + 5,
+      mapOffsetX - 5,
       mapOffsetY + mapHeight + 30,
       level,
       12,
@@ -297,7 +298,7 @@ export class UIRenderer {
     livesText.setScrollFactor(0);
 
     const powerText = this.scene.add.text(
-      mapOffsetX + mapWidth * 2 / 3 + 35,
+      mapOffsetX + mapWidth * 2 / 3 + 30,
       mapOffsetY + mapHeight + 5,
       `${loc.getText('power')}: ${loc.getText('powerReady')}`,
       {

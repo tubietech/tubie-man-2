@@ -903,7 +903,7 @@ export class GameScene extends Phaser.Scene {
     this.add.text(
       this.cameras.main.centerX,
       this.cameras.main.centerY,
-      `${loc.getText('gameOver')}\n\n${loc.getText('clickToRestart')}`,
+      loc.getText('gameOver'),
       {
         fontFamily: 'PressStart2P',
         fontSize: '32px',
@@ -912,19 +912,10 @@ export class GameScene extends Phaser.Scene {
       }
     ).setOrigin(0.5);
 
-    // Set up click to restart
-    this.input.once('pointerdown', () => {
-      this.scene.restart(this.getSceneRestartData(true));
+    // Show game over text for a few seconds, then return to main menu
+    this.time.delayedCall(3000, () => {
+      this.scene.start('MenuScene');
     });
-
-    // Set up Continue key to restart (from settings)
-    const settingsManager = SettingsManager.getInstance();
-    const continueKey = this.input.keyboard?.addKey(settingsManager.getContinueKeyCode());
-    if (continueKey) {
-      continueKey.once('down', () => {
-        this.scene.restart(this.getSceneRestartData(true));
-      });
-    }
   }
 
   shutdown() {
