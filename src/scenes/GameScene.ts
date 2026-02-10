@@ -183,8 +183,9 @@ export class GameScene extends Phaser.Scene {
     this.mapOffsetX = (canvasWidth - mapPixelWidth) / 2;
     this.mapOffsetY = (canvasHeight - mapPixelHeight) / 2;
 
-    if(TouchControls.isTouchDevice())
-      this.mapOffsetY = this.mapOffsetY / 2;
+    // On touch devices in vertical mode, ensure enough space above the map for UI
+    if (TouchControls.isTouchDevice() && this.orientation === Orientation.VERTICAL)
+      this.mapOffsetY = Math.max(this.mapOffsetY, gameConfig.ui.minTopMargin);
   }
 
   async create() {

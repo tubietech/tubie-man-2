@@ -255,7 +255,6 @@ export class UIRenderer {
     );
   
     const highScoreText = this.createLabelValueTextVertical(
-      //mapOffsetX + mapWidth / 2 - 20,
       mapOffsetX + 80,
       mapOffsetY - 80,
       loc.getText('highScore'),

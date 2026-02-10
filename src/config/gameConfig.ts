@@ -219,6 +219,9 @@ export const gameConfig = {
     fireDisabledAlpha: 0.18,     // Dimmed when no powerup
     fireSizeRatio: 0.8,          // Fire button radius as fraction of D-pad size
   },
+  ui: {
+    minTopMargin: 90, // Minimum pixels above the map for score/high score/lives on touch devices
+  },
   window: {
     widthModifier: 0.99, // Percentage of viewport width (0-1)
     heightModifier: 0.99, // Percentage of viewport height (0-1)
