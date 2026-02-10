@@ -117,6 +117,12 @@ export const gameConfig = {
     wallEdgeOffset: 0.48, // Inset walls by 48% from tile edges (0-1 scale). This value should not exceed o.5, as single thickness walls will dissappear
     minimumWallThickness: 0.3, // Minimum thickness for walls in grid units (prevents over-thinning)
     wallOutlineThickness: 2,
+    winFlash: {
+      count: 3,          // Number of times the walls flash
+      duration: 750,    // Duration of each flash in ms (one full cycle: flash on + flash off)
+      wallColor: 0x000000,       // Flash fill color (black)
+      outlineColor: 0xffffff,    // Flash outline color (white)
+    },
     generation: {
       maxGenerationAttempts: 10,
       gridRows: 9,

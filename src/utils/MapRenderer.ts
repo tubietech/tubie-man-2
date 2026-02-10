@@ -19,6 +19,8 @@ export class MapRenderer {
   private mapTexture: Phaser.GameObjects.Image | null = null;
   private static textureCounter: number = 0;
   private logger: Logger;
+  private wallSections: ICoordinate[][] = [];
+  private penDoorTiles: ICoordinate[] = [];
   
 
   constructor(
@@ -153,16 +155,16 @@ export class MapRenderer {
     this.logger.log('Starting optimized wall rendering');
 
     // Step 1: Find all connected wall sections in the map
-    const wallSections = findConnectedWallSections(this.mapData.map);
-    this.logger.log(`Found ${wallSections.length} wall sections`);
+    this.wallSections = findConnectedWallSections(this.mapData.map);
+    this.logger.log(`Found ${this.wallSections.length} wall sections`);
 
     // Step 2: Draw each wall section using the polygon approach
-    for (const section of wallSections) {
+    for (const section of this.wallSections) {
       this.drawWallRegion(section);
     }
 
     // Collect pen door tiles to draw as one connected region
-    const penDoorTiles: ICoordinate[] = [];
+    this.penDoorTiles = [];
     const rectangles: Phaser.GameObjects.Rectangle[] = [];
 
     // Process non-wall tiles
@@ -182,7 +184,7 @@ export class MapRenderer {
           rectangles.push(rect);
         } else if (tile === 3) {
           // Collect pen door tiles
-          penDoorTiles.push({ x, y });
+          this.penDoorTiles.push({ x, y });
         } else if (tile === 4) {
           // Tunnel
           const rect = this.scene.add.rectangle(
@@ -198,8 +200,8 @@ export class MapRenderer {
     }
 
     // Draw pen door as one connected region
-    if (penDoorTiles.length > 0) {
-      this.drawPenDoor(penDoorTiles);
+    if (this.penDoorTiles.length > 0) {
+      this.drawPenDoor(this.penDoorTiles);
     }
 
     // Generate texture from the graphics object for reuse
@@ -255,6 +257,37 @@ export class MapRenderer {
         this.scene.textures.remove(textureKey);
       }
     }
+  }
+
+  /**
+   * Redraw walls with a different color palette, replacing the existing map texture.
+   * Uses cached wall sections from the initial drawMap() call.
+   */
+  redrawWalls(palette: IMapColorPalette): void {
+    // Destroy the old texture
+    if (this.mapTexture) {
+      const textureKey = this.mapTexture.texture.key;
+      this.mapTexture.destroy();
+      this.mapTexture = null;
+      if (this.scene.textures.exists(textureKey))
+        this.scene.textures.remove(textureKey);
+    }
+
+    // Temporarily swap palette and redraw walls
+    const originalPalette = this.colorPalette;
+    this.colorPalette = palette;
+
+    for (const section of this.wallSections)
+      this.drawWallRegion(section);
+
+    if (this.penDoorTiles.length > 0)
+      this.drawPenDoor(this.penDoorTiles);
+
+    // Generate new texture from the redrawn graphics
+    this.generateMapTexture();
+
+    // Restore original palette
+    this.colorPalette = originalPalette;
   }
 
   createPellets(): IPelletData {

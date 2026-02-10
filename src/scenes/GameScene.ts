@@ -803,7 +803,41 @@ export class GameScene extends Phaser.Scene {
       this.entityManager.player.hasFirePower = false;
     }
 
-    this.scene.restart(this.getSceneRestartData(false));
+    // Hide enemies during the flash animation
+    this.entityManager.pauseAndHideEnemies();
+
+    // Flash the walls before transitioning to the next level
+    this.playWinFlash(() => {
+      this.scene.restart(this.getSceneRestartData(false));
+    });
+  }
+
+  private playWinFlash(onComplete: () => void): void {
+    const { count, duration, wallColor, outlineColor } = gameConfig.map.winFlash;
+    const flashPalette: IMapColorPalette = { wall: wallColor, wallOutline: outlineColor };
+    const halfDuration = duration / 2;
+    let flashIndex = 0;
+
+    const doFlash = () => {
+      if (flashIndex >= count) {
+        onComplete();
+        return;
+      }
+
+      // Flash to alternate colors
+      this.mapRenderer!.redrawWalls(flashPalette);
+
+      // Flash back to normal colors after half duration
+      this.time.delayedCall(halfDuration, () => {
+        this.mapRenderer!.redrawWalls(this.currentPalette);
+
+        flashIndex++;
+        // Wait the other half before next flash
+        this.time.delayedCall(halfDuration, doFlash);
+      });
+    };
+
+    doFlash();
   }
   
   togglePause(): void {
