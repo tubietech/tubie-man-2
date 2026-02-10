@@ -31,7 +31,7 @@ export class Bonus extends Entity {
   ) {
     // Initialize Entity with dummy color (will be replaced by sprite)
     const startPos = bonusData.path[0];
-    super(scene, startPos.x, startPos.y, 0x000000, speed, mapData, tileSize, mapOffsetX, mapOffsetY);
+    super(scene, startPos.x, startPos.y, speed, mapData, tileSize, mapOffsetX, mapOffsetY);
 
     this.path = bonusData.path;
     this.score = bonusData.score;

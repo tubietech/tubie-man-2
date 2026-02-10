@@ -130,7 +130,7 @@ export class MapRenderer {
     const py = this.mapOffsetY + leftmost.y * this.tileSize + inset;
 
     // Draw fill as one continuous bar spanning full width
-    this.graphics.fillStyle(gameConfig.colors.penDoor);
+    this.graphics.fillStyle(gameConfig.map.colors.penDoor);
     this.graphics.fillRect(startX, py, totalWidth, barHeight);
 
     // Draw outline
@@ -192,7 +192,7 @@ export class MapRenderer {
             this.mapOffsetY + y * this.tileSize,
             this.tileSize,
             this.tileSize,
-            gameConfig.colors.tunnel
+            gameConfig.map.colors.tunnel
           ).setOrigin(0).setAlpha(0.5);
           rectangles.push(rect);
         }
@@ -321,7 +321,7 @@ export class MapRenderer {
             this.mapOffsetX + x * this.tileSize + this.tileSize / 2,
             this.mapOffsetY + y * this.tileSize + this.tileSize / 2,
             this.tileSize * gameConfig.map.pellet.size,
-            gameConfig.colors.pellet
+            gameConfig.map.colors.pellet
           );
           pellets[y][x] = pellet;
         }

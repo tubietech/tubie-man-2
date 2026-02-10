@@ -24,7 +24,6 @@ export class Enemy extends Entity {
   isInjured: boolean = false;
   injuredSpeed: number;
   normalSpeed: number;
-  originalColor: number;
   respawnTimer: number = 0;
   respawnDelay: number = 0;
   isRespawning: boolean = false;
@@ -41,15 +40,13 @@ export class Enemy extends Entity {
   onReachedPen?: (enemy: Enemy) => void;
 
   constructor(scene: Phaser.Scene, x: number, y: number, type: string, enemyNumber: number, speed: number, mapData: IMapData, tileSize: number, mapOffsetX: number, mapOffsetY: number, difficulty: Difficulty = Difficulty.MEDIUM) {
-    const color = gameConfig.colors[type as keyof typeof gameConfig.colors] as number;
-    super(scene, x, y, color, speed, mapData, tileSize, mapOffsetX, mapOffsetY);
+    super(scene, x, y, speed, mapData, tileSize, mapOffsetX, mapOffsetY);
     this.type = type;
     this.enemyNumber = enemyNumber;
     this.targetX = x;
     this.targetY = y;
     this.difficulty = difficulty;
     this.normalSpeed = speed;
-    this.originalColor = color;
 
     // Store starting position
     this.startX = x;
@@ -208,11 +205,6 @@ export class Enemy extends Entity {
       const normalScale = (this.tileSize * gameConfig.enemy.spriteScale) / this.animatedSprite.width;
       this.animatedSprite.setScale(normalScale);
     }
-
-    // Restore original color (Arc uses setFillStyle, not setTint)
-    if (this.sprite instanceof Phaser.GameObjects.Arc) {
-      this.sprite.setFillStyle(this.originalColor);
-    }
   }
 
   /**
@@ -249,11 +241,6 @@ export class Enemy extends Entity {
     if (this.animatedSprite) {
       const normalScale = (this.tileSize * gameConfig.enemy.spriteScale) / this.animatedSprite.width;
       this.animatedSprite.setScale(normalScale);
-    }
-
-    // Restore original color
-    if (this.sprite instanceof Phaser.GameObjects.Arc) {
-      this.sprite.setFillStyle(this.originalColor);
     }
   }
 
@@ -388,8 +375,6 @@ export class Enemy extends Entity {
       const normalScale = (this.tileSize * gameConfig.enemy.spriteScale) / this.animatedSprite.width;
       this.animatedSprite.setScale(normalScale);
       this.animatedSprite.clearTint();
-    } else if (this.sprite instanceof Phaser.GameObjects.Arc) {
-      this.sprite.setFillStyle(this.originalColor);
     }
 
     // Start following exit path to leave the pen

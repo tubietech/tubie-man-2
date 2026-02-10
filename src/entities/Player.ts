@@ -11,6 +11,7 @@ import { IPowerActivationStrategy } from '../interfaces/IPowerActivationStrategy
 import { PowerActivationV2 } from './powerup/PowerActivationV2';
 import { Logger } from '../utils/Logger';
 import { LogGroup } from '../enums/LogGroup';
+import { Difficulty } from '../enums/Difficulty';
 export class Player extends Entity {
   hasFirePower: boolean = false;
   fireActive: boolean = false;
@@ -25,8 +26,8 @@ export class Player extends Entity {
   private powerActivationStrategy: IPowerActivationStrategy;
   private difficulty: string;
 
-  constructor(scene: Phaser.Scene, x: number, y: number, color: number, speed: number, mapData: IMapData, tileSize: number, mapOffsetX: number, mapOffsetY: number, difficulty: string = 'medium') {
-    super(scene, x, y, color, speed, mapData, tileSize, mapOffsetX, mapOffsetY);
+  constructor(scene: Phaser.Scene, x: number, y: number, speed: number, mapData: IMapData, tileSize: number, mapOffsetX: number, mapOffsetY: number, difficulty: Difficulty  = Difficulty.MEDIUM) {
+    super(scene, x, y, speed, mapData, tileSize, mapOffsetX, mapOffsetY);
 
     this.difficulty = difficulty;
 
@@ -385,7 +386,7 @@ export class Player extends Entity {
 
       // Set sprite to frame 2 of the current direction animation
       const frame = this.getDeathFrame();
-      if (frame) {
+      if (frame && this.animatedSprite) {
         this.animatedSprite.setFrame(frame);
       }
 
@@ -401,7 +402,8 @@ export class Player extends Entity {
         ease: 'Linear',
         onComplete: () => {
           // Reset angle to 0 after animation
-          this.animatedSprite.setAngle(0);
+          if(this.animatedSprite)
+            this.animatedSprite.setAngle(0);
           // Re-enable input and movement
           this.isDying = false;
           // Activate invulnerability after respawn

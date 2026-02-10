@@ -36,7 +36,7 @@ export class Projectile extends Entity implements IProjectile {
     speed: number
   ) {
     // Initialize Entity with dummy color (will be replaced by sprite)
-    super(scene, startPos.x, startPos.y, 0x000000, speed, mapData, tileSize, mapOffsetX, mapOffsetY);
+    super(scene, startPos.x, startPos.y, speed, mapData, tileSize, mapOffsetX, mapOffsetY);
 
     this.direction = direction;
     this.active = true;

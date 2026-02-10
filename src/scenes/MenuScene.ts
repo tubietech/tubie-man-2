@@ -96,13 +96,13 @@ export class MenuScene extends Phaser.Scene {
         this.mapsLoaded = true;
         preloadLogger.log('✓ Preloaded maps ready');
         // this.loadingText.setText('✓ Maps ready');
-        this.loadingText.setColor(colorNumberToString(gameConfig.colors.mapsLoadedText));
+        this.loadingText.setColor(colorNumberToString(gameConfig.menu.colors.mapsLoadedText));
       })
       .catch((error) => {
         preloadLogger.warnMultiLine(['Failed to preload maps:', error]);
         this.mapsLoaded = true; // Continue anyway
         // this.loadingText.setText('Maps will generate on-the-fly');
-        this.loadingText.setColor(colorNumberToString(gameConfig.colors.mapsFailedText));
+        this.loadingText.setColor(colorNumberToString(gameConfig.menu.colors.mapsFailedText));
       });
 
     // Create menus (pass language change flag to focus on language selector)

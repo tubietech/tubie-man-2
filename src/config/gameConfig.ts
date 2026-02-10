@@ -28,8 +28,6 @@ export const gameConfig = {
     animationFrameRate: 3,
     speed: { easy: 53, medium: 70, hard: 90 },
     injuredSpeed: { easy: 200, medium: 200, hard: 200 }, // Speed when injured and fleeing to pen
-    scaredDuration: 5000,
-    types: ['pokey', 'pricky', 'stingy', 'doc'],
     countPerLevel: {
       1: 3,  // Level 1: Pokey, Pricky, Stingy
       2: 3,  // Level 2: Pokey, Pricky, Stingy
@@ -111,8 +109,6 @@ export const gameConfig = {
     minTunnels: 1,
     maxTunnels: 2,
     tunnelCooldown: 500, // Milliseconds to wait before allowing re-entry to a tunnel
-    fillIterations: 3,
-    maxDeadEndsPerHalf: 2,
     wallRadius: 8, // Corner radius for wall tiles
     wallEdgeOffset: 0.48, // Inset walls by 48% from tile edges (0-1 scale). This value should not exceed o.5, as single thickness walls will dissappear
     minimumWallThickness: 0.3, // Minimum thickness for walls in grid units (prevents over-thinning)
@@ -133,31 +129,14 @@ export const gameConfig = {
       width: 6,
       height: 3,
       doorWidth: 2
+    },
+    colors: {
+      pellet: 0xffb897,
+      penDoor: 0xff8800,
+      tunnel: 0x000000,
+      getReadyText: 0xffa500, // Bright orange for "Get Ready!" text
+      getReadyOutline: 0xffffff, // White outline for "Get Ready!" text
     }
-  },
-  colors: {
-    wall: 0x2121ff,
-    wallOutline: 0xffa500,
-    pellet: 0xffb897,
-    powerup: 0xffffff,
-    player: 0xffff00,
-    fire: 0xff4500,
-    pokey: 0xff0000,
-    pricky: 0xffb8ff,
-    stingy: 0x00ffff,
-    doc: 0xffb851,
-    penDoor: 0xff8800,
-    tunnel: 0xffffff,
-    powerupReady: 0x00ff00,
-    powerupNotReady: 0xff0000,
-    powerupActive: 0xffa500,
-    gameUiText: 0xffffff,
-    gameUiValue: 0xffff00, // Color for score/lives/level values (yellow)
-    developerIndicator: 0xffff00, // Yellow asterisk for developer mode indicator
-    getReadyText: 0xffa500, // Bright orange for "Get Ready!" text
-    getReadyOutline: 0xffffff, // White outline for "Get Ready!" text
-    mapsLoadedText: 0x2fb7a1,
-    mapsFailedText: 0xffaa00
   },
   controls: {
     keyboard: {
@@ -234,6 +213,13 @@ export const gameConfig = {
   },
   ui: {
     minTopMargin: 90, // Minimum pixels above the map for score/high score/lives on touch devices
+    colors: {
+      powerupReady: 0x00ff00,
+      powerupActive: 0xffa500,
+      gameUiLabel: 0xffffff,
+      gameUiValue: 0xffff00, // Color for score/lives/level values (yellow)
+      developerIndicator: 0xffff00, // Yellow asterisk for developer mode indicator
+    },
   },
   window: {
     widthModifier: 0.99, // Percentage of viewport width (0-1)
@@ -267,7 +253,6 @@ export const gameConfig = {
     font: {
       title: 'PressStart2P',
       button: 'PressStart2P',
-      body: 'PressStart2P',
       label: 'PressStart2P',
     },
     colors: {
@@ -294,7 +279,9 @@ export const gameConfig = {
         start: 0xff0000, // Red at minimum value
         mid: 0xffff00,   // Yellow at midpoint
         end: 0x00ff00    // Green at maximum value
-      }
+      },
+      mapsLoadedText: 0x2fb7a1,
+      mapsFailedText: 0xffaa00,
     },
     layout: {
       spacing: 30,
@@ -315,8 +302,6 @@ export const gameConfig = {
     fontSize: {
       title: '48px',
       button: '20px',
-      body: '18px',
-      label: '16px',
       copyright: '10px'
     }
   },
@@ -341,11 +326,5 @@ export const gameConfig = {
       menuSelect: 'sfx_menuSelect',
       menuNavigate: 'sfx_menuNavigate'
     },
-    // Default volume settings (0-1)
-    defaultVolume: {
-      master: 1.0,
-      music: 0.5,
-      sfx: 0.7
-    }
   }
 };

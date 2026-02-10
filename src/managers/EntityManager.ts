@@ -79,7 +79,6 @@ export class EntityManager {
       this.scene,
       startX,
       startY,
-      gameConfig.colors.player,
       playerSpeed,
       this.mapData,
       this.tileSize,

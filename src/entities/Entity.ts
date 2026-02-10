@@ -20,7 +20,7 @@ export class Entity implements IEntity {
   // Optional animated sprite (used by Player, Enemy)
   protected animatedSprite?: Phaser.GameObjects.Sprite;
 
-  constructor(scene: Phaser.Scene, x: number, y: number, color: number, speed: number, mapData: IMapData, tileSize: number, mapOffsetX: number, mapOffsetY: number) {
+  constructor(scene: Phaser.Scene, x: number, y: number, speed: number, mapData: IMapData, tileSize: number, mapOffsetX: number, mapOffsetY: number) {
     this.scene = scene;
     this.gridX = x;
     this.gridY = y;
@@ -34,8 +34,7 @@ export class Entity implements IEntity {
     this.sprite = scene.add.circle(
       mapOffsetX + x * tileSize + tileSize / 2,
       mapOffsetY + y * tileSize + tileSize / 2,
-      tileSize / 2 - 2,
-      color
+      tileSize / 2 - 2
     );
   }
   

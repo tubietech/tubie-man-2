@@ -373,7 +373,7 @@ export class GameScene extends Phaser.Scene {
           this.mapOffsetX + pos.x * tileSize + tileSize / 2,
           this.mapOffsetY + pos.y * tileSize + tileSize / 2,
           tileSize * gameConfig.map.pellet.size,
-          gameConfig.colors.pellet
+          gameConfig.map.colors.pellet
         );
         pellets[pos.y][pos.x] = pellet;
       }
@@ -436,7 +436,7 @@ export class GameScene extends Phaser.Scene {
         {
           fontFamily: 'PressStart2P',
           fontSize: '48px',
-          color: colorNumberToString(gameConfig.colors.developerIndicator),
+          color: colorNumberToString(gameConfig.ui.colors.developerIndicator),
         }
       ).setScrollFactor(0).setDepth(10002);
       devLogger.log('Indicator displayed');
@@ -551,8 +551,8 @@ export class GameScene extends Phaser.Scene {
     this.getReadyText = this.add.text(centerX, centerY, loc.getText('getReady'), {
       fontFamily: 'PressStart2P',
       fontSize: '32px',
-      color: colorNumberToString(gameConfig.colors.getReadyText),
-      stroke: colorNumberToString(gameConfig.colors.getReadyOutline),
+      color: colorNumberToString(gameConfig.map.colors.getReadyText),
+      stroke: colorNumberToString(gameConfig.map.colors.getReadyOutline),
       strokeThickness: gameConfig.levelStart.getReadyOutlineThickness,
       align: 'center'
     });

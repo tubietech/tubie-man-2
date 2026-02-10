@@ -37,8 +37,8 @@ export class UIRenderer {
     originY: number = 0,
     separator: string = ': '
   ): Phaser.GameObjects.Container {
-    const uiTextColor = colorNumberToString(gameConfig.colors.gameUiText);
-    const uiValueColor = colorNumberToString(gameConfig.colors.gameUiValue);
+    const uiTextColor = colorNumberToString(gameConfig.ui.colors.gameUiLabel);
+    const uiValueColor = colorNumberToString(gameConfig.ui.colors.gameUiValue);
 
     // Create label text
     const labelText = this.scene.add.text(0, 0, label + separator, {
@@ -95,8 +95,8 @@ export class UIRenderer {
     originX: number = 0,
     originY: number = 0
   ): Phaser.GameObjects.Container {
-    const uiTextColor = colorNumberToString(gameConfig.colors.gameUiText);
-    const uiValueColor = colorNumberToString(gameConfig.colors.gameUiValue);
+    const uiTextColor = colorNumberToString(gameConfig.ui.colors.gameUiLabel);
+    const uiValueColor = colorNumberToString(gameConfig.ui.colors.gameUiValue);
 
     // Create label text
     const labelText = this.scene.add.text(0, 0, label + ':', {
@@ -303,7 +303,7 @@ export class UIRenderer {
       {
         fontFamily: 'PressStart2P',
         fontSize: '16px',
-        color: colorNumberToString(gameConfig.colors.powerupReady)
+        color: colorNumberToString(gameConfig.ui.colors.powerupReady)
       }
     ).setOrigin(0.5, 0).setScrollFactor(0);
 
@@ -421,7 +421,7 @@ export class UIRenderer {
     const powerText = this.scene.add.text(uiX, 450, `${loc.getText('power')}:\n${loc.getText('powerReady')}`, {
       fontFamily: 'PressStart2P',
       fontSize: '18px',
-      color: colorNumberToString(gameConfig.colors.powerupReady),
+      color: colorNumberToString(gameConfig.ui.colors.powerupReady),
       align: 'left'
     }).setScrollFactor(0);
 
@@ -548,7 +548,7 @@ export class UIRenderer {
       if (cooldownBarBg) cooldownBarBg.setVisible(false);
     } else if (fireActive) {
       powerText.setVisible(true);
-      powerText.setColor(colorNumberToString(gameConfig.colors.powerupActive));
+      powerText.setColor(colorNumberToString(gameConfig.ui.colors.powerupActive));
       powerText.setText(
         orientation === Orientation.VERTICAL
           ? `${loc.getText('power')}: ${loc.getText('powerActive')}`
@@ -579,12 +579,12 @@ export class UIRenderer {
         const percentage = remainingDuration / totalDuration;
 
         // Draw background circle (outline)
-        durationPieChart.lineStyle(2, gameConfig.colors.powerupActive, 1);
+        durationPieChart.lineStyle(2, gameConfig.ui.colors.powerupActive, 1);
         durationPieChart.strokeCircle(centerX, centerY, radius);
 
         // Draw filled pie chart (starts at top, goes clockwise)
         if (percentage > 0) {
-          durationPieChart.fillStyle(gameConfig.colors.powerupActive, 0.7);
+          durationPieChart.fillStyle(gameConfig.ui.colors.powerupActive, 0.7);
           durationPieChart.beginPath();
           durationPieChart.moveTo(centerX, centerY);
           durationPieChart.arc(centerX, centerY, radius, -Math.PI / 2, -Math.PI / 2 + (percentage * Math.PI * 2), false);
@@ -625,12 +625,12 @@ export class UIRenderer {
         const fillWidth = barWidth * cooldownProgress;
 
         cooldownBar.clear();
-        cooldownBar.fillStyle(gameConfig.colors.powerupActive, 1);
+        cooldownBar.fillStyle(gameConfig.ui.colors.powerupActive, 1);
         cooldownBar.fillRect(barX, barY, fillWidth, barHeight);
       }
     } else {
       powerText.setVisible(true);
-      powerText.setColor(colorNumberToString(gameConfig.colors.powerupReady));
+      powerText.setColor(colorNumberToString(gameConfig.ui.colors.powerupReady));
       powerText.setText(
         orientation === Orientation.VERTICAL
           ? `${loc.getText('power')}: ${loc.getText('powerReady')}`
