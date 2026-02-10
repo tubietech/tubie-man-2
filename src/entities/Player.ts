@@ -305,11 +305,9 @@ export class Player extends Entity {
     const projectiles = this.powerActivationStrategy.getProjectiles();
 
     for (const enemy of enemies) {
-      // Check if enemy is hit by projectile
-      // Projectiles are scaled to 1.5x tile size (radius = 0.75 tiles)
-      // Using threshold of 1.0 means projectile must be within 1 tile of enemy center
+      // Check if enemy is hit by projectile (pixel-based Euclidean distance)
       const hitByProjectile = projectiles.some(projectile =>
-        projectile.checkCollision(enemy, 1.0)
+        projectile.checkCollision(enemy, gameConfig.collision.projectileEnemyRadius)
       );
 
       if (hitByProjectile) {
@@ -320,14 +318,8 @@ export class Player extends Entity {
         };
       }
 
-      // Check if player collides with enemy
-      // Collision occurs when the edge of the enemy sprite reaches the center of the player's tile
-      // Normal enemy sprites are scaled to 2x tile size (radius = 1 tile)
-      // Injured enemy sprites are scaled to 1.5x tile size (radius = 0.75 tiles)
-      // Player sprites are scaled to 2x tile size (radius = 1 tile)
-      // Using 1.0 threshold means normal enemy edge must reach player center
-      // Injured enemies will need to get slightly closer (within 0.75 tiles) to collide
-      if (this.checkCollision(enemy, 1.0)) {
+      // Check if player collides with enemy (pixel-based Euclidean distance)
+      if (this.checkCollision(enemy, gameConfig.collision.playerEnemyRadius)) {
         return {
           hasCollision: true,
           enemy: enemy,

@@ -2,6 +2,7 @@ import { Player } from '../entities/Player';
 import { Enemy } from '../entities/enemies/Enemy';
 import { Bonus } from '../entities/Bonus';
 import { ICollisionContext } from '../interfaces/ICollisionContext';
+import { gameConfig } from '../config/gameConfig';
 import { Logger } from '../utils/Logger';
 import { LogGroup } from '../enums/LogGroup';
 
@@ -97,9 +98,8 @@ export class CollisionManager {
     if (!bonus || !bonus.isActive())
       return false;
 
-    // Collision occurs when the edge of the bonus sprite reaches the center of the player's tile
-    // Using threshold of 1.0 for consistent gameplay feel with other collision types
-    if (player.checkCollision(bonus, 1.0)) {
+    // Pixel-based Euclidean distance check
+    if (player.checkCollision(bonus, gameConfig.collision.playerBonusRadius)) {
       // Capture position and score before collecting (which destroys the sprite)
       const bonusX = bonus.sprite.x;
       const bonusY = bonus.sprite.y;

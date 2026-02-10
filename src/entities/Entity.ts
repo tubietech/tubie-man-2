@@ -105,24 +105,17 @@ export class Entity implements IEntity {
   }
 
   /**
-   * Calculate distance between two grid positions (Manhattan distance)
-   */
-  getGridDistance(pos1: ICoordinate, pos2: ICoordinate): number {
-    return Math.abs(pos1.x - pos2.x) + Math.abs(pos1.y - pos2.y);
-  }
-
-  /**
-   * Check if this entity collides with another entity
-   * Collision occurs when the distance between entities is less than the threshold
+   * Check if this entity collides with another entity using pixel-based Euclidean distance
    * @param other The other entity to check collision with
-   * @param threshold The distance threshold for collision (in tiles)
+   * @param radiusFraction Collision radius as a fraction of tileSize
    * @returns true if collision detected, false otherwise
    */
-  checkCollision(other: Entity, threshold: number): boolean {
-    const thisPos = this.getGridPosition();
-    const otherPos = other.getGridPosition();
-    const distance = this.getGridDistance(thisPos, otherPos);
-    return distance < threshold;
+  checkCollision(other: Entity, radiusFraction: number): boolean {
+    const dx = this.sprite.x - other.sprite.x;
+    const dy = this.sprite.y - other.sprite.y;
+    const distSq = dx * dx + dy * dy;
+    const radius = radiusFraction * this.tileSize;
+    return distSq < radius * radius;
   }
 
   getOppositeDirection(): Direction {
