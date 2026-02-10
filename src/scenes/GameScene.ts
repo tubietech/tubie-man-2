@@ -355,8 +355,10 @@ export class GameScene extends Phaser.Scene {
     pellets.forEach((row, y) => {
       row.forEach((pellet, x) => {
         const isPreserved = preservedPellets.some(p => p.x === x && p.y === y);
-        if (pellet && pellet.active && !isPreserved)
+        if (pellet && pellet.active && !isPreserved) {
           pellet.destroy();
+          row[x] = null as any;
+        }
       });
     });
 

@@ -156,8 +156,8 @@ export const gameConfig = {
     developerIndicator: 0xffff00, // Yellow asterisk for developer mode indicator
     getReadyText: 0xffa500, // Bright orange for "Get Ready!" text
     getReadyOutline: 0xffffff, // White outline for "Get Ready!" text
-    mapsLoadedText: 0x2fb7a1, // Green for maps loaded successfully
-    mapsFailedText: 0xffaa00 // Orange for map loading failure
+    mapsLoadedText: 0x2fb7a1,
+    mapsFailedText: 0xffaa00
   },
   controls: {
     keyboard: {
