@@ -19,6 +19,7 @@ export class TouchControls {
   private scene: Phaser.Scene;
   private callbacks: ITouchControlCallbacks;
   private logger: Logger;
+  private touchLogger: Logger;
 
   // Containers
   private joystickContainer: Phaser.GameObjects.Container | null = null;
@@ -41,6 +42,7 @@ export class TouchControls {
 
   // State
   private activeDirection: Direction | null = null;
+  private lastSentDirection: Direction | null = null;
   private isVisible: boolean = false;
 
   // Bound listener references for cleanup
@@ -51,6 +53,7 @@ export class TouchControls {
     this.scene = scene;
     this.callbacks = callbacks;
     this.logger = new Logger(LogGroup.GAME);
+    this.touchLogger = new Logger(LogGroup.TOUCH);
   }
 
   static isTouchDevice(): boolean {
@@ -106,7 +109,7 @@ export class TouchControls {
     }
 
     const baseRadius = size / 2;
-    this.createJoystick(joystickX, joystickY, baseRadius);
+    this.createJoystick(joystickX, joystickY, baseRadius * cfg.joystickSizeRatio);
     this.createFireButton(fireX, fireY, baseRadius * cfg.fireSizeRatio);
     this.setupGlobalListeners();
 
@@ -138,6 +141,7 @@ export class TouchControls {
 
     // Pointerdown on the base starts dragging
     this.joystickBase.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
+      this.touchLogger.log(`pointerdown at (${Math.round(pointer.x)}, ${Math.round(pointer.y)}), pointerId=${pointer.id}`);
       this.isDragging = true;
       this.activePointerId = pointer.id;
       this.handleJoystickMove(pointer.x, pointer.y);
@@ -162,12 +166,17 @@ export class TouchControls {
 
     // Compute direction from angle (with deadzone)
     const cfg = gameConfig.touchControls;
+    const prevDirection = this.activeDirection;
+
     if (distance < this.joystickRadius * cfg.joystickDeadzone) {
       this.activeDirection = null;
+      if (prevDirection !== null)
+        this.touchLogger.log(`deadzone entered (dist=${distance.toFixed(1)}, threshold=${(this.joystickRadius * cfg.joystickDeadzone).toFixed(1)})`);
       return;
     }
 
     const angle = Math.atan2(dy, dx);
+    const angleDeg = angle * (180 / Math.PI);
     // atan2: 0=right, π/2=down, ±π=left, -π/2=up
     if (angle > -Math.PI / 4 && angle <= Math.PI / 4)
       this.activeDirection = Direction.RIGHT;
@@ -177,13 +186,18 @@ export class TouchControls {
       this.activeDirection = Direction.UP;
     else
       this.activeDirection = Direction.LEFT;
+
+    if (this.activeDirection !== prevDirection)
+      this.touchLogger.log(`direction: ${prevDirection} -> ${this.activeDirection} (angle=${angleDeg.toFixed(1)}°, dist=${distance.toFixed(1)}, dx=${dx.toFixed(1)}, dy=${dy.toFixed(1)})`);
   }
 
   private resetJoystick(): void {
+    this.touchLogger.log(`pointerup — resetting joystick (was: ${this.activeDirection})`);
     const cfg = gameConfig.touchControls;
     this.isDragging = false;
     this.activePointerId = -1;
     this.activeDirection = null;
+    this.lastSentDirection = null;
     if (this.knob) {
       this.knob.x = 0;
       this.knob.y = 0;
@@ -247,12 +261,17 @@ export class TouchControls {
   // --- Public methods ---
 
   /**
-   * Called every frame. Sends the active direction if the joystick is being held.
+   * Called every frame. Sends the direction only when it changes to avoid flooding the input queue.
    */
   update(): void {
     if (!this.isVisible) return;
-    if (this.activeDirection !== null)
+    if (this.activeDirection !== null && this.activeDirection !== this.lastSentDirection) {
+      this.touchLogger.log(`sending input: ${this.activeDirection} (prev sent: ${this.lastSentDirection})`);
+      this.lastSentDirection = this.activeDirection;
       this.callbacks.onDirectionInput(this.activeDirection);
+    }
+    if (this.activeDirection === null)
+      this.lastSentDirection = null;
   }
 
   /**
@@ -333,6 +352,7 @@ export class TouchControls {
     this.knob = null;
     this.fireButtonBg = null;
     this.activeDirection = null;
+    this.lastSentDirection = null;
     this.isDragging = false;
     this.activePointerId = -1;
     this.isVisible = false;

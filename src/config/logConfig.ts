@@ -31,7 +31,8 @@ export const logConfig = {
     [LogGroup.BONUS]: false,
     [LogGroup.DEVELOPER]: false,
     [LogGroup.QUIRK]: false,
-    [LogGroup.PROJECTILE]: false
+    [LogGroup.PROJECTILE]: false,
+    [LogGroup.TOUCH]: true
   },
 
   /**

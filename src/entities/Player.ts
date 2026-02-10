@@ -345,13 +345,16 @@ export class Player extends Entity {
   reset(startX: number, startY: number): void {
     this.moveTo(startX, startY);
     this.direction = Direction.RIGHT;
+    this.lastDirection = Direction.RIGHT;
+    this.inputQueue = [];
     this.deactivateFire();
     this.hasFirePower = false;
 
-    // Restore original sprite scale
+    // Restore original sprite scale and play initial animation
     if (this.animatedSprite) {
       this.animatedSprite.setScale(this.originalScale);
     }
+    this.playDirectionAnimation(Direction.RIGHT);
   }
 
   /**

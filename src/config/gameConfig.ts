@@ -217,6 +217,7 @@ export const gameConfig = {
     knobAlpha: 0.7,
     knobActiveColor: 0x6262ff,   // Brighter blue when dragging
     knobActiveAlpha: 0.9,
+    joystickSizeRatio: 0.8,       // Joystick base radius as fraction of available space (matches fire button)
     joystickDeadzone: 0.15,      // Fraction of radius — no direction inside this zone
     // Fire button
     fireColor: 0xff4500,         // Fire red
