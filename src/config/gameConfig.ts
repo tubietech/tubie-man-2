@@ -207,23 +207,24 @@ export const gameConfig = {
   },
   touchControls: {
     minMargin: 80,              // Minimum pixel margin to place controls beside the map
-    dpadButtonRadiusRatio: 0.30, // D-pad button radius as fraction of D-pad size
-    dpadButtonOffsetRatio: 0.55, // D-pad button distance from center as fraction of D-pad size
-    maxSize: 160,               // Maximum D-pad diameter in pixels
+    maxSize: 160,               // Maximum joystick diameter in pixels
     bgColor: 0x000000,
     bgAlpha: 0.3,
-    buttonColor: 0x2121ff,       // Blue, matches walls/pause button
-    buttonAlpha: 0.6,
     buttonBorderColor: 0xffa500, // Orange border, matches game style
-    buttonActiveColor: 0x6262ff, // Brighter blue when pressed
-    buttonActiveAlpha: 0.9,
-    arrowColor: 0xffffff,        // White arrows
+    // Joystick knob
+    knobRadiusRatio: 0.30,       // Knob radius as fraction of joystick base radius
+    knobColor: 0x2121ff,         // Blue, matches walls/pause button
+    knobAlpha: 0.7,
+    knobActiveColor: 0x6262ff,   // Brighter blue when dragging
+    knobActiveAlpha: 0.9,
+    joystickDeadzone: 0.15,      // Fraction of radius — no direction inside this zone
+    // Fire button
     fireColor: 0xff4500,         // Fire red
     fireAlpha: 0.6,
     fireActiveColor: 0xff6b35,
     fireActiveAlpha: 0.9,
     fireDisabledAlpha: 0.18,     // Dimmed when no powerup
-    fireSizeRatio: 0.8,          // Fire button radius as fraction of D-pad size
+    fireSizeRatio: 0.8,          // Fire button radius as fraction of joystick size
   },
   collision: {
     playerEnemyRadius: 0.75,     // Collision radius as fraction of tileSize

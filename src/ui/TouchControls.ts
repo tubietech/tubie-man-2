@@ -12,7 +12,7 @@ export interface ITouchControlCallbacks {
 }
 
 /**
- * Virtual touch controls overlay: D-Pad for movement + Fire button for powerup.
+ * Virtual touch controls overlay: Joystick for movement + Fire button for powerup.
  * Only instantiated on touch-capable devices.
  */
 export class TouchControls {
@@ -21,24 +21,31 @@ export class TouchControls {
   private logger: Logger;
 
   // Containers
-  private dpadContainer: Phaser.GameObjects.Container | null = null;
+  private joystickContainer: Phaser.GameObjects.Container | null = null;
   private fireContainer: Phaser.GameObjects.Container | null = null;
 
-  // D-pad button references (for highlight toggling)
-  private dpadButtons: Map<Direction, Phaser.GameObjects.Arc> = new Map();
+  // Joystick elements
+  private joystickBase: Phaser.GameObjects.Arc | null = null;
+  private knob: Phaser.GameObjects.Arc | null = null;
+  private joystickRadius: number = 0;
+  private knobRadius: number = 0;
+  private joystickCenterX: number = 0; // World-space center
+  private joystickCenterY: number = 0;
+
+  // Joystick drag state
+  private isDragging: boolean = false;
+  private activePointerId: number = -1;
 
   // Fire button background reference
   private fireButtonBg: Phaser.GameObjects.Arc | null = null;
-
-  // Track all interactive objects for pointer filtering
-  private interactiveObjects: Set<Phaser.GameObjects.GameObject> = new Set();
 
   // State
   private activeDirection: Direction | null = null;
   private isVisible: boolean = false;
 
-  // Bound listener reference for cleanup
+  // Bound listener references for cleanup
   private globalPointerUpHandler: ((pointer: Phaser.Input.Pointer) => void) | null = null;
+  private globalPointerMoveHandler: ((pointer: Phaser.Input.Pointer) => void) | null = null;
 
   constructor(scene: Phaser.Scene, callbacks: ITouchControlCallbacks) {
     this.scene = scene;
@@ -65,13 +72,13 @@ export class TouchControls {
     const useHorizontalLayout = orientation === Orientation.HORIZONTAL
       && mapOffsetX >= cfg.minMargin;
 
-    let dpadX: number, dpadY: number, fireX: number, fireY: number, size: number;
+    let joystickX: number, joystickY: number, fireX: number, fireY: number, size: number;
 
     if (useHorizontalLayout) {
-      // D-Pad in left margin, Fire in right margin
+      // Joystick in left margin, Fire in right margin
       size = Math.min(mapOffsetX - 20, cfg.maxSize);
-      dpadX = mapOffsetX / 2;
-      dpadY = mapOffsetY + mapHeight / 2;
+      joystickX = mapOffsetX / 2;
+      joystickY = mapOffsetY + mapHeight / 2;
 
       const rightMarginStart = mapOffsetX + mapWidth;
       const rightMarginWidth = canvasWidth - rightMarginStart;
@@ -86,8 +93,8 @@ export class TouchControls {
       // Flip controls based on settings for right-handed or left-handed preference
       const sideModifier = SettingsManager.getInstance().getTouchIsRightHanded() ? 0.75 : 0.25;
 
-      dpadX = canvasWidth * sideModifier;
-      dpadY = controlsY;
+      joystickX = canvasWidth * sideModifier;
+      joystickY = controlsY;
       fireX = canvasWidth * (1 - sideModifier);
       fireY = controlsY;
     }
@@ -98,111 +105,90 @@ export class TouchControls {
       return;
     }
 
-    const dpadRadius = size / 2;
-    this.createDpad(dpadX, dpadY, dpadRadius);
-    this.createFireButton(fireX, fireY, dpadRadius * cfg.fireSizeRatio);
-    this.setupGlobalPointerUp();
+    const baseRadius = size / 2;
+    this.createJoystick(joystickX, joystickY, baseRadius);
+    this.createFireButton(fireX, fireY, baseRadius * cfg.fireSizeRatio);
+    this.setupGlobalListeners();
 
     this.isVisible = true;
     this.logger.log(`Touch controls created (${useHorizontalLayout ? 'horizontal' : 'vertical'} layout, size=${Math.round(size)})`);
   }
 
-  private createDpad(centerX: number, centerY: number, radius: number): void {
+  private createJoystick(centerX: number, centerY: number, radius: number): void {
     const cfg = gameConfig.touchControls;
-    this.dpadContainer = this.scene.add.container(centerX, centerY);
-    this.dpadContainer.setScrollFactor(0);
-    this.dpadContainer.setDepth(100);
+    this.joystickRadius = radius;
+    this.joystickCenterX = centerX;
+    this.joystickCenterY = centerY;
 
-    // Background circle
-    const bg = this.scene.add.circle(0, 0, radius, cfg.bgColor, cfg.bgAlpha);
-    bg.setStrokeStyle(2, cfg.buttonBorderColor);
-    this.dpadContainer.add(bg);
+    this.joystickContainer = this.scene.add.container(centerX, centerY);
+    this.joystickContainer.setScrollFactor(0);
+    this.joystickContainer.setDepth(100);
 
-    // Directional buttons
-    const buttonRadius = radius * cfg.dpadButtonRadiusRatio;
-    const offset = radius * cfg.dpadButtonOffsetRatio;
+    // Background circle (base)
+    this.joystickBase = this.scene.add.circle(0, 0, radius, cfg.bgColor, cfg.bgAlpha);
+    this.joystickBase.setStrokeStyle(2, cfg.buttonBorderColor);
+    this.joystickBase.setInteractive();
+    this.joystickContainer.add(this.joystickBase);
 
-    const directions: { dir: Direction; x: number; y: number }[] = [
-      { dir: Direction.UP, x: 0, y: -offset },
-      { dir: Direction.DOWN, x: 0, y: offset },
-      { dir: Direction.LEFT, x: -offset, y: 0 },
-      { dir: Direction.RIGHT, x: offset, y: 0 },
-    ];
+    // Knob
+    this.knobRadius = radius * cfg.knobRadiusRatio;
+    this.knob = this.scene.add.circle(0, 0, this.knobRadius, cfg.knobColor, cfg.knobAlpha);
+    this.knob.setStrokeStyle(1, cfg.buttonBorderColor);
+    this.joystickContainer.add(this.knob);
 
-    for (const { dir, x, y } of directions) {
-      const btn = this.scene.add.circle(x, y, buttonRadius, cfg.buttonColor, cfg.buttonAlpha);
-      btn.setStrokeStyle(1, cfg.buttonBorderColor);
-      btn.setInteractive();
-      this.interactiveObjects.add(btn);
-      this.dpadButtons.set(dir, btn);
-      this.dpadContainer.add(btn);
-
-      // Arrow icon
-      this.drawArrowIcon(dir, x, y, buttonRadius);
-
-      // Input handlers
-      btn.on('pointerdown', () => {
-        this.setActiveDirection(dir);
-        this.highlightDpadButton(dir, true);
-      });
-
-      btn.on('pointerover', (_pointer: Phaser.Input.Pointer, _lx: number, _ly: number, event: Phaser.Types.Input.EventData) => {
-        // When dragging from one button to another
-        const pointer = this.scene.input.activePointer;
-        if (pointer.isDown) {
-          this.setActiveDirection(dir);
-          this.highlightDpadButton(dir, true);
-        }
-        event.stopPropagation();
-      });
-
-      btn.on('pointerout', () => {
-        this.highlightDpadButton(dir, false);
-      });
-
-      btn.on('pointerup', () => {
-        this.clearActiveDirection(dir);
-        this.highlightDpadButton(dir, false);
-      });
-    }
-
-    // Center decoration
-    const centerDot = this.scene.add.circle(0, 0, buttonRadius * 0.4, 0x333333, 0.5);
-    this.dpadContainer.add(centerDot);
+    // Pointerdown on the base starts dragging
+    this.joystickBase.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
+      this.isDragging = true;
+      this.activePointerId = pointer.id;
+      this.handleJoystickMove(pointer.x, pointer.y);
+      this.knob!.setFillStyle(cfg.knobActiveColor, cfg.knobActiveAlpha);
+    });
   }
 
-  private drawArrowIcon(dir: Direction, btnX: number, btnY: number, btnRadius: number): void {
-    const arrowSize = btnRadius * 0.5;
-    const cfg = gameConfig.touchControls;
+  private handleJoystickMove(pointerX: number, pointerY: number): void {
+    const dx = pointerX - this.joystickCenterX;
+    const dy = pointerY - this.joystickCenterY;
+    const distance = Math.sqrt(dx * dx + dy * dy);
 
-    let x1: number, y1: number, x2: number, y2: number, x3: number, y3: number;
-
-    switch (dir) {
-      case Direction.UP:
-        x1 = btnX; y1 = btnY - arrowSize;
-        x2 = btnX - arrowSize; y2 = btnY + arrowSize * 0.5;
-        x3 = btnX + arrowSize; y3 = btnY + arrowSize * 0.5;
-        break;
-      case Direction.DOWN:
-        x1 = btnX; y1 = btnY + arrowSize;
-        x2 = btnX - arrowSize; y2 = btnY - arrowSize * 0.5;
-        x3 = btnX + arrowSize; y3 = btnY - arrowSize * 0.5;
-        break;
-      case Direction.LEFT:
-        x1 = btnX - arrowSize; y1 = btnY;
-        x2 = btnX + arrowSize * 0.5; y2 = btnY - arrowSize;
-        x3 = btnX + arrowSize * 0.5; y3 = btnY + arrowSize;
-        break;
-      case Direction.RIGHT:
-        x1 = btnX + arrowSize; y1 = btnY;
-        x2 = btnX - arrowSize * 0.5; y2 = btnY - arrowSize;
-        x3 = btnX - arrowSize * 0.5; y3 = btnY + arrowSize;
-        break;
+    // Clamp knob position within base circle
+    const maxDist = this.joystickRadius - this.knobRadius;
+    if (distance <= maxDist) {
+      this.knob!.x = dx;
+      this.knob!.y = dy;
+    } else {
+      this.knob!.x = (dx / distance) * maxDist;
+      this.knob!.y = (dy / distance) * maxDist;
     }
 
-    const triangle = this.scene.add.triangle(0, 0, x1, y1, x2, y2, x3, y3, cfg.arrowColor);
-    triangle.setOrigin(0, 0);
-    this.dpadContainer!.add(triangle);
+    // Compute direction from angle (with deadzone)
+    const cfg = gameConfig.touchControls;
+    if (distance < this.joystickRadius * cfg.joystickDeadzone) {
+      this.activeDirection = null;
+      return;
+    }
+
+    const angle = Math.atan2(dy, dx);
+    // atan2: 0=right, π/2=down, ±π=left, -π/2=up
+    if (angle > -Math.PI / 4 && angle <= Math.PI / 4)
+      this.activeDirection = Direction.RIGHT;
+    else if (angle > Math.PI / 4 && angle <= 3 * Math.PI / 4)
+      this.activeDirection = Direction.DOWN;
+    else if (angle > -3 * Math.PI / 4 && angle <= -Math.PI / 4)
+      this.activeDirection = Direction.UP;
+    else
+      this.activeDirection = Direction.LEFT;
+  }
+
+  private resetJoystick(): void {
+    const cfg = gameConfig.touchControls;
+    this.isDragging = false;
+    this.activePointerId = -1;
+    this.activeDirection = null;
+    if (this.knob) {
+      this.knob.x = 0;
+      this.knob.y = 0;
+      this.knob.setFillStyle(cfg.knobColor, cfg.knobAlpha);
+    }
   }
 
   private createFireButton(centerX: number, centerY: number, radius: number): void {
@@ -227,7 +213,6 @@ export class TouchControls {
     this.fireContainer.add([bg, label]);
 
     bg.setInteractive();
-    this.interactiveObjects.add(bg);
 
     bg.on('pointerdown', () => {
       this.callbacks.onFirePressed();
@@ -243,48 +228,26 @@ export class TouchControls {
     });
   }
 
-  private setupGlobalPointerUp(): void {
-    this.globalPointerUpHandler = () => {
-      this.clearAllDirections();
+  private setupGlobalListeners(): void {
+    // Global pointermove — track joystick drag even when pointer leaves the base
+    this.globalPointerMoveHandler = (pointer: Phaser.Input.Pointer) => {
+      if (this.isDragging && pointer.id === this.activePointerId && pointer.isDown)
+        this.handleJoystickMove(pointer.x, pointer.y);
+    };
+    this.scene.input.on('pointermove', this.globalPointerMoveHandler);
+
+    // Global pointerup — release joystick when finger lifts
+    this.globalPointerUpHandler = (pointer: Phaser.Input.Pointer) => {
+      if (this.isDragging && pointer.id === this.activePointerId)
+        this.resetJoystick();
     };
     this.scene.input.on('pointerup', this.globalPointerUpHandler);
-  }
-
-  // --- Direction state management ---
-
-  private setActiveDirection(dir: Direction): void {
-    if (this.activeDirection !== null && this.activeDirection !== dir)
-      this.highlightDpadButton(this.activeDirection, false);
-    this.activeDirection = dir;
-  }
-
-  private clearActiveDirection(dir: Direction): void {
-    if (this.activeDirection === dir)
-      this.activeDirection = null;
-  }
-
-  private clearAllDirections(): void {
-    if (this.activeDirection !== null)
-      this.highlightDpadButton(this.activeDirection, false);
-    this.activeDirection = null;
-  }
-
-  private highlightDpadButton(dir: Direction, active: boolean): void {
-    const btn = this.dpadButtons.get(dir);
-    if (!btn) return;
-
-    const cfg = gameConfig.touchControls;
-    if (active) {
-      btn.setFillStyle(cfg.buttonActiveColor, cfg.buttonActiveAlpha);
-    } else {
-      btn.setFillStyle(cfg.buttonColor, cfg.buttonAlpha);
-    }
   }
 
   // --- Public methods ---
 
   /**
-   * Called every frame. Queues the active direction if a D-Pad button is held.
+   * Called every frame. Sends the active direction if the joystick is being held.
    */
   update(): void {
     if (!this.isVisible) return;
@@ -312,26 +275,33 @@ export class TouchControls {
   isPointerOnControls(pointer: Phaser.Input.Pointer): boolean {
     if (!this.isVisible) return false;
 
-    for (const obj of this.interactiveObjects) {
-      if (!(obj instanceof Phaser.GameObjects.Arc)) continue;
-
-      const worldMatrix = obj.getWorldTransformMatrix();
-      const dx = pointer.x - worldMatrix.tx;
-      const dy = pointer.y - worldMatrix.ty;
-      const dist = Math.sqrt(dx * dx + dy * dy);
-      if (dist <= obj.radius)
+    // Check joystick base
+    if (this.joystickBase) {
+      const dx = pointer.x - this.joystickCenterX;
+      const dy = pointer.y - this.joystickCenterY;
+      if (dx * dx + dy * dy <= this.joystickRadius * this.joystickRadius)
         return true;
     }
+
+    // Check fire button
+    if (this.fireButtonBg) {
+      const worldMatrix = this.fireButtonBg.getWorldTransformMatrix();
+      const dx = pointer.x - worldMatrix.tx;
+      const dy = pointer.y - worldMatrix.ty;
+      if (dx * dx + dy * dy <= this.fireButtonBg.radius * this.fireButtonBg.radius)
+        return true;
+    }
+
     return false;
   }
 
   setVisible(visible: boolean): void {
     this.isVisible = visible;
-    if (this.dpadContainer) this.dpadContainer.setVisible(visible);
+    if (this.joystickContainer) this.joystickContainer.setVisible(visible);
     if (this.fireContainer) this.fireContainer.setVisible(visible);
 
     if (!visible)
-      this.clearAllDirections();
+      this.resetJoystick();
   }
 
   getVisible(): boolean {
@@ -344,9 +314,14 @@ export class TouchControls {
       this.globalPointerUpHandler = null;
     }
 
-    if (this.dpadContainer) {
-      this.dpadContainer.destroy();
-      this.dpadContainer = null;
+    if (this.globalPointerMoveHandler) {
+      this.scene.input.off('pointermove', this.globalPointerMoveHandler);
+      this.globalPointerMoveHandler = null;
+    }
+
+    if (this.joystickContainer) {
+      this.joystickContainer.destroy();
+      this.joystickContainer = null;
     }
 
     if (this.fireContainer) {
@@ -354,10 +329,12 @@ export class TouchControls {
       this.fireContainer = null;
     }
 
-    this.dpadButtons.clear();
-    this.interactiveObjects.clear();
+    this.joystickBase = null;
+    this.knob = null;
     this.fireButtonBg = null;
     this.activeDirection = null;
+    this.isDragging = false;
+    this.activePointerId = -1;
     this.isVisible = false;
   }
 }
