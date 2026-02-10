@@ -449,8 +449,8 @@ export class GameScene extends Phaser.Scene {
     if (!TouchControls.isTouchDevice()) return;
 
     this.touchControls = new TouchControls(this, {
-      onDirectionInput: (dir: Direction) => {
-        this.entityManager.player.processInput({ direction: dir });
+      onDirectionInput: (dir: Direction, continuous: boolean) => {
+        this.entityManager.player.processInput({ direction: dir, continuous });
       },
       onFirePressed: () => {
         this.entityManager.player.activateFire();

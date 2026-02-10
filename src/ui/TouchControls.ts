@@ -7,7 +7,7 @@ import { LogGroup } from '../enums/LogGroup';
 import { SettingsManager } from '../utils/SettingsManager';
 
 export interface ITouchControlCallbacks {
-  onDirectionInput: (direction: Direction) => void;
+  onDirectionInput: (direction: Direction, continuous: boolean) => void;
   onFirePressed: () => void;
 }
 
@@ -265,10 +265,11 @@ export class TouchControls {
    */
   update(): void {
     if (!this.isVisible) return;
-    if (this.activeDirection !== null && this.activeDirection !== this.lastSentDirection) {
-      this.touchLogger.log(`sending input: ${this.activeDirection} (prev sent: ${this.lastSentDirection})`);
+    if (this.activeDirection !== null) {
+      if (this.activeDirection !== this.lastSentDirection)
+        this.touchLogger.log(`direction changed: ${this.lastSentDirection} -> ${this.activeDirection}`);
       this.lastSentDirection = this.activeDirection;
-      this.callbacks.onDirectionInput(this.activeDirection);
+      this.callbacks.onDirectionInput(this.activeDirection, true);
     }
     if (this.activeDirection === null)
       this.lastSentDirection = null;

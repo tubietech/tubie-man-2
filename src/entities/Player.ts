@@ -60,11 +60,16 @@ export class Player extends Entity {
     // Ignore input during death animation
     if (this.isDying) return;
 
-    this.inputQueue.push(input.direction);
+    if (input.continuous) {
+      // Continuous input (joystick): replace the entire queue so the latest
+      // direction is always tried, even if a previous direction failed
+      this.inputQueue = [input.direction];
+    } else {
+      this.inputQueue.push(input.direction);
 
-    // Limit queue size to prevent overflow
-    if (this.inputQueue.length > 2) {
-      this.inputQueue = this.inputQueue.slice(-2);
+      // Limit queue size to prevent overflow
+      if (this.inputQueue.length > 2)
+        this.inputQueue = this.inputQueue.slice(-2);
     }
   }
 
