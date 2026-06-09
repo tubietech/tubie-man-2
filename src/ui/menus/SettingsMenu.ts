@@ -48,6 +48,11 @@ export class SettingsMenu extends Menu {
     this.onLanguageChange = callback;
   }
 
+  focusLanguageSelector(): void {
+    // navigables on the gameplay tab: [tabGroup(0), languageGroup(1), ...]
+    this.setInitialFocusIndex(1);
+  }
+
   private buildMenu(): void {
     const loc = this.localization;
 

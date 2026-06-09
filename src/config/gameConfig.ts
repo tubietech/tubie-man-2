@@ -214,7 +214,7 @@ export const gameConfig = {
   ui: {
     minTopMargin: 90, // Minimum pixels above the map for score/high score/lives on touch devices
     colors: {
-      powerupReady: 0x00ff00,
+      powerupReady: 0x2fb7a1,
       powerupActive: 0xffa500,
       gameUiLabel: 0xffffff,
       gameUiValue: 0xffff00, // Color for score/lives/level values (yellow)

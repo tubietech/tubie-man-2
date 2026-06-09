@@ -147,19 +147,24 @@ export class UIRenderer {
   }
 
   private createLivesSprites(
-    x: number,
+    anchorX: number,
     y: number,
     currentLives: number,
     difficulty: string,
     spriteScale: number = 1.5,
-    spacing: number = 5
+    spacing: number = 5,
+    leftToRight: boolean = false
   ): Phaser.GameObjects.Sprite[] {
     const sprites: Phaser.GameObjects.Sprite[] = [];
     const maxLives = gameConfig.player.startLives[difficulty as keyof typeof gameConfig.player.startLives];
+    const spriteWidth = 16 * spriteScale;
 
     for (let i = 0; i < maxLives; i++) {
+      const x = leftToRight
+        ? anchorX + (i * (spriteWidth + spacing))
+        : anchorX - 95 - (i * (spriteWidth + spacing)) - spriteWidth; // 95 offsets the lives to the left of the pause button
       const sprite = this.scene.add.sprite(
-        x + (i * (16 * spriteScale + spacing)),
+        x,
         y,
         'atlas',
         'player_right_frame_2.png'
@@ -265,7 +270,7 @@ export class UIRenderer {
     );
 
     const livesSprites = this.createLivesSprites(
-      mapOffsetX + mapWidth * 2 / 3 - 50,
+      mapOffsetX + mapWidth,
       mapOffsetY - 50,
       currentLives ?? gameConfig.player.startLives[difficulty as keyof typeof gameConfig.player.startLives],
       difficulty,
@@ -391,12 +396,13 @@ export class UIRenderer {
     );
 
     const livesSprites = this.createLivesSprites(
-      uiX - 10,
+      uiX,
       230,
       currentLives ?? gameConfig.player.startLives[difficulty as keyof typeof gameConfig.player.startLives],
       difficulty,
       1,
-      15
+      15,
+      true
     );
 
     const levelText = this.createLabelValueTextVertical(

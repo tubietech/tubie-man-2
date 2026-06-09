@@ -429,6 +429,7 @@ export class GameScene extends Phaser.Scene {
     
     // Create developer mode indicator (yellow asterisk in top left, outside map)
     if (isDeveloperMode) {
+      (window as any).__tubieMapData = this.mapData;
       this.developerIndicator = this.add.text(
         10,
         10,

@@ -243,7 +243,8 @@ export class Player extends Entity {
     if (this.animatedSprite.anims.currentAnim?.key !== animKey) {
       this.animatedSprite.play(animKey);
     } else if (!this.animatedSprite.anims.isPlaying) {
-      this.animatedSprite.anims.resume();
+      // resume() only works on paused animations; play() handles both paused and stopped
+      this.animatedSprite.play(animKey);
     }
   }
   

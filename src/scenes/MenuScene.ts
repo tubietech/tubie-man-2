@@ -108,8 +108,12 @@ export class MenuScene extends Phaser.Scene {
     // Create menus (pass language change flag to focus on language selector)
     this.createMenus(data?.languageChanged ?? false);
 
-    // Show main menu
+    // Show main menu, and if returning from a language change, re-open settings on top
     this.openMenu(this.mainMenu);
+    if (data?.languageChanged) {
+      this.settingsMenu.focusLanguageSelector();
+      this.openMenu(this.settingsMenu);
+    }
 
     // Initialize audio
     this.setupAudio();

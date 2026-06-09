@@ -629,7 +629,14 @@ export class Enemy extends Entity {
       }
     }
 
-    if (validDirs.length === 0) return this.direction;
+    if (validDirs.length === 0) {
+      // Dead end: only the direction we came from is open, so reverse
+      const reverse = this.getOppositeDirection();
+      const reversePos = this.getNextPosition(reverse);
+      if (this.canMove(reversePos.x, reversePos.y))
+        return reverse;
+      return this.direction;
+    }
 
     let bestDir = validDirs[0];
     let bestDist = Infinity;
