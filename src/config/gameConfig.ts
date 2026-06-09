@@ -205,6 +205,7 @@ export const gameConfig = {
     fireActiveAlpha: 0.9,
     fireDisabledAlpha: 0.18,     // Dimmed when no powerup
     fireSizeRatio: 0.8,          // Fire button radius as fraction of joystick size
+    swipeThreshold: 20,          // Minimum pixel distance to register a swipe direction
   },
   collision: {
     playerEnemyRadius: 0.75,     // Collision radius as fraction of tileSize

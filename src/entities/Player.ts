@@ -117,6 +117,14 @@ export class Player extends Entity {
     }
   }
 
+  processSwipeInput(dx: number, dy: number): void {
+    if (Math.abs(dx) > Math.abs(dy)) {
+      this.processInput({ direction: dx > 0 ? Direction.RIGHT : Direction.LEFT });
+    } else {
+      this.processInput({ direction: dy > 0 ? Direction.DOWN : Direction.UP });
+    }
+  }
+
   update(_time: number, delta: number): void {
     // Skip all updates during death animation
     if (this.isDying) return;

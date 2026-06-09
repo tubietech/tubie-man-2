@@ -117,15 +117,45 @@ export class InputManager {
     });
   }
 
+  // Swipe gesture state
+  private swipeOrigin: { x: number; y: number } | null = null;
+  private swipeFired: boolean = false;
+
   private setupPointerInput(): void {
+    const threshold = gameConfig.touchControls.swipeThreshold;
+
     this.scene.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
-      if (!this.isPaused() && !this.isFilteredPointer(pointer))
-        this.callbacks.onPointerInput(pointer.x, pointer.y);
+      if (this.isPaused() || this.isFilteredPointer(pointer)) return;
+      this.swipeOrigin = { x: pointer.x, y: pointer.y };
+      this.swipeFired = false;
     });
 
     this.scene.input.on('pointermove', (pointer: Phaser.Input.Pointer) => {
-      if (!this.isPaused() && pointer.isDown && pointer.primaryDown && !this.isFilteredPointer(pointer))
-        this.callbacks.onPointerDrag(pointer.x, pointer.y);
+      if (this.isPaused() || !pointer.isDown || !pointer.primaryDown) return;
+      if (this.isFilteredPointer(pointer) || !this.swipeOrigin || this.swipeFired) return;
+
+      const dx = pointer.x - this.swipeOrigin.x;
+      const dy = pointer.y - this.swipeOrigin.y;
+      if (Math.sqrt(dx * dx + dy * dy) >= threshold) {
+        this.swipeFired = true;
+        this.callbacks.onPointerDrag(dx, dy);
+      }
+    });
+
+    this.scene.input.on('pointerup', (pointer: Phaser.Input.Pointer) => {
+      if (this.isPaused() || !this.swipeOrigin) {
+        this.swipeOrigin = null;
+        return;
+      }
+      if (!this.isFilteredPointer(pointer) && !this.swipeFired) {
+        const dx = pointer.x - this.swipeOrigin.x;
+        const dy = pointer.y - this.swipeOrigin.y;
+        if (Math.sqrt(dx * dx + dy * dy) >= threshold)
+          this.callbacks.onPointerDrag(dx, dy);
+        else
+          this.callbacks.onFirePressed();
+      }
+      this.swipeOrigin = null;
     });
   }
 

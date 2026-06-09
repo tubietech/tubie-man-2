@@ -299,10 +299,7 @@ export class GameScene extends Phaser.Scene {
       {
         onTogglePause: () => this.togglePause(),
         onPointerInput: (x, y) => this.entityManager.player.processPointerInput({ x, y }),
-        onPointerDrag: (x, y) => {
-          this.entityManager.player.inputQueue = [];
-          this.entityManager.player.processPointerInput({ x, y });
-        },
+        onPointerDrag: (dx, dy) => this.entityManager.player.processSwipeInput(dx, dy),
         onFirePressed: () => this.entityManager.player.activateFire(),
         // Developer mode callbacks
         onToggleEnemyAI: () => {
