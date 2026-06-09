@@ -2,7 +2,7 @@
 # Game assets bucket — private, served exclusively through CloudFront OAC
 # ---------------------------------------------------------------------------
 resource "aws_s3_bucket" "tubieman" {
-  bucket = "tubie-tech-tubieman"
+  bucket = var.s3_bucket_name
 
   tags = {
     Environment = var.environment
