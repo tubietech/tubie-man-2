@@ -1,0 +1,21 @@
+The game should have a menu system. Menus should all be based on a base 'Menu' class, but this menu class can be extended with sub-classes as needed. Menus can contain the following components
+- text
+- sprites
+- buttons
+- button groups
+- scrollable text blocks
+
+Each component should be its own class, which are all subclasses of a primary UIElement which handles common definitions and logic, like placement, on-click handler definition etc.
+
+Each menu should have 1 column with all components stacked vertically in the column. The menu should allow for mouse/click events, as well as keyboard arrow navigation and gamepad navigation.
+
+The main menu has the following components
+- Title (text)
+- player and enemy sprite group (sprites)
+- Play (button, starts the game)
+- Settings (button, link to another menu)
+- About (button, link to another menu)
+- Difficulty (button group)
+- Language (button group)
+
+For now make the menu pages that About and Settings link to be blank pages with just the text "Hello World". 

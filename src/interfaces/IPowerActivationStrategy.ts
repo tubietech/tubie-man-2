@@ -1,0 +1,71 @@
+import { Direction } from '../enums/Direction';
+import { ICoordinate } from './ICoordinate';
+import { Projectile } from '../entities/Projectile';
+
+/**
+ * Interface for powerup activation strategies
+ * Defines the contract for how the player's fire powerup spawns and manages projectiles
+ */
+export interface IPowerActivationStrategy {
+  /**
+   * Activate the fire powerup
+   * @param playerPos Current grid position of the player
+   * @param direction Direction the player is facing
+   * @returns True if fire was successfully activated, false otherwise
+   */
+  activate(playerPos: ICoordinate, direction: Direction): boolean;
+
+  /**
+   * Update the fire powerup state
+   * @param delta Time elapsed since last frame (ms)
+   */
+  update(delta: number): void;
+
+  /**
+   * Deactivate the fire powerup (stops firing, but lets in-flight projectiles finish)
+   */
+  deactivate(): void;
+
+  /**
+   * Immediately destroy all active projectiles.
+   * Use for forced cleanup (level change, scene shutdown).
+   */
+  destroyAllProjectiles(): void;
+
+  /**
+   * Check if fire is currently active
+   */
+  isActive(): boolean;
+
+  /**
+   * Check if player has fire power available
+   */
+  hasPower(): boolean;
+
+  /**
+   * Set whether player has fire power available
+   */
+  setPower(hasPower: boolean): void;
+
+  /**
+   * Get positions of all active projectiles
+   */
+  getFirePositions(): ICoordinate[];
+
+  /**
+   * Get all active projectile instances
+   */
+  getProjectiles(): Projectile[];
+
+  /**
+   * Get the remaining duration of the powerup (in ms)
+   * Returns 0 if powerup is not active
+   */
+  getRemainingDuration(): number;
+
+  /**
+   * Get the time until next fire is available (in ms)
+   * Returns 0 if fire is ready
+   */
+  getFireCooldown(): number;
+}

@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Map Generator</title>
+  <style>
+    body {
+      font-family: 'Courier New', monospace;
+      background: #1a1a1a;
+      color: #00ff00;
+      padding: 20px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    h1 {
+      text-align: center;
+      color: #ffff00;
+    }
+    .controls {
+      background: #2a2a2a;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+    button {
+      background: #00ff00;
+      color: #1a1a1a;
+      border: none;
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+      border-radius: 4px;
+      font-weight: bold;
+    }
+    button:hover {
+      background: #00cc00;
+    }
+    button:disabled {
+      background: #666;
+      cursor: not-allowed;
+    }
+    .log {
+      background: #0a0a0a;
+      padding: 15px;
+      border-radius: 8px;
+      max-height: 600px;
+      overflow-y: auto;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    .log-success { color: #00ff00; }
+    .log-error { color: #ff0000; }
+    .log-warning { color: #ffaa00; }
+    .log-info { color: #00aaff; }
+    .progress {
+      background: #2a2a2a;
+      height: 30px;
+      border-radius: 4px;
+      margin: 10px 0;
+      overflow: hidden;
+    }
+    .progress-bar {
+      background: #00ff00;
+      height: 100%;
+      transition: width 0.3s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #1a1a1a;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h1>🗺️ Preloaded Map Generator</h1>
+
+  <div class="controls">
+    <button id="generateBtn">Generate 10 Maps</button>
+    <div class="progress">
+      <div class="progress-bar" id="progressBar" style="width: 0%">0%</div>
+    </div>
+  </div>
+
+  <div class="log" id="log"></div>
+
+  <script type="module">
+    const logEl = document.getElementById('log');
+    const generateBtn = document.getElementById('generateBtn');
+    const progressBar = document.getElementById('progressBar');
+
+    function log(message, type = 'info') {
+      const line = document.createElement('div');
+      line.className = `log-${type}`;
+      line.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+      logEl.appendChild(line);
+      logEl.scrollTop = logEl.scrollHeight;
+    }
+
+    function updateProgress(current, total) {
+      const percent = Math.round((current / total) * 100);
+      progressBar.style.width = `${percent}%`;
+      progressBar.textContent = `${percent}% (${current}/${total})`;
+    }
+
+    generateBtn.addEventListener('click', async () => {
+      generateBtn.disabled = true;
+      logEl.innerHTML = '';
+      updateProgress(0, 10);
+
+      try {
+        log('Starting map generation...', 'info');
+        log('Importing dependencies...', 'info');
+
+        const { MapGeneratorV2 } = await import('/src/utils/MapGeneratorV2.ts');
+        const { gameConfig } = await import('/src/config/gameConfig.ts');
+
+        log('✓ Dependencies loaded', 'success');
+
+        const hashes = new Set();
+        const maps = [];
+
+        for (let i = 0; i < 10; i++) {
+          log(`\nGenerating map ${i}...`, 'info');
+          let mapData, attempts = 0;
+
+          while (attempts < 50) {
+            try {
+              mapData = await MapGeneratorV2.generate(gameConfig.map.width, gameConfig.map.height);
+
+              if (!hashes.has(mapData.hash)) {
+                hashes.add(mapData.hash);
+                break;
+              }
+
+              log(`  ⚠ Duplicate hash detected, regenerating... (attempt ${attempts + 1})`, 'warning');
+              attempts++;
+            } catch (error) {
+              log(`  ✗ Error: ${error.message}`, 'error');
+              attempts++;
+            }
+          }
+
+          if (!mapData) {
+            log(`✗ Failed to generate map ${i} after ${attempts} attempts`, 'error');
+            continue;
+          }
+
+          maps.push({ index: i, data: mapData });
+          log(`✓ Generated map ${i}`, 'success');
+          log(`  Hash: ${mapData.hash}`, 'info');
+          log(`  Powerups: ${mapData.powerPellets.length}`, 'info');
+          log(`  Tunnels: ${mapData.tunnels.length / 2}`, 'info');
+          log(`  Bonus Path Length: ${mapData.bonusPath.length}`, 'info');
+
+          updateProgress(i + 1, 10);
+        }
+
+        log('\n========================================', 'info');
+        log('Generation complete!', 'success');
+        log(`Successfully generated: ${maps.length}/10 maps`, 'success');
+        log('========================================\n', 'info');
+
+        // Create a single download with all maps in a zip-like JSON structure
+        log('Preparing download...', 'info');
+
+        const allMaps = {};
+        for (const { index, data } of maps) {
+          allMaps[`map${index}.json`] = data;
+        }
+
+        const json = JSON.stringify(allMaps, null, 2);
+        const blob = new Blob([json], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'all-maps.json';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        log('✓ Downloaded all-maps.json', 'success');
+        log('\nNext steps:', 'warning');
+        log('1. Extract the individual maps from all-maps.json', 'warning');
+        log('2. Save each map to src/resources/maps/', 'warning');
+        log('   OR use the script below in Node.js to split them automatically', 'warning');
+
+      } catch (error) {
+        log(`Fatal error: ${error.message}`, 'error');
+        console.error(error);
+      } finally {
+        generateBtn.disabled = false;
+      }
+    });
+
+    log('Ready to generate maps!', 'success');
+  </script>
+</body>
+</html>
