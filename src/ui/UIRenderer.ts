@@ -3,12 +3,15 @@ import { Orientation } from '../enums/Orientation';
 import { LocalizationManager } from '../config/localization/LocalizationManager';
 import { gameConfig } from '../config/gameConfig';
 import { colorNumberToString } from '../utils/utils';
+import { SettingsManager } from '../utils/SettingsManager';
+import { TubeType } from '../enums/TubeType';
 
 export interface IUIElements {
   scoreText: Phaser.GameObjects.Container;
   highScoreText: Phaser.GameObjects.Container;
   livesText: Phaser.GameObjects.Container;
   livesSprites: Phaser.GameObjects.Sprite[];
+  livesTubeSprites: Phaser.GameObjects.Sprite[];
   levelText: Phaser.GameObjects.Container;
   levelSprites: Phaser.GameObjects.Sprite[];
   powerText: Phaser.GameObjects.Text;
@@ -154,30 +157,36 @@ export class UIRenderer {
     spriteScale: number = 1.5,
     spacing: number = 5,
     leftToRight: boolean = false
-  ): Phaser.GameObjects.Sprite[] {
+  ): { sprites: Phaser.GameObjects.Sprite[]; tubeSprites: Phaser.GameObjects.Sprite[] } {
     const sprites: Phaser.GameObjects.Sprite[] = [];
+    const tubeSprites: Phaser.GameObjects.Sprite[] = [];
     const maxLives = gameConfig.player.startLives[difficulty as keyof typeof gameConfig.player.startLives];
     const spriteWidth = 16 * spriteScale;
+    const tubeType = SettingsManager.getInstance().getTubeType();
+    const tubeFrame = tubeType !== TubeType.NONE ? `${tubeType}.png` : null;
 
     for (let i = 0; i < maxLives; i++) {
       const x = leftToRight
         ? anchorX + (i * (spriteWidth + spacing))
         : anchorX - 95 - (i * (spriteWidth + spacing)) - spriteWidth; // 95 offsets the lives to the left of the pause button
-      const sprite = this.scene.add.sprite(
-        x,
-        y,
-        'atlas',
-        'player_frame_2.png'
-      );
+      const visible = i < currentLives;
+
+      const sprite = this.scene.add.sprite(x, y, 'atlas', 'player_frame_2.png');
       sprite.setScale(spriteScale * 0.15);
       sprite.setScrollFactor(0);
       sprite.setOrigin(0, 0);
-      // Only show sprites up to currentLives count
-      sprite.setVisible(i < currentLives);
+      sprite.setVisible(visible);
       sprites.push(sprite);
+
+      const tubeSprite = this.scene.add.sprite(x, y, 'atlas', tubeFrame ?? 'player_frame_2.png');
+      tubeSprite.setScale(spriteScale * 0.15);
+      tubeSprite.setScrollFactor(0);
+      tubeSprite.setOrigin(0, 0);
+      tubeSprite.setVisible(visible && tubeFrame !== null);
+      tubeSprites.push(tubeSprite);
     }
 
-    return sprites;
+    return { sprites, tubeSprites };
   }
 
   private createLevelSprites(
@@ -275,7 +284,7 @@ export class UIRenderer {
     );
 
     // Lives sprites sit beside the lives label in the top-right of the HUD band
-    const livesSprites = this.createLivesSprites(
+    const { sprites: livesSprites, tubeSprites: livesTubeSprites } = this.createLivesSprites(
       screenWidth - 5,
       hudY + 20,
       currentLives ?? gameConfig.player.startLives[difficulty as keyof typeof gameConfig.player.startLives],
@@ -351,6 +360,7 @@ export class UIRenderer {
       highScoreText,
       livesText,
       livesSprites,
+      livesTubeSprites,
       levelText,
       levelSprites,
       powerText,
@@ -406,7 +416,7 @@ export class UIRenderer {
       0
     );
 
-    const livesSprites = this.createLivesSprites(
+    const { sprites: livesSprites, tubeSprites: livesTubeSprites } = this.createLivesSprites(
       uiX,
       230,
       currentLives ?? gameConfig.player.startLives[difficulty as keyof typeof gameConfig.player.startLives],
@@ -470,6 +480,7 @@ export class UIRenderer {
       highScoreText,
       livesText,
       livesSprites,
+      livesTubeSprites,
       levelText,
       levelSprites,
       powerText,
