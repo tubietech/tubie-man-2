@@ -3,6 +3,7 @@ import { Logger } from './Logger';
 import { LogGroup } from '../enums/LogGroup';
 import { IKeyBinding } from '../ui/elements/UIKeyBindingSetting';
 import { AudioManager } from './AudioManager';
+import { TouchInputType } from '../enums/TouchInputType';
 import Phaser from 'phaser';
 
 /**
@@ -40,6 +41,7 @@ export interface IGameSettings {
     };
     touch: {
       isRightHanded: boolean;
+      inputType: TouchInputType;
     };
   };
 }
@@ -95,7 +97,8 @@ export class SettingsManager {
           mute: { button: gameConfig.controls.gamepad.mute }
         },
         touch: {
-          isRightHanded: true
+          isRightHanded: true,
+          inputType: TouchInputType.JOYSTICK
         }
       }
     };
@@ -148,7 +151,8 @@ export class SettingsManager {
           mute: loaded.controls?.gamepad?.mute ?? defaults.controls.gamepad.mute
         },
         touch: {
-          isRightHanded: loaded.controls?.touch?.isRightHanded ?? defaults.controls.touch.isRightHanded
+          isRightHanded: loaded.controls?.touch?.isRightHanded ?? defaults.controls.touch.isRightHanded,
+          inputType: loaded.controls?.touch?.inputType ?? defaults.controls.touch.inputType
         }
       }
     };
@@ -384,6 +388,15 @@ export class SettingsManager {
 
   setTouchIsRightHanded(isRightHanded: boolean): void {
     this.settings.controls.touch.isRightHanded = isRightHanded;
+    this.saveSettings();
+  }
+
+  getTouchInputType(): TouchInputType {
+    return this.settings.controls.touch.inputType;
+  }
+
+  setTouchInputType(inputType: TouchInputType): void {
+    this.settings.controls.touch.inputType = inputType;
     this.saveSettings();
   }
 

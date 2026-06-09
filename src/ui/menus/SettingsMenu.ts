@@ -14,6 +14,7 @@ import { UISliderSetting } from '../elements/UISliderSetting';
 import { UITabGroup } from '../elements/UITabGroup';
 import { UIElement } from '../elements/UIElement';
 import { SettingsManager } from '../../utils/SettingsManager';
+import { TouchInputType } from '../../enums/TouchInputType';
 import { Orientation } from '../../enums/Orientation';
 import { INavigable } from '../../interfaces/INavigable';
 
@@ -532,6 +533,29 @@ export class SettingsMenu extends Menu {
     navigables.push(continueBinding);
     this.addElement(continueBinding);
     
+    // Touch input type toggle (joystick vs swipe)
+    const touchInputToggle = new UIToggleSetting(this.scene, {
+      x: 0,
+      y: currentY,
+      label: loc.getText('touchInputType'),
+      width: settingWidth,
+      height: settingHeight,
+      initialValue: this.settingsManager.getTouchInputType() === TouchInputType.JOYSTICK,
+      onLabel: loc.getText('touchInputJoystick'),
+      offLabel: loc.getText('touchInputSwipe'),
+      onValueChange: (value) => {
+        this.settingsManager.setTouchInputType(value ? TouchInputType.JOYSTICK : TouchInputType.SWIPE);
+      },
+      toggleBackground1: gameConfig.menu.colors.toggleValueBackground3, // Optional custom background color for ON state
+      toggleBackground2: gameConfig.menu.colors.toggleValueBackground4, // Optional custom background color for OFF state
+      toggleBorder1: gameConfig.menu.colors.toggleBorder3, // Optional custom border color for ON state
+      toggleBorder2: gameConfig.menu.colors.toggleBorder4, // Optional custom border color for OFF state
+    });
+    elements.push(touchInputToggle);
+    navigables.push(touchInputToggle);
+    this.addElement(touchInputToggle);
+    currentY += settingSpacing;
+
     // Left Right Hand Toggle
     const touchSideToggle = new UIToggleSetting(this.scene, {
       x: 0,

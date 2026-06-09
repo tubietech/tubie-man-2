@@ -26,6 +26,7 @@ import { CollisionManager } from '../managers/CollisionManager';
 import { LevelManager } from '../managers/LevelManager';
 import { ICollisionContext } from '../interfaces/ICollisionContext';
 import { TouchControls } from '../ui/TouchControls';
+import { TouchInputType } from '../enums/TouchInputType';
 import { Direction } from '../enums/Direction';
 
 export class GameScene extends Phaser.Scene {
@@ -458,26 +459,32 @@ export class GameScene extends Phaser.Scene {
   private createTouchControls(): void {
     if (!TouchControls.isTouchDevice()) return;
 
-    this.touchControls = new TouchControls(this, {
-      onDirectionInput: (dir: Direction, continuous: boolean) => {
-        this.entityManager.player.processInput({ direction: dir, continuous });
-      },
-      onFirePressed: () => {
-        this.entityManager.player.activateFire();
-      }
-    });
+    const inputType = SettingsManager.getInstance().getTouchInputType();
 
-    this.touchControls.create(
-      this.orientation,
-      this.mapOffsetX,
-      this.mapOffsetY,
-      this.mapWidth,
-      this.mapHeight
-    );
+    if (inputType === TouchInputType.JOYSTICK) {
+      this.touchControls = new TouchControls(this, {
+        onDirectionInput: (dir: Direction, continuous: boolean) => {
+          this.entityManager.player.processInput({ direction: dir, continuous });
+        },
+        onFirePressed: () => {
+          this.entityManager.player.activateFire();
+        }
+      });
 
-    this.inputManager.setPointerFilter(
-      (pointer) => this.touchControls!.isPointerOnControls(pointer)
-    );
+      this.touchControls.create(
+        this.orientation,
+        this.mapOffsetX,
+        this.mapOffsetY,
+        this.mapWidth,
+        this.mapHeight
+      );
+
+      // Block swipe input while the pointer is over the joystick or fire button
+      this.inputManager.setPointerFilter(
+        (pointer) => this.touchControls!.isPointerOnControls(pointer)
+      );
+    }
+    // SWIPE mode: no joystick created, swipe input via InputManager is active by default
   }
 
   private isInitialized(): boolean {

@@ -62,6 +62,9 @@ export const languageFiles = {
     isRightHanded: 'Touch Layout',
     rightHanded: 'Right',
     leftHanded: 'Left',
+    touchInputType: 'Touch Input',
+    touchInputJoystick: 'Joystick',
+    touchInputSwipe: 'Swipe',
     copyright: '©Tubie Tech 2026, All Rights Reserved'
   },
   [Language.SPANISH]: {
@@ -124,6 +127,9 @@ export const languageFiles = {
     isRightHanded: "Diseño táctil",
     rightHanded: "Diestro",
     leftHanded: "Zurdo",
+    touchInputType: 'Entrada táctil',
+    touchInputJoystick: 'Joystick',
+    touchInputSwipe: 'Deslizar',
     copyright: '©Tubie Tech 2026, All Rights Reserved'
   },
   [Language.FRENCH]: {
@@ -186,6 +192,9 @@ export const languageFiles = {
     isRightHanded: "Disposition tactile",
     rightHanded: "Droitier",
     leftHanded: "Gaucher",
+    touchInputType: 'Entrée tactile',
+    touchInputJoystick: 'Joystick',
+    touchInputSwipe: 'Glisser',
     copyright: '©Tubie Tech 2026, All Rights Reserved'
   },
   [Language.GERMAN]: {
@@ -248,6 +257,9 @@ export const languageFiles = {
     isRightHanded: "Touch-Layout",
     rightHanded: "Rechts",
     leftHanded: "Links",
+    touchInputType: 'Touch-Eingabe',
+    touchInputJoystick: 'Joystick',
+    touchInputSwipe: 'Wischen',
     copyright: '©Tubie Tech 2026, All Rights Reserved'
   }
 };
