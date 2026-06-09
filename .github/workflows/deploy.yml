@@ -38,19 +38,37 @@ jobs:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: us-east-2
 
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_wrapper: false
+
+      - name: Terraform apply
+        working-directory: terraform
+        run: |
+          terraform init -input=false -reconfigure
+          terraform apply -auto-approve -input=false
+
+      - name: Read Terraform outputs
+        id: tf
+        working-directory: terraform
+        run: |
+          echo "s3_bucket=$(terraform output -raw s3_bucket_name)" >> $GITHUB_OUTPUT
+          echo "cf_distribution=$(terraform output -raw cloudfront_distribution_id)" >> $GITHUB_OUTPUT
+
       - name: Sync build to S3
         run: |
-          aws s3 sync dist/ s3://${{ vars.S3_BUCKET_NAME }} \
+          aws s3 sync dist/ s3://${{ steps.tf.outputs.s3_bucket }} \
             --delete \
             --cache-control "public,max-age=31536000,immutable" \
             --exclude "index.html"
 
           # index.html must not be cached — browsers always fetch a fresh copy
-          aws s3 cp dist/index.html s3://${{ vars.S3_BUCKET_NAME }}/index.html \
+          aws s3 cp dist/index.html s3://${{ steps.tf.outputs.s3_bucket }}/index.html \
             --cache-control "no-cache,no-store,must-revalidate"
 
       - name: Invalidate CloudFront cache
         run: |
           aws cloudfront create-invalidation \
-            --distribution-id ${{ vars.CLOUDFRONT_DISTRIBUTION_ID }} \
+            --distribution-id ${{ steps.tf.outputs.cf_distribution }} \
             --paths "/*"
