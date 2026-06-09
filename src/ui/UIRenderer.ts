@@ -249,29 +249,35 @@ export class UIRenderer {
     currentLives?: number,
     difficulty: string = 'medium'
   ): IUIElements {
+    // Top HUD band: lay out from y=5 downward so elements are always on-screen.
+    // mapOffsetY is guaranteed >= gameConfig.ui.minTopMargin in vertical mode.
+    const hudY = 5;
+    const screenWidth = this.scene.cameras.main.width;
+
     const scoreText = this.createLabelValueTextVertical(
-      mapOffsetX + 25,
-      mapOffsetY - 40,
+      mapOffsetX,
+      hudY,
       loc.getText('score'),
       score,
-      '16px',
+      '14px',
       0,
       0
     );
-  
+
     const highScoreText = this.createLabelValueTextVertical(
-      mapOffsetX + 80,
-      mapOffsetY - 80,
+      mapOffsetX + mapWidth / 2,
+      hudY,
       loc.getText('highScore'),
       highScore,
-      '16px',
+      '14px',
       0.5,
       0
     );
 
+    // Lives sprites sit beside the lives label in the top-right of the HUD band
     const livesSprites = this.createLivesSprites(
-      mapOffsetX + mapWidth,
-      mapOffsetY - 50,
+      screenWidth - 5,
+      hudY + 20,
       currentLives ?? gameConfig.player.startLives[difficulty as keyof typeof gameConfig.player.startLives],
       difficulty,
       1,
@@ -297,9 +303,16 @@ export class UIRenderer {
       15
     );
 
-    // Create container for lives label (for compatibility with existing code)
-    const livesText = this.scene.add.container(mapOffsetX + 10, mapOffsetY + mapHeight + 10, []);
-    livesText.setScrollFactor(0);
+    // Lives label sits in the top-right of the HUD band
+    const livesText = this.createLabelValueTextVertical(
+      screenWidth - 5,
+      hudY,
+      loc.getText('lives'),
+      '',
+      '14px',
+      1,
+      0
+    );
 
     const powerText = this.scene.add.text(
       mapOffsetX + mapWidth * 2 / 3 + 30,
@@ -327,10 +340,8 @@ export class UIRenderer {
     cooldownBar.setScrollFactor(0);
     cooldownBar.setVisible(false);
 
-    // Create pause button - positioned off the map, on the right side (vertical layout doesn't have right panel)
-    // So we position it at the far right edge of the screen
     const pauseButton = this.createPauseButton(
-      this.scene.cameras.main.width - 40,
+      screenWidth - 40,
       mapOffsetY - 30,
       onPauseClick
     );

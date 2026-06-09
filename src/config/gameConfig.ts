@@ -212,7 +212,8 @@ export const gameConfig = {
     playerBonusRadius: 0.75,     // Collision radius as fraction of tileSize
   },
   ui: {
-    minTopMargin: 90, // Minimum pixels above the map for score/high score/lives on touch devices
+    minTopMargin: 90,    // Minimum pixels above the map for score/high score/lives
+    minBottomMargin: 80, // Minimum pixels below the map for level/power HUD in portrait mode
     colors: {
       powerupReady: 0x2fb7a1,
       powerupActive: 0xffa500,

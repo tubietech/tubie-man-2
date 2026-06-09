@@ -162,14 +162,23 @@ export class GameScene extends Phaser.Scene {
   }
 
   private getTileSize(): number {
-    // Calculate tile size based on canvas dimensions to fill the screen
     const canvasWidth = this.cameras.main.width;
     const canvasHeight = this.cameras.main.height;
     const mapWidth = gameConfig.map.width;
     const mapHeight = gameConfig.map.height;
 
-    // Use the smaller scale to ensure the entire map fits
-    return Math.min(canvasWidth / mapWidth, canvasHeight / mapHeight);
+    const widthBound = canvasWidth / mapWidth;
+    const heightBound = canvasHeight / mapHeight;
+
+    // In portrait mode, reserve top and bottom HUD bands so the map doesn't overflow them
+    if (this.orientation === Orientation.VERTICAL) {
+      const { minTopMargin, minBottomMargin } = gameConfig.ui;
+      const availableHeight = canvasHeight - minTopMargin - minBottomMargin;
+      const heightBoundWithMargins = availableHeight / mapHeight;
+      return Math.min(widthBound, heightBoundWithMargins);
+    }
+
+    return Math.min(widthBound, heightBound);
   }
 
   private calculateMapOffset(): void {
@@ -183,8 +192,8 @@ export class GameScene extends Phaser.Scene {
     this.mapOffsetX = (canvasWidth - mapPixelWidth) / 2;
     this.mapOffsetY = (canvasHeight - mapPixelHeight) / 2;
 
-    // On touch devices in vertical mode, ensure enough space above the map for UI
-    if (TouchControls.isTouchDevice() && this.orientation === Orientation.VERTICAL)
+    // In vertical mode, ensure enough space above the map for the HUD
+    if (this.orientation === Orientation.VERTICAL)
       this.mapOffsetY = Math.max(this.mapOffsetY, gameConfig.ui.minTopMargin);
   }
 
