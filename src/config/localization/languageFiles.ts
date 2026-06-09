@@ -65,6 +65,15 @@ export const languageFiles = {
     touchInputType: 'Touch Input',
     touchInputJoystick: 'Joystick',
     touchInputSwipe: 'Swipe',
+    tubeType: 'Tube Type',
+    tubeTypeNone: 'None',
+    tubeTypeGTube: 'G-Tube',
+    tubeTypeNGTube: 'NG-Tube',
+    tubeTypeNGG: 'NG + G',
+    tubeTypeGJTube: 'GJ-Tube',
+    tubeTypeCentral: 'Central\n  Line',
+    tubeTypeNGCentral: '  NG +\nCentral',
+    tubeTypeGCentral: '  G +\nCentral',
     copyright: '©Tubie Tech 2026, All Rights Reserved'
   },
   [Language.SPANISH]: {
@@ -130,6 +139,15 @@ export const languageFiles = {
     touchInputType: 'Entrada táctil',
     touchInputJoystick: 'Joystick',
     touchInputSwipe: 'Deslizar',
+    tubeType: 'Tube Type',
+    tubeTypeNone: 'None',
+    tubeTypeGTube: 'G-Tube',
+    tubeTypeNGTube: 'NG-Tube',
+    tubeTypeNGG: 'NG + G',
+    tubeTypeGJTube: 'GJ-Tube',
+    tubeTypeCentral: 'Central\n  Line',
+    tubeTypeNGCentral: '  NG +\nCentral',
+    tubeTypeGCentral: '  G +\nCentral',
     copyright: '©Tubie Tech 2026, All Rights Reserved'
   },
   [Language.FRENCH]: {
@@ -195,6 +213,15 @@ export const languageFiles = {
     touchInputType: 'Entrée tactile',
     touchInputJoystick: 'Joystick',
     touchInputSwipe: 'Glisser',
+    tubeType: 'Tube Type',
+    tubeTypeNone: 'None',
+    tubeTypeGTube: 'G-Tube',
+    tubeTypeNGTube: 'NG-Tube',
+    tubeTypeNGG: 'NG + G',
+    tubeTypeGJTube: 'GJ-Tube',
+    tubeTypeCentral: 'Central\n  Line',
+    tubeTypeNGCentral: '  NG +\nCentral',
+    tubeTypeGCentral: '  G +\nCentral',
     copyright: '©Tubie Tech 2026, All Rights Reserved'
   },
   [Language.GERMAN]: {
@@ -260,6 +287,15 @@ export const languageFiles = {
     touchInputType: 'Touch-Eingabe',
     touchInputJoystick: 'Joystick',
     touchInputSwipe: 'Wischen',
+    tubeType: 'Tube Type',
+    tubeTypeNone: 'None',
+    tubeTypeGTube: 'G-Tube',
+    tubeTypeNGTube: 'NG-Tube',
+    tubeTypeNGG: 'NG + G',
+    tubeTypeGJTube: 'GJ-Tube',
+    tubeTypeCentral: 'Central\n  Line',
+    tubeTypeNGCentral: '  NG +\nCentral',
+    tubeTypeGCentral: '  G +\nCentral',
     copyright: '©Tubie Tech 2026, All Rights Reserved'
   }
 };

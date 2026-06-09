@@ -18,11 +18,14 @@ export interface ISpriteData {
   frame?: string | number;
   scale?: number;
   animation?: string;
+  // If set, this sprite tracks the x position of the sprite at the given index instead of moving independently
+  trackIndex?: number;
 }
 
 export class UISpriteGroup extends UIElement {
   readonly type = MenuItemType.SPRITE_GROUP;
   private sprites: Phaser.GameObjects.Sprite[] = [];
+  private spriteTrackIndices: (number | undefined)[] = [];
   private spacing: number;
   private animateChase: boolean;
   private chaseWidth: number;
@@ -66,10 +69,14 @@ export class UISpriteGroup extends UIElement {
       }
 
       this.sprites.push(sprite);
+      this.spriteTrackIndices.push(spriteConfig.trackIndex);
       this.container.add(sprite);
 
-      // Initialize chase positions
-      this.chasePositions.push(x);
+      // Initialize chase positions (tracked sprites share position with their target)
+      const initialX = spriteConfig.trackIndex !== undefined
+        ? this.chasePositions[spriteConfig.trackIndex] ?? x
+        : x;
+      this.chasePositions.push(initialX);
     });
   }
 
@@ -82,14 +89,16 @@ export class UISpriteGroup extends UIElement {
       delay: 16, // ~60fps
       callback: () => {
         this.sprites.forEach((sprite, index) => {
-          // Move sprite to the right
-          this.chasePositions[index] += speed * 0.016; // deltaTime approximation
-
-          // Wrap around when reaching the right edge
-          if (this.chasePositions[index] > halfWidth) {
-            this.chasePositions[index] = -halfWidth - this.spacing;
+          const trackIndex = this.spriteTrackIndices[index];
+          if (trackIndex !== undefined) {
+            // Overlay sprite — mirror the tracked sprite's position exactly
+            this.chasePositions[index] = this.chasePositions[trackIndex];
+          } else {
+            this.chasePositions[index] += speed * 0.016;
+            if (this.chasePositions[index] > halfWidth) {
+              this.chasePositions[index] = -halfWidth - this.spacing;
+            }
           }
-
           sprite.x = this.chasePositions[index];
         });
       },

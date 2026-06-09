@@ -15,6 +15,7 @@ import { UITabGroup } from '../elements/UITabGroup';
 import { UIElement } from '../elements/UIElement';
 import { SettingsManager } from '../../utils/SettingsManager';
 import { TouchInputType } from '../../enums/TouchInputType';
+import { TubeType } from '../../enums/TubeType';
 import { Orientation } from '../../enums/Orientation';
 import { INavigable } from '../../interfaces/INavigable';
 
@@ -29,6 +30,7 @@ export class SettingsMenu extends Menu {
   readonly menuType = MenuType.SETTINGS;
   private localization: LocalizationManager;
   private onLanguageChange?: (language: Language) => void;
+  private onTubeTypeChange?: () => void;
   
   private tabGroup!: UITabGroup;
   private currentTab: TabId = 'gameplay';
@@ -47,6 +49,10 @@ export class SettingsMenu extends Menu {
 
   setOnLanguageChange(callback: (language: Language) => void): void {
     this.onLanguageChange = callback;
+  }
+
+  setOnTubeTypeChange(callback: () => void): void {
+    this.onTubeTypeChange = callback;
   }
 
   focusLanguageSelector(): void {
@@ -94,7 +100,7 @@ export class SettingsMenu extends Menu {
     });
     this.addElement(this.tabGroup);
     this.addNavigable(this.tabGroup);
-    currentY += 50;
+    currentY += 40;
 
     // Content area starts here
     const contentStartY = currentY;
@@ -105,7 +111,7 @@ export class SettingsMenu extends Menu {
     this.buildControllerTab(contentStartY);
 
     // Back button (always visible, positioned after tab content)
-    const backButtonY = 250;
+    const backButtonY = 265;
     this.backButton = new UIButton(this.scene, {
       x: 0,
       y: backButtonY,
@@ -127,7 +133,7 @@ export class SettingsMenu extends Menu {
     const elements: UIElement[] = [];
     const navigables: INavigable[] = [];
 
-    let currentY = startY;
+    let currentY = startY - 5;
     const settingWidth = 300;
     const settingHeight = 45;
 
@@ -141,7 +147,7 @@ export class SettingsMenu extends Menu {
     });
     elements.push(languageLabel);
     this.addElement(languageLabel);
-    currentY += 35;
+    currentY += 30;
 
     // Language button group
     const currentLangIndex = this.getCurrentLanguageIndex();
@@ -166,7 +172,48 @@ export class SettingsMenu extends Menu {
     elements.push(languageGroup);
     navigables.push(languageGroup);
     this.addElement(languageGroup);
-    currentY += 70;
+    currentY += 40;
+
+    // Tube Type label
+    const tubeTypeLabel = new UIText(this.scene, {
+      x: 0,
+      y: currentY,
+      text: loc.getText('tubeType'),
+      fontSize: '16px',
+      color: gameConfig.menu.colors.bodyText
+    });
+    elements.push(tubeTypeLabel);
+    this.addElement(tubeTypeLabel);
+    currentY += 35;
+
+    // Tube Type button group
+    const tubeTypeOptions = [
+      { label: loc.getText('tubeTypeNone'),    value: TubeType.NONE },
+      { label: loc.getText('tubeTypeGTube'),   value: TubeType.G_TUBE },
+      { label: loc.getText('tubeTypeNGTube'),  value: TubeType.NG_TUBE },
+      { label: loc.getText('tubeTypeNGG'),     value: TubeType.NG_G },
+      { label: loc.getText('tubeTypeGJTube'),  value: TubeType.GJ_TUBE },
+      { label: loc.getText('tubeTypeCentral'), value: TubeType.CENTRAL },
+      { label: loc.getText('tubeTypeNGCentral'), value: TubeType.NG_CENTRAL },
+      { label: loc.getText('tubeTypeGCentral'), value: TubeType.G_CENTRAL },
+    ];
+    const currentTubeIndex = tubeTypeOptions.findIndex(o => o.value === this.settingsManager.getTubeType());
+    const tubeTypeGroup = new UIButtonGroup<TubeType>(this.scene, {
+      x: 0,
+      y: currentY,
+      options: tubeTypeOptions,
+      selectedIndex: currentTubeIndex >= 0 ? currentTubeIndex : 0,
+      buttonWidth: 68,
+      onSelectionChange: (value) => {
+        this.settingsManager.setTubeType(value);
+        this.onTubeTypeChange?.();
+      },
+      fontSize: '8px'
+    });
+    elements.push(tubeTypeGroup);
+    navigables.push(tubeTypeGroup);
+    this.addElement(tubeTypeGroup);
+    currentY += 55;
 
     // Arcade Mode toggle
     const arcadeToggle = new UIToggleSetting(this.scene, {

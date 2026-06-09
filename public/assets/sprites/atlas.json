@@ -609,7 +609,7 @@
       "sourceSize": { "w": 330, "h": 330 }
     },
     {
-      "filename": "player_up_frame_1.png",
+      "filename": "tube-g.png",
       "frame": { "x": 0, "y": 2640, "w": 330, "h": 330 },
       "rotated": false,
       "trimmed": false,
@@ -617,7 +617,7 @@
       "sourceSize": { "w": 330, "h": 330 }
     },
     {
-      "filename": "player_up_frame_2.png",
+      "filename": "tube-ng.png",
       "frame": { "x": 330, "y": 2640, "w": 330, "h": 330 },
       "rotated": false,
       "trimmed": false,
@@ -625,7 +625,7 @@
       "sourceSize": { "w": 330, "h": 330 }
     },
     {
-      "filename": "player_up_frame_3.png",
+      "filename": "tube-ng-g.png",
       "frame": { "x": 660, "y": 2640, "w": 330, "h": 330 },
       "rotated": false,
       "trimmed": false,
@@ -633,7 +633,7 @@
       "sourceSize": { "w": 330, "h": 330 }
     },
     {
-      "filename": "player_left_frame_1.png",
+      "filename": "tube-gj.png",
       "frame": { "x": 990, "y": 2640, "w": 330, "h": 330 },
       "rotated": false,
       "trimmed": false,
@@ -641,7 +641,7 @@
       "sourceSize": { "w": 330, "h": 330 }
     },
     {
-      "filename": "player_left_frame_2.png",
+      "filename": "tube-central.png",
       "frame": { "x": 1320, "y": 2640, "w": 330, "h": 330 },
       "rotated": false,
       "trimmed": false,
@@ -649,7 +649,7 @@
       "sourceSize": { "w": 330, "h": 330 }
     },
     {
-      "filename": "player_left_frame_3.png",
+      "filename": "tube-ng-central.png",
       "frame": { "x": 1650, "y": 2640, "w": 330, "h": 330 },
       "rotated": false,
       "trimmed": false,
@@ -657,7 +657,7 @@
       "sourceSize": { "w": 330, "h": 330 }
     },
     {
-      "filename": "player_down_frame_1.png",
+      "filename": "tube-g-central.png",
       "frame": { "x": 1980, "y": 2640, "w": 330, "h": 330 },
       "rotated": false,
       "trimmed": false,
@@ -681,7 +681,7 @@
       "sourceSize": { "w": 330, "h": 330 }
     },
     {
-      "filename": "player_right_frame_1.png",
+      "filename": "player_frame_1.png",
       "frame": { "x": 2970, "y": 2640, "w": 330, "h": 330 },
       "rotated": false,
       "trimmed": false,
@@ -689,7 +689,7 @@
       "sourceSize": { "w": 330, "h": 330 }
     },
     {
-      "filename": "player_right_frame_2.png",
+      "filename": "player_frame_2.png",
       "frame": { "x": 3300, "y": 2640, "w": 330, "h": 330 },
       "rotated": false,
       "trimmed": false,
@@ -697,7 +697,7 @@
       "sourceSize": { "w": 330, "h": 330 }
     },
     {
-      "filename": "player_right_frame_3.png",
+      "filename": "player_frame_3.png",
       "frame": { "x": 3630, "y": 2640, "w": 330, "h": 330 },
       "rotated": false,
       "trimmed": false,

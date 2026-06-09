@@ -10,6 +10,7 @@ import { UIButtonGroup } from '../elements/UIButtonGroup';
 import { UISpriteGroup, ISpriteData } from '../elements/UISpriteGroup';
 import { Orientation } from '../../enums/Orientation';
 import { SettingsManager } from '../../utils/SettingsManager';
+import { TubeType } from '../../enums/TubeType';
 
 export class MainMenu extends Menu {
   readonly menuType = MenuType.MAIN;
@@ -22,6 +23,10 @@ export class MainMenu extends Menu {
   private onOpenAbout?: () => void;
   private onOpenInstructions?: () => void;
   private onOpenHighScores?: () => void;
+
+  private chaseScene!: UISpriteGroup;
+  private chaseSceneX: number = 0;
+  private chaseSceneY: number = 0;
 
   constructor(scene: Phaser.Scene, orientation: Orientation) {
     super(scene, { type: MenuType.MAIN, orientation });
@@ -66,8 +71,10 @@ export class MainMenu extends Menu {
     currentY += 80;
 
     // Animated chase scene
-    const chaseScene = this.createChaseScene(0, currentY);
-    this.addElement(chaseScene);
+    this.chaseSceneX = 0;
+    this.chaseSceneY = currentY;
+    this.chaseScene = this.createChaseScene(this.chaseSceneX, this.chaseSceneY);
+    this.addElement(this.chaseScene);
     currentY += 80;
 
     // Difficulty label
@@ -217,11 +224,22 @@ export class MainMenu extends Menu {
       // Player sprite (being chased - in front)
       {
         texture: 'atlas',
-        frame: 'player_right_frame_1.png',
+        frame: 'player_frame_1.png',
         scale: spriteScale,
-        animation: 'player_right'
+        animation: 'player_anim'
       }
     ];
+
+    // Add tube overlay if one is selected — tracks the player sprite (index 4)
+    const tubeType = SettingsManager.getInstance().getTubeType();
+    if (tubeType !== TubeType.NONE) {
+      sprites.push({
+        texture: 'atlas',
+        frame: `${tubeType}.png`,
+        scale: spriteScale,
+        trackIndex: 4
+      });
+    }
 
     return new UISpriteGroup(this.scene, {
       x: x + 30,
@@ -231,6 +249,18 @@ export class MainMenu extends Menu {
       animateChase: true,
       chaseWidth: 380
     });
+  }
+
+  refreshChaseScene(): void {
+    // Remove old chase scene from elements list and destroy it
+    const idx = this.elements.indexOf(this.chaseScene);
+    if (idx !== -1) this.elements.splice(idx, 1);
+    this.container.remove(this.chaseScene.container, true);
+    this.chaseScene.destroy();
+
+    // Create and register the new one
+    this.chaseScene = this.createChaseScene(this.chaseSceneX, this.chaseSceneY);
+    this.addElement(this.chaseScene);
   }
 
   getSelectedDifficulty(): Difficulty {

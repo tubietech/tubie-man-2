@@ -83,49 +83,12 @@ export class PreloadScene extends Phaser.Scene {
   private createPlayerAnimations() {
     const frameRate = gameConfig.player.animationFrameRate;
 
-    // UP animation
     this.anims.create({
-      key: 'player_up',
+      key: 'player_anim',
       frames: [
-        { key: 'atlas', frame: 'player_up_frame_1.png' },
-        { key: 'atlas', frame: 'player_up_frame_2.png' },
-        { key: 'atlas', frame: 'player_up_frame_3.png' }
-      ],
-      frameRate: frameRate,
-      repeat: -1
-    });
-
-    // DOWN animation
-    this.anims.create({
-      key: 'player_down',
-      frames: [
-        { key: 'atlas', frame: 'player_down_frame_1.png' },
-        { key: 'atlas', frame: 'player_down_frame_2.png' },
-        { key: 'atlas', frame: 'player_down_frame_3.png' }
-      ],
-      frameRate: frameRate,
-      repeat: -1
-    });
-
-    // LEFT animation
-    this.anims.create({
-      key: 'player_left',
-      frames: [
-        { key: 'atlas', frame: 'player_left_frame_1.png' },
-        { key: 'atlas', frame: 'player_left_frame_2.png' },
-        { key: 'atlas', frame: 'player_left_frame_3.png' }
-      ],
-      frameRate: frameRate,
-      repeat: -1
-    });
-
-    // RIGHT animation
-    this.anims.create({
-      key: 'player_right',
-      frames: [
-        { key: 'atlas', frame: 'player_right_frame_1.png' },
-        { key: 'atlas', frame: 'player_right_frame_2.png' },
-        { key: 'atlas', frame: 'player_right_frame_3.png' }
+        { key: 'atlas', frame: 'player_frame_1.png' },
+        { key: 'atlas', frame: 'player_frame_2.png' },
+        { key: 'atlas', frame: 'player_frame_3.png' }
       ],
       frameRate: frameRate,
       repeat: -1

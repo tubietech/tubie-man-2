@@ -4,6 +4,7 @@ import { LogGroup } from '../enums/LogGroup';
 import { IKeyBinding } from '../ui/elements/UIKeyBindingSetting';
 import { AudioManager } from './AudioManager';
 import { TouchInputType } from '../enums/TouchInputType';
+import { TubeType } from '../enums/TubeType';
 import Phaser from 'phaser';
 
 /**
@@ -18,6 +19,7 @@ export interface IControllerBinding {
  */
 export interface IGameSettings {
   arcadeMode: boolean;
+  tubeType: TubeType;
   controls: {
     keyboard: {
       fire: IKeyBinding;
@@ -75,6 +77,7 @@ export class SettingsManager {
   private getDefaultSettings(): IGameSettings {
     return {
       arcadeMode: false,
+      tubeType: TubeType.NONE,
       controls: {
         keyboard: {
           fire: { type: 'keyboard', key: gameConfig.controls.keyboard.fire },
@@ -129,6 +132,7 @@ export class SettingsManager {
 
     return {
       arcadeMode: loaded.arcadeMode ?? defaults.arcadeMode,
+      tubeType: loaded.tubeType ?? defaults.tubeType,
       controls: {
         keyboard: {
           fire: loaded.controls?.keyboard?.fire ?? defaults.controls.keyboard.fire,
@@ -175,6 +179,16 @@ export class SettingsManager {
    */
   getSettings(): IGameSettings {
     return this.settings;
+  }
+
+  // ============== Tube Type ==============
+  getTubeType(): TubeType {
+    return this.settings.tubeType;
+  }
+
+  setTubeType(tubeType: TubeType): void {
+    this.settings.tubeType = tubeType;
+    this.saveSettings();
   }
 
   // ============== Arcade Mode ==============

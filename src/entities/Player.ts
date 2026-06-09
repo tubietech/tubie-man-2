@@ -12,6 +12,8 @@ import { PowerActivationV2 } from './powerup/PowerActivationV2';
 import { Logger } from '../utils/Logger';
 import { LogGroup } from '../enums/LogGroup';
 import { Difficulty } from '../enums/Difficulty';
+import { SettingsManager } from '../utils/SettingsManager';
+import { TubeType } from '../enums/TubeType';
 export class Player extends Entity {
   hasFirePower: boolean = false;
   fireActive: boolean = false;
@@ -25,6 +27,7 @@ export class Player extends Entity {
 
   private powerActivationStrategy: IPowerActivationStrategy;
   private difficulty: string;
+  private tubeSprite: Phaser.GameObjects.Sprite | null = null;
 
   constructor(scene: Phaser.Scene, x: number, y: number, speed: number, mapData: IMapData, tileSize: number, mapOffsetX: number, mapOffsetY: number, difficulty: Difficulty  = Difficulty.MEDIUM) {
     super(scene, x, y, speed, mapData, tileSize, mapOffsetX, mapOffsetY);
@@ -39,7 +42,7 @@ export class Player extends Entity {
       pixelPos.x,
       pixelPos.y,
       'atlas',
-      'player_right_frame_1.png'
+      'player_frame_1.png'
     );
 
     // Scale sprite to fit tile size, then scale up by config multiplier
@@ -49,6 +52,9 @@ export class Player extends Entity {
 
     // Replace the default circle sprite with the animated sprite
     this.replaceWithCustomSprite(this.animatedSprite);
+
+    // Create tube overlay sprite (rendered on top of the body)
+    this.updateTubeSprite();
 
     // Start with idle frame for right direction
     this.lastDirection = Direction.RIGHT;
@@ -224,35 +230,45 @@ export class Player extends Entity {
     }
   }
 
+  updateTubeSprite(): void {
+    const tubeType = SettingsManager.getInstance().getTubeType();
+
+    if (this.tubeSprite) {
+      this.tubeSprite.destroy();
+      this.tubeSprite = null;
+    }
+
+    if (tubeType === TubeType.NONE || !this.animatedSprite) return;
+
+    const pos = this.getPixelPosition();
+    this.tubeSprite = this.scene.add.sprite(pos.x, pos.y, 'atlas', `${tubeType}.png`);
+    this.tubeSprite.setScale(this.originalScale);
+    // Sit just above the body sprite in depth
+    this.tubeSprite.setDepth((this.animatedSprite.depth || 0) + 1);
+  }
+
   private playDirectionAnimation(direction: Direction): void {
-    // Safety check: ensure sprite and anims exist
     if (!this.animatedSprite || !this.animatedSprite.anims) {
       return;
     }
 
-    let animKey = '';
+    const angles: Record<Direction, number> = {
+      [Direction.RIGHT]: 0,
+      [Direction.DOWN]: 90,
+      [Direction.LEFT]: 0,
+      [Direction.UP]: 270,
+    };
+    this.animatedSprite.setAngle(angles[direction]);
+    this.animatedSprite.setFlipX(direction === Direction.LEFT);
 
-    switch (direction) {
-      case Direction.UP:
-        animKey = 'player_up';
-        break;
-      case Direction.DOWN:
-        animKey = 'player_down';
-        break;
-      case Direction.LEFT:
-        animKey = 'player_left';
-        break;
-      case Direction.RIGHT:
-        animKey = 'player_right';
-        break;
+    if (this.tubeSprite) {
+      this.tubeSprite.setPosition(this.animatedSprite.x, this.animatedSprite.y);
+      this.tubeSprite.setAngle(angles[direction]);
+      this.tubeSprite.setFlipX(direction === Direction.LEFT);
     }
 
-    // Only play if not already playing this animation
-    if (this.animatedSprite.anims.currentAnim?.key !== animKey) {
-      this.animatedSprite.play(animKey);
-    } else if (!this.animatedSprite.anims.isPlaying) {
-      // resume() only works on paused animations; play() handles both paused and stopped
-      this.animatedSprite.play(animKey);
+    if (this.animatedSprite.anims.currentAnim?.key !== 'player_anim' || !this.animatedSprite.anims.isPlaying) {
+      this.animatedSprite.play('player_anim');
     }
   }
   
@@ -369,6 +385,9 @@ export class Player extends Entity {
     if (this.animatedSprite) {
       this.animatedSprite.setScale(this.originalScale);
     }
+    if (this.tubeSprite) {
+      this.tubeSprite.setScale(this.originalScale);
+    }
     this.playDirectionAnimation(Direction.RIGHT);
   }
 
@@ -403,19 +422,24 @@ export class Player extends Entity {
       const { spinCount, spinDuration } = gameConfig.player.deathAnimation;
       const totalDuration = spinCount * spinDuration;
 
+      const tweenTargets = [this.animatedSprite, this.tubeSprite].filter(Boolean);
+
       // Create spin animation using Phaser tweens
       this.scene.tweens.add({
-        targets: this.animatedSprite,
-        angle: 360 * spinCount, // Total degrees to rotate
+        targets: tweenTargets,
+        angle: 360 * spinCount,
         duration: totalDuration,
         ease: 'Linear',
         onComplete: () => {
-          // Reset angle to 0 after animation
-          if(this.animatedSprite)
+          if (this.animatedSprite) {
             this.animatedSprite.setAngle(0);
-          // Re-enable input and movement
+            this.animatedSprite.setFlipX(false);
+          }
+          if (this.tubeSprite) {
+            this.tubeSprite.setAngle(0);
+            this.tubeSprite.setFlipX(false);
+          }
           this.isDying = false;
-          // Activate invulnerability after respawn
           this.activateInvulnerability();
           resolve();
         }
@@ -423,8 +447,8 @@ export class Player extends Entity {
 
       // Create shrink animation that runs simultaneously with spin
       this.scene.tweens.add({
-        targets: this.animatedSprite,
-        scale: 0, // Shrink to nothing
+        targets: tweenTargets,
+        scale: 0,
         duration: totalDuration,
         ease: 'Linear'
       });
@@ -435,18 +459,7 @@ export class Player extends Entity {
    * Get the second frame for the death animation based on last direction
    */
   private getDeathFrame(): string {
-    switch (this.lastDirection) {
-      case Direction.UP:
-        return 'player_up_frame_2.png';
-      case Direction.DOWN:
-        return 'player_down_frame_2.png';
-      case Direction.LEFT:
-        return 'player_left_frame_2.png';
-      case Direction.RIGHT:
-        return 'player_right_frame_2.png';
-      default:
-        return 'player_right_frame_2.png';
-    }
+    return 'player_frame_2.png';
   }
 
   /**
@@ -454,6 +467,10 @@ export class Player extends Entity {
    */
   cleanup(): void {
     this.deactivateFire();
+    if (this.tubeSprite) {
+      this.tubeSprite.destroy();
+      this.tubeSprite = null;
+    }
     super.cleanup();
   }
 }

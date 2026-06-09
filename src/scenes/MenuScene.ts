@@ -215,6 +215,7 @@ export class MenuScene extends Phaser.Scene {
     this.settingsMenu = new SettingsMenu(this, this.orientation);
     this.settingsMenu.setOnBack(() => this.goBack());
     this.settingsMenu.setOnLanguageChange((language) => this.changeLanguage(language));
+    this.settingsMenu.setOnTubeTypeChange(() => this.mainMenu.refreshChaseScene());
 
     // Create about menu
     this.aboutMenu = new AboutMenu(this, this.orientation);
