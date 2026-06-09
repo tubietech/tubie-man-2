@@ -13,6 +13,9 @@ export class PreloadScene extends Phaser.Scene {
     // Load the sprite atlas
     this.load.atlas('atlas', '/assets/sprites/atlas.png', '/assets/sprites/atlas.json');
 
+    // QR code shown on Konami code entry
+    this.load.svg('qr', '/assets/qr.svg', { width: 512, height: 512 });
+
     // Load audio files
     this.loadAudio();
 

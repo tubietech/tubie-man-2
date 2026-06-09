@@ -38,6 +38,10 @@ export class MenuScene extends Phaser.Scene {
   private userInteractionHandler: (() => void) | null = null;
   private gameAudioLoaded: boolean = false;
 
+  // QR overlay
+  private qrOverlay: Phaser.GameObjects.Container | null = null;
+  private qrDismissTimer: Phaser.Time.TimerEvent | null = null;
+
   constructor() {
     super({ key: 'MenuScene' });
   }
@@ -270,6 +274,35 @@ export class MenuScene extends Phaser.Scene {
     this.scene.restart({ languageChanged: true });
   }
 
+  private showQRCode(): void {
+    // Don't stack multiple overlays
+    if (this.qrOverlay) return;
+
+    const { width, height } = this.cameras.main;
+    const qrSize = Math.min(width, height) * 0.8;
+
+    const dim = this.add.rectangle(width / 2, height / 2, width, height, 0x000000, 0.85)
+      .setInteractive(); // block clicks through to menu
+
+    const qr = this.add.image(width / 2, height / 2, 'qr')
+      .setDisplaySize(qrSize, qrSize);
+
+    this.qrOverlay = this.add.container(0, 0, [dim, qr]).setDepth(2000);
+
+    const dismiss = () => {
+      if (!this.qrOverlay) return;
+      this.qrOverlay.destroy();
+      this.qrOverlay = null;
+      this.qrDismissTimer?.remove();
+      this.qrDismissTimer = null;
+    };
+
+    this.qrDismissTimer = this.time.delayedCall(15000, dismiss);
+
+    // Tap/click anywhere to dismiss early
+    this.input.once('pointerdown', dismiss);
+  }
+
   private setupKonamiCode(): void {
     // Map keyboard keycodes to Konami code string identifiers
     this.konamiCodeKeys.set(Phaser.Input.Keyboard.KeyCodes.UP, 'UP');
@@ -303,6 +336,7 @@ export class MenuScene extends Phaser.Scene {
             Logger.logStatic(LogGroup.DEVELOPER, 'Developer mode activated!');
             DeveloperMode.getInstance().enable();
             this.konamiCodeInput = []; // Reset input
+            this.showQRCode();
           }
         }
       }
@@ -325,6 +359,12 @@ export class MenuScene extends Phaser.Scene {
   }
 
   shutdown() {
+    // Cleanup QR overlay
+    this.qrDismissTimer?.remove();
+    this.qrDismissTimer = null;
+    this.qrOverlay?.destroy();
+    this.qrOverlay = null;
+
     // Cleanup menus
     this.mainMenu?.destroy();
     this.settingsMenu?.destroy();
