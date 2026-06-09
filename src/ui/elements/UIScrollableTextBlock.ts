@@ -31,6 +31,10 @@ export class UIScrollableTextBlock extends UIElement implements INavigable {
   private onPointerEnterCallback?: () => void;
   private isHovered: boolean = false;
   private padding: number = 10;
+  private upKey: Phaser.Input.Keyboard.Key | null = null;
+  private downKey: Phaser.Input.Keyboard.Key | null = null;
+  private keyHoldTimer: number = 0;
+  private static readonly KEY_HOLD_DELAY_MS = 500;
 
   constructor(scene: Phaser.Scene, config: IUIScrollableTextBlockConfig) {
     super(scene, config);
@@ -75,6 +79,11 @@ export class UIScrollableTextBlock extends UIElement implements INavigable {
 
     // Setup scrolling interactivity
     this.setupScrolling();
+
+    if (scene.input.keyboard) {
+      this.upKey = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.UP);
+      this.downKey = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.DOWN);
+    }
   }
 
   private calculateMaxScroll(): void {
@@ -84,22 +93,35 @@ export class UIScrollableTextBlock extends UIElement implements INavigable {
   }
 
   private setupScrolling(): void {
-    this.background.setInteractive({ useHandCursor: true });
+    this.background.setInteractive({ useHandCursor: true, draggable: true });
 
     // Track hover state for mouse wheel scrolling
     this.background.on('pointerover', () => {
       this.isHovered = true;
-      // Notify menu to blur other elements
-      if (this.onPointerEnterCallback) {
+      if (this.onPointerEnterCallback)
         this.onPointerEnterCallback();
-      }
-      if (!this.isFocused) {
+      if (!this.isFocused)
         this.focus();
-      }
     });
 
     this.background.on('pointerout', () => {
       this.isHovered = false;
+    });
+
+    // Touch/mouse drag scrolling
+    let dragStartY: number = 0;
+
+    this.background.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
+      dragStartY = pointer.y;
+      if (!this.isFocused)
+        this.focus();
+    });
+
+    this.background.on('pointermove', (pointer: Phaser.Input.Pointer) => {
+      if (!pointer.isDown) return;
+      const delta = dragStartY - pointer.y;
+      dragStartY = pointer.y;
+      this.scroll(delta);
     });
 
     // Mouse wheel scrolling - works when hovered or focused
@@ -109,9 +131,8 @@ export class UIScrollableTextBlock extends UIElement implements INavigable {
       _deltaX: number,
       deltaY: number
     ) => {
-      if (this.isFocused || this.isHovered) {
+      if (this.isFocused || this.isHovered)
         this.scroll(deltaY > 0 ? this.scrollSpeed : -this.scrollSpeed);
-      }
     });
   }
 
@@ -167,6 +188,23 @@ export class UIScrollableTextBlock extends UIElement implements INavigable {
     this.onPointerEnterCallback = callback;
   }
 
+  update(delta: number): void {
+    if (!this.isFocused) return;
+    const downHeld = this.downKey?.isDown ?? false;
+    const upHeld = this.upKey?.isDown ?? false;
+
+    if (downHeld || upHeld) {
+      this.keyHoldTimer += delta;
+      if (this.keyHoldTimer >= UIScrollableTextBlock.KEY_HOLD_DELAY_MS) {
+        const pixelsPerSecond = 120;
+        const amount = (pixelsPerSecond * delta) / 1000;
+        this.scroll(downHeld ? amount : -amount);
+      }
+    } else {
+      this.keyHoldTimer = 0;
+    }
+  }
+
   isAtScrollEnd(): boolean {
     return this.scrollY >= this.maxScrollY;
   }
@@ -184,6 +222,8 @@ export class UIScrollableTextBlock extends UIElement implements INavigable {
   }
 
   destroy(): void {
+    this.upKey?.destroy();
+    this.downKey?.destroy();
     super.destroy();
   }
 }

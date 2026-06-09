@@ -252,6 +252,13 @@ export abstract class Menu implements IMenu {
     }
   }
 
+  update(delta: number): void {
+    if (!this.isVisible || this.navigableElements.length === 0) return;
+    const focused = this.navigableElements[this.focusedIndex];
+    if (focused && typeof (focused as any).update === 'function')
+      (focused as any).update(delta);
+  }
+
   destroy(): void {
     this.hide();
     this.elements.forEach(element => element.destroy());

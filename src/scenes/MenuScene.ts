@@ -309,13 +309,14 @@ export class MenuScene extends Phaser.Scene {
     });
   }
 
-  update(): void {
-    // Sync settings menu toggles with external value changes (e.g., mute key pressed)
-    if (this.menuStack.length > 0) {
-      const currentMenu = this.menuStack[this.menuStack.length - 1];
-      if (currentMenu === this.settingsMenu)
-        this.settingsMenu.update();
-    }
+  update(_time: number, delta: number): void {
+    if (this.menuStack.length === 0) return;
+    const currentMenu = this.menuStack[this.menuStack.length - 1];
+    // Sync settings toggles with external changes (e.g. mute key)
+    if (currentMenu === this.settingsMenu)
+      this.settingsMenu.update();
+    // Drive hold-to-scroll and any other per-frame element logic
+    currentMenu.update(delta);
   }
 
   setOrientation(orientation: Orientation) {
