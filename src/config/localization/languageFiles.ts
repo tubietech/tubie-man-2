@@ -55,7 +55,7 @@ export const languageFiles = {
     tabController: 'CONTROLLER',
     getReady: 'Get Ready!',
     settingMasterVolume: 'Volume',
-    settingMute: 'Mute ALl',
+    settingMute: 'Mute All',
     settingsSfxMute: 'Mute Sounds',
     settingsMusicMute: 'Mute Music',
     settingMuteKey: 'Mute Key',

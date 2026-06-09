@@ -167,7 +167,7 @@ export class UIRenderer {
         x,
         y,
         'atlas',
-        'player_right_frame_2.png'
+        'player_frame_2.png'
       );
       sprite.setScale(spriteScale * 0.15);
       sprite.setScrollFactor(0);
