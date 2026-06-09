@@ -102,3 +102,20 @@ $RECYCLE.BIN/
 *~
 .directory
 .Trash-*
+
+# Vite cache
+.vite/
+
+# Terraform
+.terraform/
+.terraform.lock.hcl
+*.tfstate
+*.tfstate.backup
+*.tfvars
+terraform.tfvars.json
+crash.log
+crash.*.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
