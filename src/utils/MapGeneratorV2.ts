@@ -119,7 +119,48 @@ export class MapGeneratorV2 {
       mapData.bonusPath = BonusPathGenerator.generateBonusPath(mapData, entryTunnelIndex);
     }
 
+    if (this.hasDeadEnds(map, mapData.tunnels.map(t => t.location)))
+      throw new Error('Map contains pellet dead ends');
+
     return mapData;
+  }
+
+  /**
+   * Check whether any pellet tile (PATH or POWERUP) has only one walkable neighbour,
+   * which would make it an unnavigable dead end for enemies.
+   * TUNNEL, EMPTY, PEN_INTERIOR, and PEN_DOOR tiles are excluded — they either have
+   * no pellets or are handled separately.
+   */
+  private static hasDeadEnds(map: number[][], tunnelLocations: ICoordinate[]): boolean {
+    const height = map.length;
+    const width = map[0].length;
+    const tunnelSet = new Set(tunnelLocations.map(t => `${t.x},${t.y}`));
+
+    const isWalkable = (x: number, y: number): boolean => {
+      if (x < 0 || y < 0 || y >= height || x >= width) return false;
+      const v = map[y][x];
+      return v === MapValue.PATH || v === MapValue.PEN_INTERIOR || v === MapValue.PEN_DOOR ||
+             v === MapValue.TUNNEL || v === MapValue.POWERUP || v === MapValue.EMPTY;
+    };
+
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        const v = map[y][x];
+        if (v !== MapValue.PATH && v !== MapValue.POWERUP) continue;
+        // Tunnel tiles wrap around — skip them, they are never true dead ends
+        if (tunnelSet.has(`${x},${y}`)) continue;
+
+        const walkableNeighbours =
+          (isWalkable(x - 1, y) ? 1 : 0) +
+          (isWalkable(x + 1, y) ? 1 : 0) +
+          (isWalkable(x, y - 1) ? 1 : 0) +
+          (isWalkable(x, y + 1) ? 1 : 0);
+
+        if (walkableNeighbours <= 1) return true;
+      }
+    }
+
+    return false;
   }
 
   /**
