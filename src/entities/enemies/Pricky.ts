@@ -54,6 +54,12 @@ export class Pricky extends Enemy {
     }
   }
 
+  becomeScared(): void {
+    // Pricky's panic already causes fleeing; don't stack scared on top of panic
+    if (this.isPanicking) return;
+    super.becomeScared();
+  }
+
   update(time: number, delta: number): void {
     const player = (this.scene as GameScene).entityManager.player;
 

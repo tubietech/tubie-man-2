@@ -28,6 +28,7 @@ export const gameConfig = {
     animationFrameRate: 3,
     speed: { easy: 53, medium: 70, hard: 90 },
     injuredSpeed: { easy: 200, medium: 200, hard: 200 }, // Speed when injured and fleeing to pen
+    scaredSpeed: { easy: 45, medium: 55, hard: 65 }, // Speed when scared and fleeing from player
     countPerLevel: {
       1: 3,  // Level 1: Pokey, Pricky, Stingy
       2: 3,  // Level 2: Pokey, Pricky, Stingy
@@ -209,6 +210,7 @@ export const gameConfig = {
   },
   collision: {
     playerEnemyRadius: 0.75,     // Collision radius as fraction of tileSize
+    playerScaredEnemyRadius: 0.35, // Reduced collision radius when enemy is scared
     projectileEnemyRadius: 0.75, // Collision radius as fraction of tileSize
     playerBonusRadius: 0.75,     // Collision radius as fraction of tileSize
   },
