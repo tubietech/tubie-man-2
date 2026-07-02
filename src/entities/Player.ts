@@ -350,7 +350,10 @@ export class Player extends Entity {
       }
 
       // Check if player collides with enemy (pixel-based Euclidean distance)
-      if (this.checkCollision(enemy, gameConfig.collision.playerEnemyRadius)) {
+      const enemyRadius = enemy.isScared
+        ? gameConfig.collision.playerScaredEnemyRadius
+        : gameConfig.collision.playerEnemyRadius;
+      if (this.checkCollision(enemy, enemyRadius)) {
         return {
           hasCollision: true,
           enemy: enemy,

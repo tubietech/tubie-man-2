@@ -10,6 +10,7 @@ import { Difficulty } from '../../enums/Difficulty';
 import { Pathfinder } from '../../utils/Pathfinder';
 import { Logger } from '../../utils/Logger';
 import { LogGroup } from '../../enums/LogGroup';
+import { GameScene } from '../../scenes/GameScene';
 
 export class Enemy extends Entity {
   type: string;
@@ -33,6 +34,8 @@ export class Enemy extends Entity {
   // animatedSprite is now inherited from Entity base class
   currentAnimKey: string = '';
   isPaused: boolean = false;
+  isScared: boolean = false;
+  scaredSpeed: number;
   startX: number;
   startY: number;
   injuredPath: ICoordinate[] = [];
@@ -47,6 +50,9 @@ export class Enemy extends Entity {
     this.targetY = y;
     this.difficulty = difficulty;
     this.normalSpeed = speed;
+
+    const baseScaredSpeed = gameConfig.enemy.scaredSpeed[difficulty as keyof typeof gameConfig.enemy.scaredSpeed];
+    this.scaredSpeed = baseScaredSpeed * (tileSize / gameConfig.map.tileSize);
 
     // Store starting position
     this.startX = x;
@@ -163,6 +169,34 @@ export class Enemy extends Entity {
         this.animatedSprite.play(animKey);
       }
     }
+
+    // Apply blue tint when scared, clear otherwise (injured state always clears tint)
+    if (this.isScared && !this.isInjured) {
+      this.animatedSprite.setTint(0x4444ff);
+    } else {
+      this.animatedSprite.clearTint();
+    }
+  }
+
+  /**
+   * Enter scared state — enemy flees from player while powerup is active.
+   * Subclasses may override to suppress (e.g. Stingy in sterile mode).
+   */
+  becomeScared(): void {
+    if (this.isInjured || this.isRespawning) return;
+    this.isScared = true;
+    this.speed = this.scaredSpeed;
+    this.updateAnimation();
+  }
+
+  /**
+   * Leave scared state — return to normal speed and appearance.
+   */
+  unscare(): void {
+    if (!this.isScared) return;
+    this.isScared = false;
+    this.speed = this.normalSpeed;
+    this.updateAnimation();
   }
 
   /**
@@ -193,6 +227,7 @@ export class Enemy extends Entity {
     this.moveTo(penX, penY);
     this.isReleased = false;
     this.isInjured = false;
+    this.isScared = false;
     this.isRespawning = false;
     this.respawnTimer = 0;
     this.speed = this.normalSpeed;
@@ -228,6 +263,7 @@ export class Enemy extends Entity {
     this.moveTo(this.startX, this.startY);
     this.isReleased = false;
     this.isInjured = false;
+    this.isScared = false;
     this.isRespawning = false;
     this.respawnTimer = 0;
     this.speed = this.normalSpeed;
@@ -290,6 +326,7 @@ export class Enemy extends Entity {
     if (this.isInjured || this.isRespawning) return;
 
     this.isInjured = true;
+    this.isScared = false;
     this.speed = this.injuredSpeed;
 
     // Update to injured animation
@@ -411,6 +448,16 @@ export class Enemy extends Entity {
     // Don't update if paused (during player death)
     if (this.isPaused) {
       return;
+    }
+
+    // Track scared state driven by player powerup
+    if (this.isReleased && !this.isInjured && !this.isRespawning) {
+      const playerFireActive = (this.scene as GameScene).entityManager.player.fireActive;
+      if (playerFireActive && !this.isScared) {
+        this.becomeScared();
+      } else if (!playerFireActive && this.isScared) {
+        this.unscare();
+      }
     }
 
     // Handle respawning state - pause in pen
@@ -636,6 +683,23 @@ export class Enemy extends Entity {
       if (this.canMove(reversePos.x, reversePos.y))
         return reverse;
       return this.direction;
+    }
+
+    if (this.isScared) {
+      // Flee: pick the direction that maximizes distance from player
+      const player = (this.scene as GameScene).entityManager.player;
+      let bestDir = validDirs[0];
+      let bestDist = -Infinity;
+
+      for (const dir of validDirs) {
+        const next = this.getNextPosition(dir);
+        const dist = Math.abs(next.x - player.gridX) + Math.abs(next.y - player.gridY);
+        if (dist > bestDist) {
+          bestDist = dist;
+          bestDir = dir;
+        }
+      }
+      return bestDir;
     }
 
     let bestDir = validDirs[0];

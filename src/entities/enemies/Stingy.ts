@@ -117,6 +117,12 @@ export class Stingy extends Enemy {
     }
   }
 
+  becomeScared(): void {
+    // Sterile mode makes Stingy immune to the scared state
+    if (this.inSterileMode) return;
+    super.becomeScared();
+  }
+
   update(time: number, delta: number): void {
     // Check for Sterile Mode activation every frame
     this.checkSterileMode();
